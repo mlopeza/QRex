@@ -1,0 +1,410 @@
+#include "TDV.h"
+#include "wchar.h"
+#include <iostream>
+#include <string>
+
+COMPILER QRex
+/*-------------------------------------------------------------*/
+
+	int //operadores
+	MAS,MENOS,POR,DIVISION,MODULO,MAYOR,MENOR,DIFERENTE,IGUAL,MAYQUE,MENQUE,AND,OR,NOT,ASIGNA;
+	int //tipos
+	tipovariable,enterov,flotantev,cadenav,errorv;
+	int 
+	tipofuncion,enterof,flotantef,voidf,errorf;
+
+	int //tipos de objetos
+	tipo,variable,funcion,llamada,undef,lectura,escritura,condicion,ciclo,regreso;
+	
+	int //Manejo de expresiones
+	expresion;
+
+	int //Manejo de retornos
+	retorno;
+	/*
+	Parte para codigos de operacion
+	*/
+
+	TablaDeVariables *tab;
+	FuncionX *f;
+	Variable *v;
+	std::wstring identificador;
+
+	void InitDeclarations() { // it must exist
+		MAS=0;
+		MENOS=1;
+		POR=2;
+		DIVISION=3;
+		MODULO=4;
+		MAYOR=5;
+		MENOR=6;
+		DIFERENTE=7;
+		IGUAL=8;
+		MAYQUE=9;
+		MENQUE=10;
+		AND=11;
+		OR=12;
+		NOT=13;
+		ASIGNA=14;
+	
+		//Inicializa la tabla de Variables
+		tab = new TablaDeVariables();
+
+		//Inicializa la funcion
+		f = new FuncionX();
+		// Codigos de funciones y variables
+		tipovariable=-1;enterov=11;flotantev=12;cadenav=13;errorv=14;
+
+		tipofuncion=-1;enterof=21;flotantef=22;voidf=23;errorf=24;
+
+		//Manejo de expresiones
+		expresion = 0;
+
+		//Manejo de retorno
+		retorno =0;
+
+		//Tipo de objetos
+		variable = 0;
+		funcion = 1;
+		llamada = 3;
+		lectura = 4;
+		escritura = 5;
+		condicion = 6;
+		ciclo = 7;
+		regreso = 8;
+		undef = 9;
+
+		
+	}
+
+	void Err(wchar_t* msg) {
+		errors->Error(la->line, la->col, msg);
+	}
+
+
+	//Esto se utiliza para registrar la funcion main en la tabla de funciones
+	void registraMain(){
+		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(L"main");
+		if( it == tab->fhash.end() && identificador != f->nombre) {
+		//Checa si hay una funcion antes de crear la funcion main
+			if(f->nombre == std::wstring(L"")){
+				f->nombre=std::wstring(L"main");
+				f->tipo=voidf;
+					
+			}else{
+			//Inserta la funcion  al hash y crea la funcion main
+				tab->fhash.insert(std::make_pair(f->nombre,f));
+				f = new FuncionX();
+				f->nombre=std::wstring(L"main");
+				f->tipo=voidf;
+			}
+		}else{
+			Err(L"No puede haber dos funciones main()");
+		}
+
+	}
+
+
+	void imprimeRegistros(){
+
+		std::wcout<<L"\n\nTabla de Funciones y Variables\n";
+		FuncionX *func;
+		Variable *var;
+		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.begin();
+		while (it != tab->fhash.end()){
+			func = it->second;
+			std::wcout<<L" "<< func->tipo<< L" " << func->nombre << L'\n';
+
+			std::wcout << L"intNum:"<< func->intNum << L" floatNum:";
+			std::wcout << func->floatNum << L" stringNum:" << func->stringNum << L'\n';
+	
+			//Variables Dentro
+			std::map<std::wstring,Variable *>::iterator it2 = func->vhash.begin();
+			while(it2 != it->second->vhash.end()){
+				var = it2->second;
+				std::wcout << L"		nombre:" << var->nombre;
+				std::wcout << L" tipo:" << var->tipo;
+				std::wcout << L" direccion:" << var->direccion << L'\n';
+	
+				it2++;
+			}
+			
+			it++;
+	
+		}
+
+	}
+
+/*-------------------------------------------------------------*/
+CHARACTERS
+letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".
+digit = "0123456789".
+cr  = '\r'.
+lf  = '\n'.
+tab = '\t'.
+AnyButQuote = ANY - '"'.
+
+TOKENS
+id  =  letter {letter | digit}.
+cte_string = '"'{AnyButQuote} '"'.
+cte_float = {digit}'.'digit {digit}.
+cte_int = digit {digit}.
+int = "int".
+float = "float".
+string = "string".
+if = "if".
+else = "else".
+print = "print".
+main = "main".
+read = "read".
+while = "while".
+void = "void".
+return = "return".
+
+IGNORE cr + lf + tab
+
+
+
+PRODUCTIONS
+//Inicia QRex----------------------------------------------------------------------
+QRex (.InitDeclarations();.) //Inicializa las variables
+     = {Funcion Cuerpo2}
+				(.tipo = funcion;.)
+main '(' ')'
+				(.registraMain();.) 
+				(.tipo = undef;.)
+Cuerpo
+				(.
+					//Inserta la funcion main al final de todo
+					tab->fhash.insert(std::make_pair(f->nombre,f));
+				.)
+
+(.imprimeRegistros();.).
+//Fin QRex-------------------------------------------------------------------------
+
+
+
+//Inicia Cuerpo--------------------------------------------------------------------
+Cuerpo = '{'{Declaracion} {Estatuto} '}'.
+//Finaliza Cuerpo------------------------------------------------------------------
+
+
+//Inicia Declaracion---------------------------------------------------------------
+Declaracion (. wchar_t* name; .) = 
+						(.tipo = variable;.) 
+Tipov ID<name> {',' ID<name>} ';'
+						(. tipo = undef;.)
+.
+//Finaliza Declaracion-----------------------------------------------------------------
+Llamada = '(' [Param] ')'.
+
+Lectura (. wchar_t* name; .) = read '(' 
+					(.tipo=lectura;.)
+ID<name> ')' ';'
+					(.tipo = undef;.)
+.
+
+Var_Cte (. wchar_t* name; .) = cte_int
+    | cte_float
+    | ID<name> [Llamada].
+
+Param = (Expresion|cte_string) [',' Param].
+
+//Inicia Funcion () ----------------------------------------------------------------
+Funcion (. wchar_t* name; .) = Tipof 
+					(.tipo = funcion;.)
+ID<name>
+					(.tipo = variable;.)
+'(' [Dec_Param] ')'
+					(.tipo = undef;.)
+.
+
+//Finaliza Funcion () ----------------------------------------------------------------
+
+Dec_Param (. wchar_t* name; .) = Tipov ID<name> [',' Dec_Param].
+
+
+//Inicia Condicion ----------------------------------------------------------------
+Condicion = if
+			(.tipo = condicion;.)
+ '(' Expresion ')' 
+			(.tipo = undef;.)
+Cuerpo [else Cuerpo].
+
+
+//Finaliza Condicion ----------------------------------------------------------------
+Asignacion (. wchar_t* name; .) = ID<name> '=' (Expresion | cte_string) ';'.
+
+
+
+//Inicia Escritura--------------------------------------------------
+Escritura = print 			(.tipo = escritura;.)
+'(' Param ')' ';'
+					(.tipo = undef;.)
+.
+//Finaliza Escritura--------------------------------------------------
+
+
+Ciclo = while 
+			(.tipo = ciclo;.)
+'(' Expresion ')' 
+			(.tipo = undef;.)
+Cuerpo.
+
+//Inicia Tipo de Funcion--------------------------------------------------
+Tipof = int (. tipofuncion = enterof;   .)
+    | float (. tipofuncion = flotantef; .)
+    | void  (. tipofuncion = voidf; .).
+
+//Finaliza tipo de funcion -----------------------------------------------
+
+
+//Inicia tipo de variable ------------------------------------------------
+Tipov = int   (. tipovariable = enterov;    .)
+    | float   (. tipovariable = flotantev;  .)
+    | string  (. tipovariable = cadenav;    .).
+
+//Finaliza tipo de variable ----------------------------------------------
+
+
+Estatuto = Asignacion
+    | Condicion
+    | Escritura
+    | Lectura
+    | Ciclo.
+
+Expresion =
+				 (.expresion = 1;.)
+ Exp1 ["||" Expresion]
+				 (.expresion = 0;.)
+.
+
+Exp1 = Exp2 ["&&" Exp1].
+
+Exp2 = Exp3 [('>'|'<'|">="|"<="|"=="|"!=") Exp3].
+
+Exp3 = Exp4 [('+'|'-') Exp4].
+
+Exp4 = Exp5 [('*'|'/'|'%') Exp5].
+
+Exp5 = ['!'] Exp6.
+
+Exp6 = '(' Expresion ')'
+    | [('+'|'-')] Var_Cte.
+
+//Inicio Cuerpo 2 (Cuerpo funcion)------------------------------------------------------------
+Cuerpo2 = '{' {Declaracion} {Estatuto} [
+					(.retorno = 1;tipo = regreso;.)
+return (Expresion|cte_string)';'] '}'
+					(.retorno = 0;tipo = undef;.)
+.
+//Finaliza Cuerpo 2 (Cuerpo funcion)------------------------------------------------------------
+
+/*Auxiliares*/
+ID<wchar_t* name> = id 
+
+			(. 	//Crea el string de coco
+				name = coco_string_create(t->val); 
+				//Conversion para meter el string a la tabla de hash
+				identificador = std::wstring(name);
+				//Eliminar el string de coco
+				coco_string_delete(name);
+
+				if(tipo == variable){
+					//Por ahora solo se guardan las variables
+					//Mas adelante se guasrdar'an los valores en la estructura
+						std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
+
+						if( it != f->vhash.end() ) {
+							std::wcout << L"("<<identificador<<L")";
+							Err(L"Variable already declared.");
+						}else{
+							v = new Variable();
+							v->nombre = identificador;
+							v->tipo = tipovariable;
+							switch(tipovariable){
+								case 11://entero
+									f->intNum++;
+									v->direccion=f->intNum;
+	
+									break;
+	
+								case 12://flotante
+									f->floatNum++;
+									v->direccion=f->floatNum;
+									break;
+	
+								case 13://string
+									f->stringNum++;
+									v->direccion=f->stringNum;
+									break;
+
+							}
+							f->vhash.insert(std::make_pair(v->nombre,v));
+						}
+				}else if(tipo == funcion){
+					std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(identificador);
+
+					//Con esto se sobreescribe la funcion poniendo la ultima en la lista
+					//Es una forma de lidiar con funciones con el mismo nombre
+					if(identificador == f->nombre){
+						delete(f);
+						f = new FuncionX();
+						f->nombre = identificador;
+						std::wcout <<L"("<< identificador<<L")";
+						Err(L"Function already declared.");
+					}else if( it == tab->fhash.end()) {
+						//Checa si hay una funcion antes de crear la funcion main
+						if(f->nombre == std::wstring(L"")){
+							f->nombre=identificador;
+							f->tipo=tipofuncion;
+					
+						}else{
+							//Inserta la funcion  al hash y crea la funcion main
+							tab->fhash.insert(std::make_pair(f->nombre,f));
+							f = new FuncionX();
+							f->nombre=identificador;
+							f->tipo=tipofuncion;
+						}
+					}else{
+						//Ejecuta lo mismo que el primer if, solo que cuando ya existe en el hash
+						tab->fhash.insert(std::make_pair(f->nombre,f));
+						tab->fhash.erase(it);
+						f = new FuncionX();
+						f->nombre = identificador;
+						std::wcout <<L"("<< identificador<<L")";
+						Err(L"Function already declared.");
+					}
+
+				} else if(tipo == lectura){
+					std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
+
+					if( it != f->vhash.end() ) {
+						//Read Variable
+					}else{
+						std::wcout <<L"("<< identificador<<L")";
+						Err(L"Trying to read and variable doesn't exist.");
+					}	
+				}else if(tipo == escritura){
+					std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
+					if( it != f->vhash.end() ) {
+						//Read Variable
+					}else{
+						std::wcout <<L"("<< identificador<<L")";
+						Err(L"Trying to write and variable doesn't exist.");
+					}		
+				}else if(tipo == condicion || tipo == ciclo || tipo == regreso){
+					std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
+					if( it != f->vhash.end() ) {
+						//Read Variable
+					}else{
+						std::wcout <<L"("<< identificador<<L")";
+						Err(L"Trying use a variable that doesn't exist.");
+					}		
+
+				}
+
+			.).
+
+
+END QRex.

@@ -1,0 +1,6 @@
+Compilar
+cococpp QRex.atg -namespace QRex
+Despues usar make para crear el ejecutble
+
+O ejecutar ./cmp
+

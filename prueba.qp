@@ -1,0 +1,35 @@
+int Func() {
+	int x;
+	return 3;
+    }
+void Func(int a, float e) {
+    int y;
+    return "asdf";
+    }
+
+int Func(int a, int b, float c) {
+    int z;
+
+    return w;
+    }
+
+main ()
+{
+    int x,r;
+    float asdf,f;
+    string a,r;
+    float v;
+    string asff;
+    print("Hola mundo", sadf, 5, asdf(asd));
+    x = "hola";
+    x = (4 - 3) || ( 4 * - 4) && !(a != 4 ) ;
+    if(a > 3){
+        read(b);
+    }
+    else {
+    }
+
+    while((a >=4 ) && (d==5)){
+    }
+    a = asdf(5);    
+}

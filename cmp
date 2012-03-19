@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cococpp QRex.atg -namespace QRex
+make
