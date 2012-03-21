@@ -3,10 +3,9 @@
 #include <map>
 #include <utility>
 #include <string>
-
-#define PROCINT 5000
-#define PROCFLOAT 7000
-#define PROCSTRING 9000
+#DEFINE PROCINT 5000
+#DEFINE PROCFLOAT 7000
+#DEFINE PROCSTRING 9000
 namespace std
 {
     typedef basic_string<char> string;
