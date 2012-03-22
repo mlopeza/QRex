@@ -35,6 +35,8 @@ COMPILER QRex
 	int //Declaraciones Globales
 	global;
 
+	int //Declaracion de parametros en una funcion
+	parametros;
 
 	/*Parte para codigos de operacion*/
 
@@ -92,6 +94,9 @@ COMPILER QRex
 		//Declaraciones globales
 		global = 0;
 
+		//Declaracion de parametros
+		parametros = 0;
+
 		//Tipo de objetos
 		variable = 0;
 		funcion = 1;
@@ -143,7 +148,10 @@ COMPILER QRex
 		while (it != tab->fhash.end()){
 			func = it->second;
 			std::wcout<<L" "<< func->tipo<< L" " << func->nombre << L'\n';
-
+			
+			//Imprime Parametros si los tiene.
+			func->parametros->Print();
+			
 			std::wcout << L"intNum:"<< func->intNum << L" floatNum:";
 			std::wcout << func->floatNum << L" stringNum:" << func->stringNum << L'\n';
 	
@@ -332,7 +340,7 @@ ID<name>
 
 //Finaliza Funcion () ----------------------------------------------------------------
 
-Dec_Param (. wchar_t* name; .) = Tipov ID<name> [',' Dec_Param].
+Dec_Param (. wchar_t* name; .) = (.parametros = 1;.)Tipov ID<name> (.parametros = 0;.) [',' Dec_Param].
 
 
 //Inicia Condicion ----------------------------------------------------------------
@@ -478,6 +486,11 @@ ID<wchar_t* name> = id
 							std::wcout << L"("<<identificador<<L")";
 							Err(L"Variable already declared.");
 						}else{
+							//Si es un prametro de la funcion
+							//Tambien se agrega a la lista de parametros
+							if(parametros == 1){
+								f->parametros->Append(tipovariable);
+							}
 							v = new Variable();
 							v->nombre = identificador;
 							v->tipo = tipovariable;
@@ -510,6 +523,7 @@ ID<wchar_t* name> = id
 						delete(f);
 						f = new FuncionX();
 						f->nombre = identificador;
+						f->tipo = tipofuncion;
 						std::wcout <<L"("<< identificador<<L")";
 						Err(L"Function already declared.");
 					}else if( it == tab->fhash.end()) {
