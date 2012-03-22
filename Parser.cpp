@@ -211,6 +211,11 @@ void Parser::ID(wchar_t* name) {
 				std::wcout << L"("<<identificador<<L")";
 				Err(L"Variable already declared.");
 			}else{
+				//Si es un prametro de la funcion
+				//Tambien se agrega a la lista de parametros
+				if(parametros == 1){
+					f->parametros->Append(tipovariable);
+				}
 				v = new Variable();
 				v->nombre = identificador;
 				v->tipo = tipovariable;
@@ -243,6 +248,7 @@ void Parser::ID(wchar_t* name) {
 			delete(f);
 			f = new FuncionX();
 			f->nombre = identificador;
+			f->tipo = tipofuncion;
 			std::wcout <<L"("<< identificador<<L")";
 			Err(L"Function already declared.");
 		}else if( it == tab->fhash.end()) {
@@ -431,8 +437,10 @@ void Parser::Tipof() {
 
 void Parser::Dec_Param() {
 		wchar_t* name; 
+		parametros = 1;
 		Tipov();
 		ID(name);
+		parametros = 0;
 		if (la->kind == 19 /* "," */) {
 			Get();
 			Dec_Param();

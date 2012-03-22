@@ -73,6 +73,18 @@ class List {
 				head = newNode;
 			}
 		};
+
+		void Print(){
+			Node *tmp = head;
+			std::wcout<< L"Parametros:";
+			while(tmp != NULL){
+				std::wcout<< L"("<< tmp->Data() << L")" <<L"   ";
+				tmp=tmp->Next();
+			}
+
+			std::wcout<< L"\n";
+		};
+
 		void Delete(){
 			Node *tmp = head;
 			Node *tmp2;

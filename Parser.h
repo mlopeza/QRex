@@ -97,6 +97,8 @@ int //operadores
 	int //Declaraciones Globales
 	global;
 
+	int //Declaracion de parametros en una funcion
+	parametros;
 
 	/*Parte para codigos de operacion*/
 
@@ -154,6 +156,9 @@ int //operadores
 		//Declaraciones globales
 		global = 0;
 
+		//Declaracion de parametros
+		parametros = 0;
+
 		//Tipo de objetos
 		variable = 0;
 		funcion = 1;
@@ -205,7 +210,10 @@ int //operadores
 		while (it != tab->fhash.end()){
 			func = it->second;
 			std::wcout<<L" "<< func->tipo<< L" " << func->nombre << L'\n';
-
+			
+			//Imprime Parametros si los tiene.
+			func->parametros->Print();
+			
 			std::wcout << L"intNum:"<< func->intNum << L" floatNum:";
 			std::wcout << func->floatNum << L" stringNum:" << func->stringNum << L'\n';
 	
