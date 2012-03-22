@@ -3,10 +3,18 @@
 #if !defined(QRex_COCO_PARSER_H__)
 #define QRex_COCO_PARSER_H__
 
-#include "TDV.h"
-#include "wchar.h"
 #include <iostream>
 #include <string>
+#include "TDV.h"
+#include "wchar.h"
+
+#define GLOBAL_INT 	10000
+#define GLOBAL_FLOAT	12000
+#define GLOBAL_STRING	14000
+
+#define CONSTANT_INT	16000
+#define CONSTANT_FLOAT	18000
+#define CONSTANT_STRING 20000
 
 
 #include "Scanner.h"
@@ -45,7 +53,8 @@ private:
 		_read=12,
 		_while=13,
 		_void=14,
-		_return=15
+		_return=15,
+		_global=16
 	};
 	int maxT;
 
@@ -69,6 +78,8 @@ public:
 
 int //operadores
 	MAS,MENOS,POR,DIVISION,MODULO,MAYOR,MENOR,DIFERENTE,IGUAL,MAYQUE,MENQUE,AND,OR,NOT,ASIGNA;
+
+
 	int //tipos
 	tipovariable,enterov,flotantev,cadenav,errorv;
 	int 
@@ -82,14 +93,24 @@ int //operadores
 
 	int //Manejo de retornos
 	retorno;
-	/*
-	Parte para codigos de operacion
-	*/
+	
+	int //Declaraciones Globales
+	global;
 
-	TablaDeVariables *tab;
+
+	/*Parte para codigos de operacion*/
+
+	TablaDeVariables *tab;		
 	FuncionX *f;
 	Variable *v;
+
+	//Tabla de Variables globales y Constantes
+	Contexto *tabconstantes;
+	Contexto *tabglobales;
+
 	std::wstring identificador;
+
+	//Tabla de variables globales
 
 	void InitDeclarations() { // it must exist
 		MAS=0;
@@ -111,6 +132,12 @@ int //operadores
 		//Inicializa la tabla de Variables
 		tab = new TablaDeVariables();
 
+		//Inicializa tabla de Constantes
+		tabconstantes = new Contexto(CONSTANT_INT,CONSTANT_FLOAT,CONSTANT_STRING);
+		
+		//Inicializa tabla de globales
+		tabglobales = new Contexto(GLOBAL_INT,GLOBAL_FLOAT,GLOBAL_STRING);
+
 		//Inicializa la funcion
 		f = new FuncionX();
 		// Codigos de funciones y variables
@@ -122,7 +149,10 @@ int //operadores
 		expresion = 0;
 
 		//Manejo de retorno
-		retorno =0;
+		retorno = 0;
+
+		//Declaraciones globales
+		global = 0;
 
 		//Tipo de objetos
 		variable = 0;
@@ -167,10 +197,10 @@ int //operadores
 
 
 	void imprimeRegistros(){
-
-		std::wcout<<L"\n\nTabla de Funciones y Variables\n";
 		FuncionX *func;
 		Variable *var;
+
+		std::wcout<<L"\n\nTabla de Funciones y Variables\n";
 		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.begin();
 		while (it != tab->fhash.end()){
 			func = it->second;
@@ -194,7 +224,54 @@ int //operadores
 	
 		}
 
+		std::wcout<<L"Tabla de Variables Globales\n";
+		std::map<std::wstring,Variable *>::iterator it2 = tabglobales->vhash.begin();
+		while (it2 != tabglobales->vhash.end()){
+			var = it2->second;
+			std::wcout << L"	nombre:" << var->nombre;
+			std::wcout << L" tipo:" << var->tipo;
+			std::wcout << L" direccion:" << var->direccion << L'\n';
+			it2++;
+		}
+
+		std::wcout<<L"Tabla de Variables Constantes\n";
+		it2 = tabconstantes->vhash.begin();
+		while (it2 != tabconstantes->vhash.end()){
+			var = it2->second;
+			std::wcout << L"	nombre:" << var->nombre;
+			std::wcout << L" tipo:" << var->tipo;
+			std::wcout << L" direccion:" << var->direccion << L'\n';
+			it2++;
+		}
+
 	}
+
+	//Registra las constantes encontradas en el programa
+	void registraConstante(){
+		std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
+			if(it == tabconstantes->vhash.end()){
+				v = new Variable();
+				v->nombre = identificador;
+				v->tipo = tipovariable;
+				switch(tipovariable){
+					case 11://entero
+						v->direccion=tabconstantes->intNum;
+						tabconstantes->intNum++;
+						break;
+					case 12://flotante
+						v->direccion=tabconstantes->floatNum;
+						tabconstantes->floatNum++;
+						break;
+					case 13://string
+						v->direccion=tabconstantes->stringNum;
+						tabconstantes->stringNum++;
+						break;
+				}
+				//Se registra la constante
+				tabconstantes->vhash.insert(std::make_pair(v->nombre,v));			
+			}
+	}
+
 
 /*-------------------------------------------------------------*/
 
@@ -204,13 +281,15 @@ int //operadores
 	void SemErr(const wchar_t* msg);
 
 	void QRex();
+	void DeclaracionGlobal();
+	void QRex2();
 	void Funcion();
 	void Cuerpo2();
 	void Cuerpo();
-	void Declaracion();
-	void Estatuto();
 	void Tipov();
 	void ID(wchar_t* name);
+	void Declaracion();
+	void Estatuto();
 	void Llamada();
 	void Param();
 	void Lectura();

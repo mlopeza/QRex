@@ -4,9 +4,9 @@
 #include <utility>
 #include <string>
 
-#define PROCINT 5000
-#define PROCFLOAT 7000
-#define PROCSTRING 9000
+#define PROCINT 4000
+#define PROCFLOAT 6000
+#define PROCSTRING 8000
 namespace std
 {
     typedef basic_string<char> string;
@@ -115,20 +115,34 @@ class FuncionX{
 
 };
 
-/*Definicion de la Tabla de Variables*/
+/*Contexto, se utiliza para variables globales
+	y constantes*/
+class Contexto{
+	public:
+		std::map<std::wstring, Variable *> vhash;
+		int intNum;
+		int floatNum;
+		int stringNum;
 
+	Contexto(int enteros,int flotantes,int cadenas){
+		intNum = enteros;
+		floatNum = flotantes;
+		stringNum = cadenas;
+	}
+
+	~Contexto(){
+		vhash.clear();
+	}
+
+};
+
+/*Definicion de la Tabla de Variables*/
 class TablaDeVariables{
 	public:
 		std::map<std::wstring, FuncionX *> fhash;
 		
-		TablaDeVariables(){
-
-		}
-
-		~TablaDeVariables(){
-			fhash.clear();
-		}
-
+		TablaDeVariables(){}
+		~TablaDeVariables(){fhash.clear();}
 };
 
 };

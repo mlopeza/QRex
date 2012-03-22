@@ -1,3 +1,7 @@
+global int x,w,alsk,d;
+global float y;
+global string z;
+
 int Func() {
 	int x;
 	return 3;
@@ -20,9 +24,9 @@ main ()
     string a,r;
     float v;
     string asff;
-    print("Hola mundo", sadf, 5, asdf(asd));
+    print("Hola mundo", sadf, 5, asdf(asd),"Yo soy muy bueno :)");
     x = "hola";
-    x = (4 - 3) || ( 4 * - 4) && !(a != 4 ) ;
+    x = (4 - 3) || ( 4 * -4 + 6) && !(a != 4 ) ;
     if(a > 3){
         read(b);
     }

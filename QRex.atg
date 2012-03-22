@@ -1,13 +1,23 @@
-#include "TDV.h"
-#include "wchar.h"
 #include <iostream>
 #include <string>
+#include "TDV.h"
+#include "wchar.h"
 
-COMPILER QRex
+#define GLOBAL_INT 	10000
+#define GLOBAL_FLOAT	12000
+#define GLOBAL_STRING	14000
+
+#define CONSTANT_INT	16000
+#define CONSTANT_FLOAT	18000
+#define CONSTANT_STRING 20000
+
 /*-------------------------------------------------------------*/
+COMPILER QRex
 
 	int //operadores
 	MAS,MENOS,POR,DIVISION,MODULO,MAYOR,MENOR,DIFERENTE,IGUAL,MAYQUE,MENQUE,AND,OR,NOT,ASIGNA;
+
+
 	int //tipos
 	tipovariable,enterov,flotantev,cadenav,errorv;
 	int 
@@ -21,14 +31,24 @@ COMPILER QRex
 
 	int //Manejo de retornos
 	retorno;
-	/*
-	Parte para codigos de operacion
-	*/
+	
+	int //Declaraciones Globales
+	global;
 
-	TablaDeVariables *tab;
+
+	/*Parte para codigos de operacion*/
+
+	TablaDeVariables *tab;		
 	FuncionX *f;
 	Variable *v;
+
+	//Tabla de Variables globales y Constantes
+	Contexto *tabconstantes;
+	Contexto *tabglobales;
+
 	std::wstring identificador;
+
+	//Tabla de variables globales
 
 	void InitDeclarations() { // it must exist
 		MAS=0;
@@ -50,6 +70,12 @@ COMPILER QRex
 		//Inicializa la tabla de Variables
 		tab = new TablaDeVariables();
 
+		//Inicializa tabla de Constantes
+		tabconstantes = new Contexto(CONSTANT_INT,CONSTANT_FLOAT,CONSTANT_STRING);
+		
+		//Inicializa tabla de globales
+		tabglobales = new Contexto(GLOBAL_INT,GLOBAL_FLOAT,GLOBAL_STRING);
+
 		//Inicializa la funcion
 		f = new FuncionX();
 		// Codigos de funciones y variables
@@ -61,7 +87,10 @@ COMPILER QRex
 		expresion = 0;
 
 		//Manejo de retorno
-		retorno =0;
+		retorno = 0;
+
+		//Declaraciones globales
+		global = 0;
 
 		//Tipo de objetos
 		variable = 0;
@@ -106,10 +135,10 @@ COMPILER QRex
 
 
 	void imprimeRegistros(){
-
-		std::wcout<<L"\n\nTabla de Funciones y Variables\n";
 		FuncionX *func;
 		Variable *var;
+
+		std::wcout<<L"\n\nTabla de Funciones y Variables\n";
 		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.begin();
 		while (it != tab->fhash.end()){
 			func = it->second;
@@ -133,7 +162,54 @@ COMPILER QRex
 	
 		}
 
+		std::wcout<<L"Tabla de Variables Globales\n";
+		std::map<std::wstring,Variable *>::iterator it2 = tabglobales->vhash.begin();
+		while (it2 != tabglobales->vhash.end()){
+			var = it2->second;
+			std::wcout << L"	nombre:" << var->nombre;
+			std::wcout << L" tipo:" << var->tipo;
+			std::wcout << L" direccion:" << var->direccion << L'\n';
+			it2++;
+		}
+
+		std::wcout<<L"Tabla de Variables Constantes\n";
+		it2 = tabconstantes->vhash.begin();
+		while (it2 != tabconstantes->vhash.end()){
+			var = it2->second;
+			std::wcout << L"	nombre:" << var->nombre;
+			std::wcout << L" tipo:" << var->tipo;
+			std::wcout << L" direccion:" << var->direccion << L'\n';
+			it2++;
+		}
+
 	}
+
+	//Registra las constantes encontradas en el programa
+	void registraConstante(){
+		std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
+			if(it == tabconstantes->vhash.end()){
+				v = new Variable();
+				v->nombre = identificador;
+				v->tipo = tipovariable;
+				switch(tipovariable){
+					case 11://entero
+						v->direccion=tabconstantes->intNum;
+						tabconstantes->intNum++;
+						break;
+					case 12://flotante
+						v->direccion=tabconstantes->floatNum;
+						tabconstantes->floatNum++;
+						break;
+					case 13://string
+						v->direccion=tabconstantes->stringNum;
+						tabconstantes->stringNum++;
+						break;
+				}
+				//Se registra la constante
+				tabconstantes->vhash.insert(std::make_pair(v->nombre,v));			
+			}
+	}
+
 
 /*-------------------------------------------------------------*/
 CHARACTERS
@@ -160,6 +236,7 @@ read = "read".
 while = "while".
 void = "void".
 return = "return".
+global = "global".
 
 IGNORE cr + lf + tab
 
@@ -168,7 +245,10 @@ IGNORE cr + lf + tab
 PRODUCTIONS
 //Inicia QRex----------------------------------------------------------------------
 QRex (.InitDeclarations();.) //Inicializa las variables
-     = {Funcion Cuerpo2}
+	= {global DeclaracionGlobal} QRex2.
+
+
+QRex2 = {Funcion Cuerpo2}
 				(.tipo = funcion;.)
 main '(' ')'
 				(.registraMain();.) 
@@ -182,6 +262,14 @@ Cuerpo
 (.imprimeRegistros();.).
 //Fin QRex-------------------------------------------------------------------------
 
+//Inicia Declaracion---------------------------------------------------------------
+DeclaracionGlobal (. wchar_t* name; global = 1; .) 
+= 
+						(.tipo = variable;		.) 
+Tipov ID<name> {',' ID<name>} ';'
+						(. tipo = undef; global = 0;	.)
+.
+//Finaliza Declaracion-----------------------------------------------------------------
 
 
 //Inicia Cuerpo--------------------------------------------------------------------
@@ -204,11 +292,34 @@ ID<name> ')' ';'
 					(.tipo = undef;.)
 .
 
-Var_Cte (. wchar_t* name; .) = cte_int
-    | cte_float
-    | ID<name> [Llamada].
+Var_Cte(.wchar_t* name;.) = 
+	  cte_int
+					(.tipovariable = enterov;
+						name = coco_string_create(t->val);
+						identificador = std::wstring(name);
+						coco_string_delete(name);
+						registraConstante();
+					.)
+	| cte_float
+					(.tipovariable = flotantev;
+						name = coco_string_create(t->val);
+						identificador = std::wstring(name);
+						coco_string_delete(name);
+						registraConstante();
+					.)
+	| ID<name> [Llamada].
 
-Param = (Expresion|cte_string) [',' Param].
+Param (.wchar_t* name;.) = 
+	(Expresion|
+		cte_string
+					(.tipovariable = cadenav;
+						name = coco_string_create(t->val);
+						identificador = std::wstring(name);
+						coco_string_delete(name);
+						registraConstante();
+					.)
+
+) [',' Param].
 
 //Inicia Funcion () ----------------------------------------------------------------
 Funcion (. wchar_t* name; .) = Tipof 
@@ -233,7 +344,16 @@ Cuerpo [else Cuerpo].
 
 
 //Finaliza Condicion ----------------------------------------------------------------
-Asignacion (. wchar_t* name; .) = ID<name> '=' (Expresion | cte_string) ';'.
+Asignacion (. wchar_t* name; .) = ID<name> '=' (Expresion | 
+		cte_string
+					(.tipovariable = cadenav;
+						name = coco_string_create(t->val);
+						identificador = std::wstring(name);
+						coco_string_delete(name);
+						registraConstante();
+					.)
+
+) ';'.
 
 
 
@@ -293,9 +413,20 @@ Exp6 = '(' Expresion ')'
     | [('+'|'-')] Var_Cte.
 
 //Inicio Cuerpo 2 (Cuerpo funcion)------------------------------------------------------------
-Cuerpo2 = '{' {Declaracion} {Estatuto} [
+Cuerpo2 (.wchar_t* name;.) = '{' {Declaracion} {Estatuto} [
 					(.retorno = 1;tipo = regreso;.)
-return (Expresion|cte_string)';'] '}'
+return (Expresion|
+			cte_string
+
+					(.tipovariable = cadenav;
+						name = coco_string_create(t->val);
+						identificador = std::wstring(name);
+						coco_string_delete(name);
+						registraConstante();
+					.)
+
+
+)';'] '}'
 					(.retorno = 0;tipo = undef;.)
 .
 //Finaliza Cuerpo 2 (Cuerpo funcion)------------------------------------------------------------
@@ -303,19 +434,47 @@ return (Expresion|cte_string)';'] '}'
 /*Auxiliares*/
 ID<wchar_t* name> = id 
 
-			(. 	//Crea el string de coco
-				name = coco_string_create(t->val); 
+			(. 	//Crea el string de coco 
 				//Conversion para meter el string a la tabla de hash
-				identificador = std::wstring(name);
 				//Eliminar el string de coco
-				coco_string_delete(name);
+				name = coco_string_create(t->val);identificador = std::wstring(name);coco_string_delete(name);
 
-				if(tipo == variable){
+				//std::wcout << identificador << L"\n";
+				if(tipo == variable && global){
+					std::map<std::wstring,Variable *>::iterator it = tabglobales->vhash.find(identificador);
+			
+					if(it != tabglobales->vhash.end()){
+						std::wcout << L"Global("<<identificador<<")";
+						Err(L"Variable already declared.");
+					}else{
+						v = new Variable();
+						v->nombre = identificador;
+						v->tipo = tipovariable;
+						switch(tipovariable){
+							case 11://entero
+								v->direccion=tabglobales->intNum;
+								tabglobales->intNum++;
+								break;
+							case 12://flotante
+								v->direccion=tabglobales->floatNum;
+								tabglobales->floatNum++;
+								break;
+							case 13://string
+								v->direccion=tabglobales->stringNum;
+								tabglobales->stringNum++;
+								break;
+						}	
+					}
+					//Insertar en tabla de variables Globales
+					tabglobales->vhash.insert(std::make_pair(v->nombre,v));
+
+				}if(tipo == variable){
 					//Por ahora solo se guardan las variables
-					//Mas adelante se guasrdar'an los valores en la estructura
+					//Mas adelante se guasrdaran los valores en la estructura
 						std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
+						std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
 
-						if( it != f->vhash.end() ) {
+						if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
 							std::wcout << L"("<<identificador<<L")";
 							Err(L"Variable already declared.");
 						}else{
@@ -378,8 +537,8 @@ ID<wchar_t* name> = id
 
 				} else if(tipo == lectura){
 					std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
-
-					if( it != f->vhash.end() ) {
+					std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
+					if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
 						//Read Variable
 					}else{
 						std::wcout <<L"("<< identificador<<L")";
@@ -387,21 +546,37 @@ ID<wchar_t* name> = id
 					}	
 				}else if(tipo == escritura){
 					std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
-					if( it != f->vhash.end() ) {
-						//Read Variable
+					std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
+					if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
+						//Write Variable
 					}else{
 						std::wcout <<L"("<< identificador<<L")";
 						Err(L"Trying to write and variable doesn't exist.");
 					}		
-				}else if(tipo == condicion || tipo == ciclo || tipo == regreso){
+				}else if(tipo == condicion || tipo == ciclo){
 					std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
-					if( it != f->vhash.end() ) {
-						//Read Variable
+					std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
+					if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
+						//Do whatever
+					}else{
+						if((it->second)->tipo == 13 ){
+							std::wcout <<L"("<< identificador<<L")";
+							Err(L"Trying use a String value in expresion.");
+						}else{
+							std::wcout <<L"("<< identificador<<L")";
+							Err(L"Trying use a variable that doesn't exist.");
+						}
+					}		
+
+				}else if(tipo == regreso){
+					std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
+					std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
+					if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
+						//Do Return
 					}else{
 						std::wcout <<L"("<< identificador<<L")";
 						Err(L"Trying use a variable that doesn't exist.");
-					}		
-
+					}
 				}
 
 			.).
