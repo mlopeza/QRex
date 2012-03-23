@@ -250,6 +250,7 @@ while = "while".
 void = "void".
 return = "return".
 global = "global".
+sign = "sign".
 
 IGNORE cr + lf + tab
 
@@ -258,7 +259,7 @@ IGNORE cr + lf + tab
 PRODUCTIONS
 //Inicia QRex----------------------------------------------------------------------
 QRex (.InitDeclarations();.) //Inicializa las variables
-	= {global DeclaracionGlobal} QRex2.
+	= {global DeclaracionGlobal | sign Funcion ';'} QRex2.
 
 
 QRex2 = {Funcion Cuerpo2}

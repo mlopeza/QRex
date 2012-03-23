@@ -1,6 +1,8 @@
 global int x,w,alsk,d;
 global float y;
+sign int Pato(int l, int rn);
 global string z;
+sign int Func(int x, int r);
 
 int Func() {
 	int x;

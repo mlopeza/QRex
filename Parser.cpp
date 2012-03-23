@@ -64,9 +64,15 @@ bool Parser::WeakSeparator(int n, int syFol, int repFol) {
 
 void Parser::QRex() {
 		InitDeclarations();
-		while (la->kind == _global) {
-			Get();
-			DeclaracionGlobal();
+		while (la->kind == _global || la->kind == _sign) {
+			if (la->kind == _global) {
+				Get();
+				DeclaracionGlobal();
+			} else {
+				Get();
+				Funcion();
+				Expect(18 /* ";" */);
+			}
 		}
 		QRex2();
 }
@@ -76,12 +82,26 @@ void Parser::DeclaracionGlobal() {
 		tipo = variable;		
 		Tipov();
 		ID(name);
-		while (la->kind == 19 /* "," */) {
+		while (la->kind == 21 /* "," */) {
 			Get();
 			ID(name);
 		}
-		Expect(20 /* ";" */);
+		Expect(18 /* ";" */);
 		tipo = undef; global = 0;	
+}
+
+void Parser::Funcion() {
+		wchar_t* name; 
+		Tipof();
+		tipo = funcion;
+		ID(name);
+		tipo = variable;
+		Expect(19 /* "(" */);
+		if (la->kind == _int || la->kind == _float || la->kind == _string) {
+			Dec_Param();
+		}
+		Expect(20 /* ")" */);
+		tipo = undef;
 }
 
 void Parser::QRex2() {
@@ -91,8 +111,8 @@ void Parser::QRex2() {
 		}
 		tipo = funcion;
 		Expect(_main);
-		Expect(17 /* "(" */);
-		Expect(18 /* ")" */);
+		Expect(19 /* "(" */);
+		Expect(20 /* ")" */);
 		registraMain();
 		tipo = undef;
 		Cuerpo();
@@ -101,23 +121,9 @@ void Parser::QRex2() {
 		imprimeRegistros();
 }
 
-void Parser::Funcion() {
-		wchar_t* name; 
-		Tipof();
-		tipo = funcion;
-		ID(name);
-		tipo = variable;
-		Expect(17 /* "(" */);
-		if (la->kind == _int || la->kind == _float || la->kind == _string) {
-			Dec_Param();
-		}
-		Expect(18 /* ")" */);
-		tipo = undef;
-}
-
 void Parser::Cuerpo2() {
 		wchar_t* name;
-		Expect(21 /* "{" */);
+		Expect(22 /* "{" */);
 		while (la->kind == _int || la->kind == _float || la->kind == _string) {
 			Declaracion();
 		}
@@ -137,22 +143,22 @@ void Parser::Cuerpo2() {
 				coco_string_delete(name);
 				registraConstante();
 				
-			} else SynErr(39);
-			Expect(20 /* ";" */);
+			} else SynErr(40);
+			Expect(18 /* ";" */);
 		}
-		Expect(22 /* "}" */);
+		Expect(23 /* "}" */);
 		retorno = 0;tipo = undef;
 }
 
 void Parser::Cuerpo() {
-		Expect(21 /* "{" */);
+		Expect(22 /* "{" */);
 		while (la->kind == _int || la->kind == _float || la->kind == _string) {
 			Declaracion();
 		}
 		while (StartOf(1)) {
 			Estatuto();
 		}
-		Expect(22 /* "}" */);
+		Expect(23 /* "}" */);
 }
 
 void Parser::Tipov() {
@@ -165,7 +171,7 @@ void Parser::Tipov() {
 		} else if (la->kind == _string) {
 			Get();
 			tipovariable = cadenav;    
-		} else SynErr(40);
+		} else SynErr(41);
 }
 
 void Parser::ID(wchar_t* name) {
@@ -326,11 +332,11 @@ void Parser::Declaracion() {
 		tipo = variable;
 		Tipov();
 		ID(name);
-		while (la->kind == 19 /* "," */) {
+		while (la->kind == 21 /* "," */) {
 			Get();
 			ID(name);
 		}
-		Expect(20 /* ";" */);
+		Expect(18 /* ";" */);
 		tipo = undef;
 }
 
@@ -345,15 +351,15 @@ void Parser::Estatuto() {
 			Lectura();
 		} else if (la->kind == _while) {
 			Ciclo();
-		} else SynErr(41);
+		} else SynErr(42);
 }
 
 void Parser::Llamada() {
-		Expect(17 /* "(" */);
+		Expect(19 /* "(" */);
 		if (StartOf(3)) {
 			Param();
 		}
-		Expect(18 /* ")" */);
+		Expect(20 /* ")" */);
 }
 
 void Parser::Param() {
@@ -368,8 +374,8 @@ void Parser::Param() {
 			coco_string_delete(name);
 			registraConstante();
 			
-		} else SynErr(42);
-		if (la->kind == 19 /* "," */) {
+		} else SynErr(43);
+		if (la->kind == 21 /* "," */) {
 			Get();
 			Param();
 		}
@@ -378,11 +384,11 @@ void Parser::Param() {
 void Parser::Lectura() {
 		wchar_t* name; 
 		Expect(_read);
-		Expect(17 /* "(" */);
+		Expect(19 /* "(" */);
 		tipo=lectura;
 		ID(name);
-		Expect(18 /* ")" */);
-		Expect(20 /* ";" */);
+		Expect(20 /* ")" */);
+		Expect(18 /* ";" */);
 		tipo = undef;
 }
 
@@ -406,16 +412,16 @@ void Parser::Var_Cte() {
 			
 		} else if (la->kind == _id) {
 			ID(name);
-			if (la->kind == 17 /* "(" */) {
+			if (la->kind == 19 /* "(" */) {
 				Llamada();
 			}
-		} else SynErr(43);
+		} else SynErr(44);
 }
 
 void Parser::Expresion() {
 		expresion = 1;
 		Exp1();
-		if (la->kind == 24 /* "||" */) {
+		if (la->kind == 25 /* "||" */) {
 			Get();
 			Expresion();
 		}
@@ -432,7 +438,7 @@ void Parser::Tipof() {
 		} else if (la->kind == _void) {
 			Get();
 			tipofuncion = voidf; 
-		} else SynErr(44);
+		} else SynErr(45);
 }
 
 void Parser::Dec_Param() {
@@ -441,7 +447,7 @@ void Parser::Dec_Param() {
 		Tipov();
 		ID(name);
 		parametros = 0;
-		if (la->kind == 19 /* "," */) {
+		if (la->kind == 21 /* "," */) {
 			Get();
 			Dec_Param();
 		}
@@ -450,9 +456,9 @@ void Parser::Dec_Param() {
 void Parser::Condicion() {
 		Expect(_if);
 		tipo = condicion;
-		Expect(17 /* "(" */);
+		Expect(19 /* "(" */);
 		Expresion();
-		Expect(18 /* ")" */);
+		Expect(20 /* ")" */);
 		tipo = undef;
 		Cuerpo();
 		if (la->kind == _else) {
@@ -464,7 +470,7 @@ void Parser::Condicion() {
 void Parser::Asignacion() {
 		wchar_t* name; 
 		ID(name);
-		Expect(23 /* "=" */);
+		Expect(24 /* "=" */);
 		if (StartOf(2)) {
 			Expresion();
 		} else if (la->kind == _cte_string) {
@@ -475,33 +481,33 @@ void Parser::Asignacion() {
 			coco_string_delete(name);
 			registraConstante();
 			
-		} else SynErr(45);
-		Expect(20 /* ";" */);
+		} else SynErr(46);
+		Expect(18 /* ";" */);
 }
 
 void Parser::Escritura() {
 		Expect(_print);
 		tipo = escritura;
-		Expect(17 /* "(" */);
+		Expect(19 /* "(" */);
 		Param();
-		Expect(18 /* ")" */);
-		Expect(20 /* ";" */);
+		Expect(20 /* ")" */);
+		Expect(18 /* ";" */);
 		tipo = undef;
 }
 
 void Parser::Ciclo() {
 		Expect(_while);
 		tipo = ciclo;
-		Expect(17 /* "(" */);
+		Expect(19 /* "(" */);
 		Expresion();
-		Expect(18 /* ")" */);
+		Expect(20 /* ")" */);
 		tipo = undef;
 		Cuerpo();
 }
 
 void Parser::Exp1() {
 		Exp2();
-		if (la->kind == 25 /* "&&" */) {
+		if (la->kind == 26 /* "&&" */) {
 			Get();
 			Exp1();
 		}
@@ -511,27 +517,27 @@ void Parser::Exp2() {
 		Exp3();
 		if (StartOf(4)) {
 			switch (la->kind) {
-			case 26 /* ">" */: {
+			case 27 /* ">" */: {
 				Get();
 				break;
 			}
-			case 27 /* "<" */: {
+			case 28 /* "<" */: {
 				Get();
 				break;
 			}
-			case 28 /* ">=" */: {
+			case 29 /* ">=" */: {
 				Get();
 				break;
 			}
-			case 29 /* "<=" */: {
+			case 30 /* "<=" */: {
 				Get();
 				break;
 			}
-			case 30 /* "==" */: {
+			case 31 /* "==" */: {
 				Get();
 				break;
 			}
-			case 31 /* "!=" */: {
+			case 32 /* "!=" */: {
 				Get();
 				break;
 			}
@@ -542,8 +548,8 @@ void Parser::Exp2() {
 
 void Parser::Exp3() {
 		Exp4();
-		if (la->kind == 32 /* "+" */ || la->kind == 33 /* "-" */) {
-			if (la->kind == 32 /* "+" */) {
+		if (la->kind == 33 /* "+" */ || la->kind == 34 /* "-" */) {
+			if (la->kind == 33 /* "+" */) {
 				Get();
 			} else {
 				Get();
@@ -554,10 +560,10 @@ void Parser::Exp3() {
 
 void Parser::Exp4() {
 		Exp5();
-		if (la->kind == 34 /* "*" */ || la->kind == 35 /* "/" */ || la->kind == 36 /* "%" */) {
-			if (la->kind == 34 /* "*" */) {
+		if (la->kind == 35 /* "*" */ || la->kind == 36 /* "/" */ || la->kind == 37 /* "%" */) {
+			if (la->kind == 35 /* "*" */) {
 				Get();
-			} else if (la->kind == 35 /* "/" */) {
+			} else if (la->kind == 36 /* "/" */) {
 				Get();
 			} else {
 				Get();
@@ -567,27 +573,27 @@ void Parser::Exp4() {
 }
 
 void Parser::Exp5() {
-		if (la->kind == 37 /* "!" */) {
+		if (la->kind == 38 /* "!" */) {
 			Get();
 		}
 		Exp6();
 }
 
 void Parser::Exp6() {
-		if (la->kind == 17 /* "(" */) {
+		if (la->kind == 19 /* "(" */) {
 			Get();
 			Expresion();
-			Expect(18 /* ")" */);
+			Expect(20 /* ")" */);
 		} else if (StartOf(5)) {
-			if (la->kind == 32 /* "+" */ || la->kind == 33 /* "-" */) {
-				if (la->kind == 32 /* "+" */) {
+			if (la->kind == 33 /* "+" */ || la->kind == 34 /* "-" */) {
+				if (la->kind == 33 /* "+" */) {
 					Get();
 				} else {
 					Get();
 				}
 			}
 			Var_Cte();
-		} else SynErr(46);
+		} else SynErr(47);
 }
 
 
@@ -691,7 +697,7 @@ void Parser::Parse() {
 }
 
 Parser::Parser(Scanner *scanner) {
-	maxT = 38;
+	maxT = 39;
 
 	ParserInitCaller<Parser>::CallInit(this);
 	dummyToken = NULL;
@@ -706,13 +712,13 @@ bool Parser::StartOf(int s) {
 	const bool T = true;
 	const bool x = false;
 
-	static bool set[6][40] = {
-		{T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x},
-		{x,T,x,x, x,x,x,x, T,x,T,x, T,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x},
-		{x,T,x,T, T,x,x,x, x,x,x,x, x,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,x,x, x,T,x,x},
-		{x,T,T,T, T,x,x,x, x,x,x,x, x,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,x,x, x,T,x,x},
-		{x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,T,T, T,T,T,T, x,x,x,x, x,x,x,x},
-		{x,T,x,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,x,x, x,x,x,x}
+	static bool set[6][41] = {
+		{T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x},
+		{x,T,x,x, x,x,x,x, T,x,T,x, T,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x},
+		{x,T,x,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,x,x, x,T,T,x, x,x,T,x, x},
+		{x,T,T,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,x,x, x,T,T,x, x,x,T,x, x},
+		{x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,T, T,T,T,T, T,x,x,x, x,x,x,x, x},
+		{x,T,x,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,T,T,x, x,x,x,x, x}
 	};
 
 
@@ -750,36 +756,37 @@ void Errors::SynErr(int line, int col, int n) {
 			case 14: s = coco_string_create(L"void expected"); break;
 			case 15: s = coco_string_create(L"return expected"); break;
 			case 16: s = coco_string_create(L"global expected"); break;
-			case 17: s = coco_string_create(L"\"(\" expected"); break;
-			case 18: s = coco_string_create(L"\")\" expected"); break;
-			case 19: s = coco_string_create(L"\",\" expected"); break;
-			case 20: s = coco_string_create(L"\";\" expected"); break;
-			case 21: s = coco_string_create(L"\"{\" expected"); break;
-			case 22: s = coco_string_create(L"\"}\" expected"); break;
-			case 23: s = coco_string_create(L"\"=\" expected"); break;
-			case 24: s = coco_string_create(L"\"||\" expected"); break;
-			case 25: s = coco_string_create(L"\"&&\" expected"); break;
-			case 26: s = coco_string_create(L"\">\" expected"); break;
-			case 27: s = coco_string_create(L"\"<\" expected"); break;
-			case 28: s = coco_string_create(L"\">=\" expected"); break;
-			case 29: s = coco_string_create(L"\"<=\" expected"); break;
-			case 30: s = coco_string_create(L"\"==\" expected"); break;
-			case 31: s = coco_string_create(L"\"!=\" expected"); break;
-			case 32: s = coco_string_create(L"\"+\" expected"); break;
-			case 33: s = coco_string_create(L"\"-\" expected"); break;
-			case 34: s = coco_string_create(L"\"*\" expected"); break;
-			case 35: s = coco_string_create(L"\"/\" expected"); break;
-			case 36: s = coco_string_create(L"\"%\" expected"); break;
-			case 37: s = coco_string_create(L"\"!\" expected"); break;
-			case 38: s = coco_string_create(L"??? expected"); break;
-			case 39: s = coco_string_create(L"invalid Cuerpo2"); break;
-			case 40: s = coco_string_create(L"invalid Tipov"); break;
-			case 41: s = coco_string_create(L"invalid Estatuto"); break;
-			case 42: s = coco_string_create(L"invalid Param"); break;
-			case 43: s = coco_string_create(L"invalid Var_Cte"); break;
-			case 44: s = coco_string_create(L"invalid Tipof"); break;
-			case 45: s = coco_string_create(L"invalid Asignacion"); break;
-			case 46: s = coco_string_create(L"invalid Exp6"); break;
+			case 17: s = coco_string_create(L"sign expected"); break;
+			case 18: s = coco_string_create(L"\";\" expected"); break;
+			case 19: s = coco_string_create(L"\"(\" expected"); break;
+			case 20: s = coco_string_create(L"\")\" expected"); break;
+			case 21: s = coco_string_create(L"\",\" expected"); break;
+			case 22: s = coco_string_create(L"\"{\" expected"); break;
+			case 23: s = coco_string_create(L"\"}\" expected"); break;
+			case 24: s = coco_string_create(L"\"=\" expected"); break;
+			case 25: s = coco_string_create(L"\"||\" expected"); break;
+			case 26: s = coco_string_create(L"\"&&\" expected"); break;
+			case 27: s = coco_string_create(L"\">\" expected"); break;
+			case 28: s = coco_string_create(L"\"<\" expected"); break;
+			case 29: s = coco_string_create(L"\">=\" expected"); break;
+			case 30: s = coco_string_create(L"\"<=\" expected"); break;
+			case 31: s = coco_string_create(L"\"==\" expected"); break;
+			case 32: s = coco_string_create(L"\"!=\" expected"); break;
+			case 33: s = coco_string_create(L"\"+\" expected"); break;
+			case 34: s = coco_string_create(L"\"-\" expected"); break;
+			case 35: s = coco_string_create(L"\"*\" expected"); break;
+			case 36: s = coco_string_create(L"\"/\" expected"); break;
+			case 37: s = coco_string_create(L"\"%\" expected"); break;
+			case 38: s = coco_string_create(L"\"!\" expected"); break;
+			case 39: s = coco_string_create(L"??? expected"); break;
+			case 40: s = coco_string_create(L"invalid Cuerpo2"); break;
+			case 41: s = coco_string_create(L"invalid Tipov"); break;
+			case 42: s = coco_string_create(L"invalid Estatuto"); break;
+			case 43: s = coco_string_create(L"invalid Param"); break;
+			case 44: s = coco_string_create(L"invalid Var_Cte"); break;
+			case 45: s = coco_string_create(L"invalid Tipof"); break;
+			case 46: s = coco_string_create(L"invalid Asignacion"); break;
+			case 47: s = coco_string_create(L"invalid Exp6"); break;
 
 		default:
 		{
