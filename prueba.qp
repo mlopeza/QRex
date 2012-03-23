@@ -1,8 +1,8 @@
 global int x,w,alsk,d;
 global float y;
-sign int Pato(int l, int rn);
+sign int Pato(int,int);
 global string z;
-sign int Func(int x, int r);
+sign int Func(int,float,int,float,float);
 
 int Func() {
 	int x;
@@ -13,11 +13,13 @@ void Func(int a, float e) {
     return "asdf";
     }
 
-int Func(int a, int b, float c) {
-    int z;
+int Func(int a, float b, int c,float blah,float plu) {
+    int flash;
 
     return w;
-    }
+}
+
+
 
 main ()
 {
