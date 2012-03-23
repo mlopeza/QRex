@@ -24,7 +24,7 @@ COMPILER QRex
 	tipofuncion,enterof,flotantef,voidf,errorf;
 
 	int //tipos de objetos
-	tipo,variable,funcion,llamada,undef,lectura,escritura,condicion,ciclo,regreso;
+	tipo,variable,funcion,llamada,undef,lectura,escritura,condicion,ciclo,regreso,funcionfirma;
 	
 	int //Manejo de expresiones
 	expresion;
@@ -38,11 +38,15 @@ COMPILER QRex
 	int //Declaracion de parametros en una funcion
 	parametros;
 
+	int //CHeca si es una firma o una funcion
+	firma,definefunc,omiteCuerpo;
+
 	/*Parte para codigos de operacion*/
 
 	TablaDeVariables *tab;		
 	FuncionX *f;
 	Variable *v;
+	FuncionX *ftemp;
 
 	//Tabla de Variables globales y Constantes
 	Contexto *tabconstantes;
@@ -96,6 +100,11 @@ COMPILER QRex
 
 		//Declaracion de parametros
 		parametros = 0;
+	
+		//Verificar si es una firma o la definicion de una funcion
+		firma = 0;
+		definefunc = 0;
+		omiteCuerpo = 0;
 
 		//Tipo de objetos
 		variable = 0;
@@ -106,8 +115,14 @@ COMPILER QRex
 		condicion = 6;
 		ciclo = 7;
 		regreso = 8;
-		undef = 9;
+		funcionfirma = 9;
+		undef = 10;
 
+        int cubo[4][5][15] = {{{11,11,11,11,11,11,11,11,11,11,11,11,11,-666,11},{12,12,12,12,12,11,11,11,11,11,11,11,11,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,11,-666,}},
+            {{12,12,12,12,12,11,11,11,11,11,11,-666,-666,-666,12},{12,12,12,12,12,11,11,11,11,11,11,-666,-666,-666,12},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,11,-666,}},
+            {{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,13},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}},
+            {{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}}
+        };
 		
 	}
 
@@ -138,7 +153,9 @@ COMPILER QRex
 
 	}
 
-
+	/*Imprime todos los registros de Funciones
+		La tabla de variables globales y la tabla de constantes
+	*/
 	void imprimeRegistros(){
 		FuncionX *func;
 		Variable *var;
@@ -167,7 +184,7 @@ COMPILER QRex
 			}
 			
 			it++;
-	
+			std::wcout << L"\n\n";
 		}
 
 		std::wcout<<L"Tabla de Variables Globales\n";
@@ -218,6 +235,87 @@ COMPILER QRex
 			}
 	}
 
+	//Agrega el parametro a la lista de la funcion
+	void registraParametroFirma(){
+			f->parametros->Append(tipovariable);
+	}
+	//Checa si efectivamente la firma es igual a la declaracion
+	void verificaRegistroFuncion(){
+		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(ftemp->nombre);
+		if(it == tab->fhash.end()){
+			std::wcout <<L"("<< ftemp->nombre<<L")";
+			Err(L"Function signtarue not declared.");
+			delete(ftemp);
+			omiteCuerpo = 1;
+		}else if(it->second->tipo != ftemp->tipo){
+			std::wcout <<L"("<< ftemp->nombre<<L")";
+			Err(L"Signature return type mismatch.");
+			delete(ftemp);
+			omiteCuerpo = 1;
+		}else if(!(it->second->parametros->Equals(ftemp->parametros))){
+			std::wcout <<L"("<< ftemp->nombre<<L")";
+			Err(L"Signature parameters mismatch.");	
+			delete(ftemp);
+			omiteCuerpo =1;
+		}else{
+			//Asigna la funcion para que agregue variables a la tabla
+			f=it->second;
+			f->definida = 1;
+			omiteCuerpo = 0;
+			std::map<std::wstring,Variable *>::iterator it = ftemp->vhash.begin();
+			while(it != ftemp->vhash.end()){
+				
+				f->vhash.insert(std::make_pair(it->first,it->second));
+				it++;
+			}
+			//Paso de contador de direcciones virtuales
+			f->intNum = ftemp->intNum;
+			f->floatNum = ftemp->floatNum;
+			f->stringNum = ftemp->stringNum;
+			//Se libera memoria de la funcion temporal
+			delete (ftemp);
+			//Se necesita explicitamente NULL por que C++ no lo hace
+			ftemp = NULL;
+		}
+
+	}
+
+	//Metodo para agregar variable actual a funcion
+	void agregaVariable(FuncionX *funcion){
+		//Por ahora solo se guardan las variables
+		//Mas adelante se guasrdaran los valores en la estructura
+		std::map<std::wstring,Variable *>::iterator it = funcion->vhash.find(identificador);
+		std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
+		if( it != funcion->vhash.end() || itglobal != tabglobales->vhash.end()) {
+			std::wcout << L"("<<identificador<<L")";
+			Err(L"Variable already declared.");
+		}else{
+			//Si es un prametro de la funcion
+			//Tambien se agrega a la lista de parametros
+			if(parametros == 1){
+				funcion->parametros->Append(tipovariable);
+			}
+			v = new Variable();
+			v->nombre = identificador;
+			v->tipo = tipovariable;
+			switch(tipovariable){
+				case 11://entero
+					funcion->intNum++;
+					v->direccion=funcion->intNum;
+					break;
+				case 12://flotante
+					funcion->floatNum++;
+					v->direccion=funcion->floatNum;
+					break;
+				case 13://string
+					funcion->stringNum++;
+					v->direccion=funcion->stringNum;
+					break;
+			}
+			funcion->vhash.insert(std::make_pair(v->nombre,v));
+		}
+
+	}
 
 /*-------------------------------------------------------------*/
 CHARACTERS
@@ -245,6 +343,7 @@ while = "while".
 void = "void".
 return = "return".
 global = "global".
+sign = "sign".
 
 IGNORE cr + lf + tab
 
@@ -253,10 +352,27 @@ IGNORE cr + lf + tab
 PRODUCTIONS
 //Inicia QRex----------------------------------------------------------------------
 QRex (.InitDeclarations();.) //Inicializa las variables
-	= {global DeclaracionGlobal} QRex2.
+	= 
+{global DeclaracionGlobal | 
+					(.firma = 1;.) 
+sign FuncionFirma ';'			
+					(.firma = 0;.)
+} 
+					//Agrega la ultima firma
+					(.tab->fhash.insert(std::make_pair(f->nombre,f));.)
+
+QRex2.
 
 
-QRex2 = {Funcion Cuerpo2}
+QRex2 = 
+{				//Aqui se hace la definicion de la funcion
+				(.definefunc = 1;.)
+Funcion 			
+				(.verificaRegistroFuncion();.)
+Cuerpo2 
+				(.definefunc = 0;omiteCuerpo=0;.)
+}
+
 				(.tipo = funcion;.)
 main '(' ')'
 				(.registraMain();.) 
@@ -337,11 +453,28 @@ ID<name>
 '(' [Dec_Param] ')'
 					(.tipo = undef;.)
 .
-
 //Finaliza Funcion () ----------------------------------------------------------------
 
-Dec_Param (. wchar_t* name; .) = (.parametros = 1;.)Tipov ID<name> (.parametros = 0;.) [',' Dec_Param].
+//Inicia Funcion Firma----------------------------------------------------------------
+FuncionFirma (. wchar_t* name; .) = Tipof 
+					(.tipo = funcionfirma;.)
+ID<name>
+					(.tipo = variable;.)
+'(' [Dec_ParamFirma] ')'
+					(.tipo = undef;.)
+.
+//Finaliza Funcion Firma--------------------------------------------------------------
 
+//Inicia Delcaracion de parametros de funcion-----------------------------------------
+Dec_Param (. wchar_t* name; .) = (.parametros = 1;.)Tipov ID<name> (.parametros = 0;.) [',' Dec_Param].
+//Finaliza Delcaracion de parametros de funcion-----------------------------------------
+
+//Inicia Delcaracion de parametros de firma funcion-------------------------------------
+Dec_ParamFirma (. wchar_t* name; .) = 
+Tipov
+					(. registraParametroFirma();.)
+[',' Dec_ParamFirma].
+//Finaliza Delcaracion de parametros de firma funcion-----------------------------------
 
 //Inicia Condicion ----------------------------------------------------------------
 Condicion = if
@@ -442,79 +575,18 @@ return (Expresion|
 /*Auxiliares*/
 ID<wchar_t* name> = id 
 
-			(. 	//Crea el string de coco 
+			(. 	
+				//Si el cuerpo de la funcion es omitido simplemente se aplica el return
+				if(omiteCuerpo == 1){
+					return;
+				}
+				//Crea el string de coco 
 				//Conversion para meter el string a la tabla de hash
 				//Eliminar el string de coco
 				name = coco_string_create(t->val);identificador = std::wstring(name);coco_string_delete(name);
 
-				//std::wcout << identificador << L"\n";
-				if(tipo == variable && global){
-					std::map<std::wstring,Variable *>::iterator it = tabglobales->vhash.find(identificador);
-			
-					if(it != tabglobales->vhash.end()){
-						std::wcout << L"Global("<<identificador<<")";
-						Err(L"Variable already declared.");
-					}else{
-						v = new Variable();
-						v->nombre = identificador;
-						v->tipo = tipovariable;
-						switch(tipovariable){
-							case 11://entero
-								v->direccion=tabglobales->intNum;
-								tabglobales->intNum++;
-								break;
-							case 12://flotante
-								v->direccion=tabglobales->floatNum;
-								tabglobales->floatNum++;
-								break;
-							case 13://string
-								v->direccion=tabglobales->stringNum;
-								tabglobales->stringNum++;
-								break;
-						}	
-					}
-					//Insertar en tabla de variables Globales
-					tabglobales->vhash.insert(std::make_pair(v->nombre,v));
-
-				}if(tipo == variable){
-					//Por ahora solo se guardan las variables
-					//Mas adelante se guasrdaran los valores en la estructura
-						std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
-						std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
-
-						if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
-							std::wcout << L"("<<identificador<<L")";
-							Err(L"Variable already declared.");
-						}else{
-							//Si es un prametro de la funcion
-							//Tambien se agrega a la lista de parametros
-							if(parametros == 1){
-								f->parametros->Append(tipovariable);
-							}
-							v = new Variable();
-							v->nombre = identificador;
-							v->tipo = tipovariable;
-							switch(tipovariable){
-								case 11://entero
-									f->intNum++;
-									v->direccion=f->intNum;
-	
-									break;
-	
-								case 12://flotante
-									f->floatNum++;
-									v->direccion=f->floatNum;
-									break;
-	
-								case 13://string
-									f->stringNum++;
-									v->direccion=f->stringNum;
-									break;
-
-							}
-							f->vhash.insert(std::make_pair(v->nombre,v));
-						}
-				}else if(tipo == funcion){
+				/*Crea las firmas de las funciones*/
+				if(tipo == funcionfirma && firma == 1){
 					std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(identificador);
 
 					//Con esto se sobreescribe la funcion poniendo la ultima en la lista
@@ -548,8 +620,75 @@ ID<wchar_t* name> = id
 						std::wcout <<L"("<< identificador<<L")";
 						Err(L"Function already declared.");
 					}
+					return;
 
-				} else if(tipo == lectura){
+				}
+
+				//Se agregan parametros para comparar a la funcion temporal con la firma
+				if(tipo == variable && definefunc == 1){
+					//Agrega a la tabla de variables temporal
+					if(ftemp == NULL){
+						agregaVariable(f);
+					}else{					
+						agregaVariable(ftemp);
+
+					}
+					return;
+				}
+
+				//Registro de la funcion
+				if(tipo == funcion && definefunc == 1){
+					//Crea la funcion a comparar con la firma
+					//Y asigna los atributos necesarios
+					ftemp = new FuncionX();
+					ftemp->tipo = tipofuncion;
+					ftemp->nombre = identificador;
+					return;					
+					
+				} 
+				
+
+				/*Registra las variables globales*/				
+				if(tipo == variable && global == 1){
+					std::map<std::wstring,Variable *>::iterator it = tabglobales->vhash.find(identificador);
+			
+					if(it != tabglobales->vhash.end()){
+						std::wcout << L"Global("<<identificador<<")";
+						Err(L"Variable already declared.");
+					}else{
+						v = new Variable();
+						v->nombre = identificador;
+						v->tipo = tipovariable;
+						switch(tipovariable){
+							case 11://entero
+								v->direccion=tabglobales->intNum;
+								tabglobales->intNum++;
+								break;
+							case 12://flotante
+								v->direccion=tabglobales->floatNum;
+								tabglobales->floatNum++;
+								break;
+							case 13://string
+								v->direccion=tabglobales->stringNum;
+								tabglobales->stringNum++;
+								break;
+						}	
+					}
+					//Insertar en tabla de variables Globales
+					tabglobales->vhash.insert(std::make_pair(v->nombre,v));
+					return;
+
+				}
+
+				//Registra las variables de las funciones
+				if(tipo == variable){
+					//Registra la variable en la funcion
+					agregaVariable(f);
+					return;
+				}
+				
+				//Definiciones semanticas de lectura
+				if(tipo == lectura){
 					std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
 					std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
 					if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
@@ -557,8 +696,12 @@ ID<wchar_t* name> = id
 					}else{
 						std::wcout <<L"("<< identificador<<L")";
 						Err(L"Trying to read and variable doesn't exist.");
-					}	
-				}else if(tipo == escritura){
+					}
+					return;	
+				}
+
+				//Definiciones semanticas de escritura
+				if(tipo == escritura){
 					std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
 					std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
 					if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
@@ -566,8 +709,13 @@ ID<wchar_t* name> = id
 					}else{
 						std::wcout <<L"("<< identificador<<L")";
 						Err(L"Trying to write and variable doesn't exist.");
-					}		
-				}else if(tipo == condicion || tipo == ciclo){
+					}
+
+					return;		
+				}
+
+				//Definiciones semanticas de ciclo o condicion
+				if(tipo == condicion || tipo == ciclo){
 					std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
 					std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
 					if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
@@ -580,9 +728,14 @@ ID<wchar_t* name> = id
 							std::wcout <<L"("<< identificador<<L")";
 							Err(L"Trying use a variable that doesn't exist.");
 						}
-					}		
+					}
 
-				}else if(tipo == regreso){
+					return;		
+
+				}
+		
+				//Define semantica de retorno
+				if(tipo == regreso){
 					std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
 					std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
 					if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
@@ -591,6 +744,8 @@ ID<wchar_t* name> = id
 						std::wcout <<L"("<< identificador<<L")";
 						Err(L"Trying use a variable that doesn't exist.");
 					}
+
+					return;
 				}
 
 			.).

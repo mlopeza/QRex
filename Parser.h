@@ -54,7 +54,8 @@ private:
 		_while=13,
 		_void=14,
 		_return=15,
-		_global=16
+		_global=16,
+		_sign=17
 	};
 	int maxT;
 
@@ -86,7 +87,7 @@ int //operadores
 	tipofuncion,enterof,flotantef,voidf,errorf;
 
 	int //tipos de objetos
-	tipo,variable,funcion,llamada,undef,lectura,escritura,condicion,ciclo,regreso;
+	tipo,variable,funcion,llamada,undef,lectura,escritura,condicion,ciclo,regreso,funcionfirma;
 	
 	int //Manejo de expresiones
 	expresion;
@@ -100,11 +101,15 @@ int //operadores
 	int //Declaracion de parametros en una funcion
 	parametros;
 
+	int //CHeca si es una firma o una funcion
+	firma,definefunc,omiteCuerpo;
+
 	/*Parte para codigos de operacion*/
 
 	TablaDeVariables *tab;		
 	FuncionX *f;
 	Variable *v;
+	FuncionX *ftemp;
 
 	//Tabla de Variables globales y Constantes
 	Contexto *tabconstantes;
@@ -158,6 +163,11 @@ int //operadores
 
 		//Declaracion de parametros
 		parametros = 0;
+	
+		//Verificar si es una firma o la definicion de una funcion
+		firma = 0;
+		definefunc = 0;
+		omiteCuerpo = 0;
 
 		//Tipo de objetos
 		variable = 0;
@@ -168,8 +178,14 @@ int //operadores
 		condicion = 6;
 		ciclo = 7;
 		regreso = 8;
-		undef = 9;
+		funcionfirma = 9;
+		undef = 10;
 
+        int cubo[4][5][15] = {{{11,11,11,11,11,11,11,11,11,11,11,11,11,-666,11},{12,12,12,12,12,11,11,11,11,11,11,11,11,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,11,-666,}},
+            {{12,12,12,12,12,11,11,11,11,11,11,-666,-666,-666,12},{12,12,12,12,12,11,11,11,11,11,11,-666,-666,-666,12},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,11,-666,}},
+            {{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,13},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}},
+            {{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}}
+        };
 		
 	}
 
@@ -200,7 +216,9 @@ int //operadores
 
 	}
 
-
+	/*Imprime todos los registros de Funciones
+		La tabla de variables globales y la tabla de constantes
+	*/
 	void imprimeRegistros(){
 		FuncionX *func;
 		Variable *var;
@@ -229,7 +247,7 @@ int //operadores
 			}
 			
 			it++;
-	
+			std::wcout << L"\n\n";
 		}
 
 		std::wcout<<L"Tabla de Variables Globales\n";
@@ -280,6 +298,87 @@ int //operadores
 			}
 	}
 
+	//Agrega el parametro a la lista de la funcion
+	void registraParametroFirma(){
+			f->parametros->Append(tipovariable);
+	}
+	//Checa si efectivamente la firma es igual a la declaracion
+	void verificaRegistroFuncion(){
+		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(ftemp->nombre);
+		if(it == tab->fhash.end()){
+			std::wcout <<L"("<< ftemp->nombre<<L")";
+			Err(L"Function signtarue not declared.");
+			delete(ftemp);
+			omiteCuerpo = 1;
+		}else if(it->second->tipo != ftemp->tipo){
+			std::wcout <<L"("<< ftemp->nombre<<L")";
+			Err(L"Signature return type mismatch.");
+			delete(ftemp);
+			omiteCuerpo = 1;
+		}else if(!(it->second->parametros->Equals(ftemp->parametros))){
+			std::wcout <<L"("<< ftemp->nombre<<L")";
+			Err(L"Signature parameters mismatch.");	
+			delete(ftemp);
+			omiteCuerpo =1;
+		}else{
+			//Asigna la funcion para que agregue variables a la tabla
+			f=it->second;
+			f->definida = 1;
+			omiteCuerpo = 0;
+			std::map<std::wstring,Variable *>::iterator it = ftemp->vhash.begin();
+			while(it != ftemp->vhash.end()){
+				
+				f->vhash.insert(std::make_pair(it->first,it->second));
+				it++;
+			}
+			//Paso de contador de direcciones virtuales
+			f->intNum = ftemp->intNum;
+			f->floatNum = ftemp->floatNum;
+			f->stringNum = ftemp->stringNum;
+			//Se libera memoria de la funcion temporal
+			delete (ftemp);
+			//Se necesita explicitamente NULL por que C++ no lo hace
+			ftemp = NULL;
+		}
+
+	}
+
+	//Metodo para agregar variable actual a funcion
+	void agregaVariable(FuncionX *funcion){
+		//Por ahora solo se guardan las variables
+		//Mas adelante se guasrdaran los valores en la estructura
+		std::map<std::wstring,Variable *>::iterator it = funcion->vhash.find(identificador);
+		std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
+		if( it != funcion->vhash.end() || itglobal != tabglobales->vhash.end()) {
+			std::wcout << L"("<<identificador<<L")";
+			Err(L"Variable already declared.");
+		}else{
+			//Si es un prametro de la funcion
+			//Tambien se agrega a la lista de parametros
+			if(parametros == 1){
+				funcion->parametros->Append(tipovariable);
+			}
+			v = new Variable();
+			v->nombre = identificador;
+			v->tipo = tipovariable;
+			switch(tipovariable){
+				case 11://entero
+					funcion->intNum++;
+					v->direccion=funcion->intNum;
+					break;
+				case 12://flotante
+					funcion->floatNum++;
+					v->direccion=funcion->floatNum;
+					break;
+				case 13://string
+					funcion->stringNum++;
+					v->direccion=funcion->stringNum;
+					break;
+			}
+			funcion->vhash.insert(std::make_pair(v->nombre,v));
+		}
+
+	}
 
 /*-------------------------------------------------------------*/
 
@@ -290,6 +389,7 @@ int //operadores
 
 	void QRex();
 	void DeclaracionGlobal();
+	void FuncionFirma();
 	void QRex2();
 	void Funcion();
 	void Cuerpo2();
@@ -305,6 +405,7 @@ int //operadores
 	void Expresion();
 	void Tipof();
 	void Dec_Param();
+	void Dec_ParamFirma();
 	void Condicion();
 	void Asignacion();
 	void Escritura();

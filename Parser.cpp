@@ -64,10 +64,19 @@ bool Parser::WeakSeparator(int n, int syFol, int repFol) {
 
 void Parser::QRex() {
 		InitDeclarations();
-		while (la->kind == _global) {
-			Get();
-			DeclaracionGlobal();
+		while (la->kind == _global || la->kind == _sign) {
+			if (la->kind == _global) {
+				Get();
+				DeclaracionGlobal();
+			} else {
+				firma = 1;
+				Get();
+				FuncionFirma();
+				Expect(18 /* ";" */);
+				firma = 0;
+			}
 		}
+		tab->fhash.insert(std::make_pair(f->nombre,f));
 		QRex2();
 }
 
@@ -76,23 +85,40 @@ void Parser::DeclaracionGlobal() {
 		tipo = variable;		
 		Tipov();
 		ID(name);
-		while (la->kind == 19 /* "," */) {
+		while (la->kind == 21 /* "," */) {
 			Get();
 			ID(name);
 		}
-		Expect(20 /* ";" */);
+		Expect(18 /* ";" */);
 		tipo = undef; global = 0;	
+}
+
+void Parser::FuncionFirma() {
+		wchar_t* name; 
+		Tipof();
+		tipo = funcionfirma;
+		ID(name);
+		tipo = variable;
+		Expect(19 /* "(" */);
+		if (la->kind == _int || la->kind == _float || la->kind == _string) {
+			Dec_ParamFirma();
+		}
+		Expect(20 /* ")" */);
+		tipo = undef;
 }
 
 void Parser::QRex2() {
 		while (la->kind == _int || la->kind == _float || la->kind == _void) {
+			definefunc = 1;
 			Funcion();
+			verificaRegistroFuncion();
 			Cuerpo2();
+			definefunc = 0;omiteCuerpo=0;
 		}
 		tipo = funcion;
 		Expect(_main);
-		Expect(17 /* "(" */);
-		Expect(18 /* ")" */);
+		Expect(19 /* "(" */);
+		Expect(20 /* ")" */);
 		registraMain();
 		tipo = undef;
 		Cuerpo();
@@ -107,17 +133,17 @@ void Parser::Funcion() {
 		tipo = funcion;
 		ID(name);
 		tipo = variable;
-		Expect(17 /* "(" */);
+		Expect(19 /* "(" */);
 		if (la->kind == _int || la->kind == _float || la->kind == _string) {
 			Dec_Param();
 		}
-		Expect(18 /* ")" */);
+		Expect(20 /* ")" */);
 		tipo = undef;
 }
 
 void Parser::Cuerpo2() {
 		wchar_t* name;
-		Expect(21 /* "{" */);
+		Expect(22 /* "{" */);
 		while (la->kind == _int || la->kind == _float || la->kind == _string) {
 			Declaracion();
 		}
@@ -137,22 +163,22 @@ void Parser::Cuerpo2() {
 				coco_string_delete(name);
 				registraConstante();
 				
-			} else SynErr(39);
-			Expect(20 /* ";" */);
+			} else SynErr(40);
+			Expect(18 /* ";" */);
 		}
-		Expect(22 /* "}" */);
+		Expect(23 /* "}" */);
 		retorno = 0;tipo = undef;
 }
 
 void Parser::Cuerpo() {
-		Expect(21 /* "{" */);
+		Expect(22 /* "{" */);
 		while (la->kind == _int || la->kind == _float || la->kind == _string) {
 			Declaracion();
 		}
 		while (StartOf(1)) {
 			Estatuto();
 		}
-		Expect(22 /* "}" */);
+		Expect(23 /* "}" */);
 }
 
 void Parser::Tipov() {
@@ -165,81 +191,21 @@ void Parser::Tipov() {
 		} else if (la->kind == _string) {
 			Get();
 			tipovariable = cadenav;    
-		} else SynErr(40);
+		} else SynErr(41);
 }
 
 void Parser::ID(wchar_t* name) {
 		Expect(_id);
+		if(omiteCuerpo == 1){
+		return;
+		}
+		//Crea el string de coco 
+		//Conversion para meter el string a la tabla de hash
+		//Eliminar el string de coco
 		name = coco_string_create(t->val);identificador = std::wstring(name);coco_string_delete(name);
 		
-		//std::wcout << identificador << L"\n";
-		if(tipo == variable && global){
-		std::map<std::wstring,Variable *>::iterator it = tabglobales->vhash.find(identificador);
-		
-		if(it != tabglobales->vhash.end()){
-			std::wcout << L"Global("<<identificador<<")";
-			Err(L"Variable already declared.");
-		}else{
-			v = new Variable();
-			v->nombre = identificador;
-			v->tipo = tipovariable;
-			switch(tipovariable){
-				case 11://entero
-					v->direccion=tabglobales->intNum;
-					tabglobales->intNum++;
-					break;
-				case 12://flotante
-					v->direccion=tabglobales->floatNum;
-					tabglobales->floatNum++;
-					break;
-				case 13://string
-					v->direccion=tabglobales->stringNum;
-					tabglobales->stringNum++;
-					break;
-			}	
-		}
-		//Insertar en tabla de variables Globales
-		tabglobales->vhash.insert(std::make_pair(v->nombre,v));
-		
-		}if(tipo == variable){
-		//Por ahora solo se guardan las variables
-		//Mas adelante se guasrdaran los valores en la estructura
-			std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
-			std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
-		
-			if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
-				std::wcout << L"("<<identificador<<L")";
-				Err(L"Variable already declared.");
-			}else{
-				//Si es un prametro de la funcion
-				//Tambien se agrega a la lista de parametros
-				if(parametros == 1){
-					f->parametros->Append(tipovariable);
-				}
-				v = new Variable();
-				v->nombre = identificador;
-				v->tipo = tipovariable;
-				switch(tipovariable){
-					case 11://entero
-						f->intNum++;
-						v->direccion=f->intNum;
-		
-						break;
-		
-					case 12://flotante
-						f->floatNum++;
-						v->direccion=f->floatNum;
-						break;
-		
-					case 13://string
-						f->stringNum++;
-						v->direccion=f->stringNum;
-						break;
-		
-				}
-				f->vhash.insert(std::make_pair(v->nombre,v));
-			}
-		}else if(tipo == funcion){
+		/*Crea las firmas de las funciones*/
+		if(tipo == funcionfirma && firma == 1){
 		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(identificador);
 		
 		//Con esto se sobreescribe la funcion poniendo la ultima en la lista
@@ -273,8 +239,75 @@ void Parser::ID(wchar_t* name) {
 			std::wcout <<L"("<< identificador<<L")";
 			Err(L"Function already declared.");
 		}
+		return;
 		
-		} else if(tipo == lectura){
+		}
+		
+		//Se agregan parametros para comparar a la funcion temporal con la firma
+		if(tipo == variable && definefunc == 1){
+		//Agrega a la tabla de variables temporal
+		if(ftemp == NULL){
+			agregaVariable(f);
+		}else{					
+			agregaVariable(ftemp);
+		
+		}
+		return;
+		}
+		
+		//Registro de la funcion
+		if(tipo == funcion && definefunc == 1){
+		//Crea la funcion a comparar con la firma
+		//Y asigna los atributos necesarios
+		ftemp = new FuncionX();
+		ftemp->tipo = tipofuncion;
+		ftemp->nombre = identificador;
+		return;					
+		
+		} 
+		
+		
+		/*Registra las variables globales*/				
+		if(tipo == variable && global == 1){
+		std::map<std::wstring,Variable *>::iterator it = tabglobales->vhash.find(identificador);
+		
+		if(it != tabglobales->vhash.end()){
+			std::wcout << L"Global("<<identificador<<")";
+			Err(L"Variable already declared.");
+		}else{
+			v = new Variable();
+			v->nombre = identificador;
+			v->tipo = tipovariable;
+			switch(tipovariable){
+				case 11://entero
+					v->direccion=tabglobales->intNum;
+					tabglobales->intNum++;
+					break;
+				case 12://flotante
+					v->direccion=tabglobales->floatNum;
+					tabglobales->floatNum++;
+					break;
+				case 13://string
+					v->direccion=tabglobales->stringNum;
+					tabglobales->stringNum++;
+					break;
+			}	
+		}
+		//Insertar en tabla de variables Globales
+		tabglobales->vhash.insert(std::make_pair(v->nombre,v));
+		return;
+		
+		}
+		
+		//Registra las variables de las funciones
+		if(tipo == variable){
+		//Registra la variable en la funcion
+		agregaVariable(f);
+		return;
+		}
+		
+		//Definiciones semanticas de lectura
+		if(tipo == lectura){
 		std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
 		std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
 		if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
@@ -282,8 +315,12 @@ void Parser::ID(wchar_t* name) {
 		}else{
 			std::wcout <<L"("<< identificador<<L")";
 			Err(L"Trying to read and variable doesn't exist.");
-		}	
-		}else if(tipo == escritura){
+		}
+		return;	
+		}
+		
+		//Definiciones semanticas de escritura
+		if(tipo == escritura){
 		std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
 		std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
 		if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
@@ -291,8 +328,13 @@ void Parser::ID(wchar_t* name) {
 		}else{
 			std::wcout <<L"("<< identificador<<L")";
 			Err(L"Trying to write and variable doesn't exist.");
-		}		
-		}else if(tipo == condicion || tipo == ciclo){
+		}
+		
+		return;		
+		}
+		
+		//Definiciones semanticas de ciclo o condicion
+		if(tipo == condicion || tipo == ciclo){
 		std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
 		std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
 		if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
@@ -305,9 +347,14 @@ void Parser::ID(wchar_t* name) {
 				std::wcout <<L"("<< identificador<<L")";
 				Err(L"Trying use a variable that doesn't exist.");
 			}
-		}		
+		}
 		
-		}else if(tipo == regreso){
+		return;		
+		
+		}
+		
+		//Define semantica de retorno
+		if(tipo == regreso){
 		std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
 		std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
 		if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
@@ -316,6 +363,8 @@ void Parser::ID(wchar_t* name) {
 			std::wcout <<L"("<< identificador<<L")";
 			Err(L"Trying use a variable that doesn't exist.");
 		}
+		
+		return;
 		}
 		
 		
@@ -326,11 +375,11 @@ void Parser::Declaracion() {
 		tipo = variable;
 		Tipov();
 		ID(name);
-		while (la->kind == 19 /* "," */) {
+		while (la->kind == 21 /* "," */) {
 			Get();
 			ID(name);
 		}
-		Expect(20 /* ";" */);
+		Expect(18 /* ";" */);
 		tipo = undef;
 }
 
@@ -345,15 +394,15 @@ void Parser::Estatuto() {
 			Lectura();
 		} else if (la->kind == _while) {
 			Ciclo();
-		} else SynErr(41);
+		} else SynErr(42);
 }
 
 void Parser::Llamada() {
-		Expect(17 /* "(" */);
+		Expect(19 /* "(" */);
 		if (StartOf(3)) {
 			Param();
 		}
-		Expect(18 /* ")" */);
+		Expect(20 /* ")" */);
 }
 
 void Parser::Param() {
@@ -368,8 +417,8 @@ void Parser::Param() {
 			coco_string_delete(name);
 			registraConstante();
 			
-		} else SynErr(42);
-		if (la->kind == 19 /* "," */) {
+		} else SynErr(43);
+		if (la->kind == 21 /* "," */) {
 			Get();
 			Param();
 		}
@@ -378,11 +427,11 @@ void Parser::Param() {
 void Parser::Lectura() {
 		wchar_t* name; 
 		Expect(_read);
-		Expect(17 /* "(" */);
+		Expect(19 /* "(" */);
 		tipo=lectura;
 		ID(name);
-		Expect(18 /* ")" */);
-		Expect(20 /* ";" */);
+		Expect(20 /* ")" */);
+		Expect(18 /* ";" */);
 		tipo = undef;
 }
 
@@ -406,16 +455,16 @@ void Parser::Var_Cte() {
 			
 		} else if (la->kind == _id) {
 			ID(name);
-			if (la->kind == 17 /* "(" */) {
+			if (la->kind == 19 /* "(" */) {
 				Llamada();
 			}
-		} else SynErr(43);
+		} else SynErr(44);
 }
 
 void Parser::Expresion() {
 		expresion = 1;
 		Exp1();
-		if (la->kind == 24 /* "||" */) {
+		if (la->kind == 25 /* "||" */) {
 			Get();
 			Expresion();
 		}
@@ -432,7 +481,7 @@ void Parser::Tipof() {
 		} else if (la->kind == _void) {
 			Get();
 			tipofuncion = voidf; 
-		} else SynErr(44);
+		} else SynErr(45);
 }
 
 void Parser::Dec_Param() {
@@ -441,18 +490,28 @@ void Parser::Dec_Param() {
 		Tipov();
 		ID(name);
 		parametros = 0;
-		if (la->kind == 19 /* "," */) {
+		if (la->kind == 21 /* "," */) {
 			Get();
 			Dec_Param();
+		}
+}
+
+void Parser::Dec_ParamFirma() {
+		wchar_t* name; 
+		Tipov();
+		registraParametroFirma();
+		if (la->kind == 21 /* "," */) {
+			Get();
+			Dec_ParamFirma();
 		}
 }
 
 void Parser::Condicion() {
 		Expect(_if);
 		tipo = condicion;
-		Expect(17 /* "(" */);
+		Expect(19 /* "(" */);
 		Expresion();
-		Expect(18 /* ")" */);
+		Expect(20 /* ")" */);
 		tipo = undef;
 		Cuerpo();
 		if (la->kind == _else) {
@@ -464,7 +523,7 @@ void Parser::Condicion() {
 void Parser::Asignacion() {
 		wchar_t* name; 
 		ID(name);
-		Expect(23 /* "=" */);
+		Expect(24 /* "=" */);
 		if (StartOf(2)) {
 			Expresion();
 		} else if (la->kind == _cte_string) {
@@ -475,33 +534,33 @@ void Parser::Asignacion() {
 			coco_string_delete(name);
 			registraConstante();
 			
-		} else SynErr(45);
-		Expect(20 /* ";" */);
+		} else SynErr(46);
+		Expect(18 /* ";" */);
 }
 
 void Parser::Escritura() {
 		Expect(_print);
 		tipo = escritura;
-		Expect(17 /* "(" */);
+		Expect(19 /* "(" */);
 		Param();
-		Expect(18 /* ")" */);
-		Expect(20 /* ";" */);
+		Expect(20 /* ")" */);
+		Expect(18 /* ";" */);
 		tipo = undef;
 }
 
 void Parser::Ciclo() {
 		Expect(_while);
 		tipo = ciclo;
-		Expect(17 /* "(" */);
+		Expect(19 /* "(" */);
 		Expresion();
-		Expect(18 /* ")" */);
+		Expect(20 /* ")" */);
 		tipo = undef;
 		Cuerpo();
 }
 
 void Parser::Exp1() {
 		Exp2();
-		if (la->kind == 25 /* "&&" */) {
+		if (la->kind == 26 /* "&&" */) {
 			Get();
 			Exp1();
 		}
@@ -511,27 +570,27 @@ void Parser::Exp2() {
 		Exp3();
 		if (StartOf(4)) {
 			switch (la->kind) {
-			case 26 /* ">" */: {
+			case 27 /* ">" */: {
 				Get();
 				break;
 			}
-			case 27 /* "<" */: {
+			case 28 /* "<" */: {
 				Get();
 				break;
 			}
-			case 28 /* ">=" */: {
+			case 29 /* ">=" */: {
 				Get();
 				break;
 			}
-			case 29 /* "<=" */: {
+			case 30 /* "<=" */: {
 				Get();
 				break;
 			}
-			case 30 /* "==" */: {
+			case 31 /* "==" */: {
 				Get();
 				break;
 			}
-			case 31 /* "!=" */: {
+			case 32 /* "!=" */: {
 				Get();
 				break;
 			}
@@ -542,8 +601,8 @@ void Parser::Exp2() {
 
 void Parser::Exp3() {
 		Exp4();
-		if (la->kind == 32 /* "+" */ || la->kind == 33 /* "-" */) {
-			if (la->kind == 32 /* "+" */) {
+		if (la->kind == 33 /* "+" */ || la->kind == 34 /* "-" */) {
+			if (la->kind == 33 /* "+" */) {
 				Get();
 			} else {
 				Get();
@@ -554,10 +613,10 @@ void Parser::Exp3() {
 
 void Parser::Exp4() {
 		Exp5();
-		if (la->kind == 34 /* "*" */ || la->kind == 35 /* "/" */ || la->kind == 36 /* "%" */) {
-			if (la->kind == 34 /* "*" */) {
+		if (la->kind == 35 /* "*" */ || la->kind == 36 /* "/" */ || la->kind == 37 /* "%" */) {
+			if (la->kind == 35 /* "*" */) {
 				Get();
-			} else if (la->kind == 35 /* "/" */) {
+			} else if (la->kind == 36 /* "/" */) {
 				Get();
 			} else {
 				Get();
@@ -567,27 +626,27 @@ void Parser::Exp4() {
 }
 
 void Parser::Exp5() {
-		if (la->kind == 37 /* "!" */) {
+		if (la->kind == 38 /* "!" */) {
 			Get();
 		}
 		Exp6();
 }
 
 void Parser::Exp6() {
-		if (la->kind == 17 /* "(" */) {
+		if (la->kind == 19 /* "(" */) {
 			Get();
 			Expresion();
-			Expect(18 /* ")" */);
+			Expect(20 /* ")" */);
 		} else if (StartOf(5)) {
-			if (la->kind == 32 /* "+" */ || la->kind == 33 /* "-" */) {
-				if (la->kind == 32 /* "+" */) {
+			if (la->kind == 33 /* "+" */ || la->kind == 34 /* "-" */) {
+				if (la->kind == 33 /* "+" */) {
 					Get();
 				} else {
 					Get();
 				}
 			}
 			Var_Cte();
-		} else SynErr(46);
+		} else SynErr(47);
 }
 
 
@@ -691,7 +750,7 @@ void Parser::Parse() {
 }
 
 Parser::Parser(Scanner *scanner) {
-	maxT = 38;
+	maxT = 39;
 
 	ParserInitCaller<Parser>::CallInit(this);
 	dummyToken = NULL;
@@ -706,13 +765,13 @@ bool Parser::StartOf(int s) {
 	const bool T = true;
 	const bool x = false;
 
-	static bool set[6][40] = {
-		{T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x},
-		{x,T,x,x, x,x,x,x, T,x,T,x, T,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x},
-		{x,T,x,T, T,x,x,x, x,x,x,x, x,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,x,x, x,T,x,x},
-		{x,T,T,T, T,x,x,x, x,x,x,x, x,x,x,x, x,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,x,x, x,T,x,x},
-		{x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,T,T, T,T,T,T, x,x,x,x, x,x,x,x},
-		{x,T,x,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, T,T,x,x, x,x,x,x}
+	static bool set[6][41] = {
+		{T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x},
+		{x,T,x,x, x,x,x,x, T,x,T,x, T,T,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x},
+		{x,T,x,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,x,x, x,T,T,x, x,x,T,x, x},
+		{x,T,T,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,T, x,x,x,x, x,x,x,x, x,x,x,x, x,T,T,x, x,x,T,x, x},
+		{x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,T, T,T,T,T, T,x,x,x, x,x,x,x, x},
+		{x,T,x,T, T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,T,T,x, x,x,x,x, x}
 	};
 
 
@@ -750,36 +809,37 @@ void Errors::SynErr(int line, int col, int n) {
 			case 14: s = coco_string_create(L"void expected"); break;
 			case 15: s = coco_string_create(L"return expected"); break;
 			case 16: s = coco_string_create(L"global expected"); break;
-			case 17: s = coco_string_create(L"\"(\" expected"); break;
-			case 18: s = coco_string_create(L"\")\" expected"); break;
-			case 19: s = coco_string_create(L"\",\" expected"); break;
-			case 20: s = coco_string_create(L"\";\" expected"); break;
-			case 21: s = coco_string_create(L"\"{\" expected"); break;
-			case 22: s = coco_string_create(L"\"}\" expected"); break;
-			case 23: s = coco_string_create(L"\"=\" expected"); break;
-			case 24: s = coco_string_create(L"\"||\" expected"); break;
-			case 25: s = coco_string_create(L"\"&&\" expected"); break;
-			case 26: s = coco_string_create(L"\">\" expected"); break;
-			case 27: s = coco_string_create(L"\"<\" expected"); break;
-			case 28: s = coco_string_create(L"\">=\" expected"); break;
-			case 29: s = coco_string_create(L"\"<=\" expected"); break;
-			case 30: s = coco_string_create(L"\"==\" expected"); break;
-			case 31: s = coco_string_create(L"\"!=\" expected"); break;
-			case 32: s = coco_string_create(L"\"+\" expected"); break;
-			case 33: s = coco_string_create(L"\"-\" expected"); break;
-			case 34: s = coco_string_create(L"\"*\" expected"); break;
-			case 35: s = coco_string_create(L"\"/\" expected"); break;
-			case 36: s = coco_string_create(L"\"%\" expected"); break;
-			case 37: s = coco_string_create(L"\"!\" expected"); break;
-			case 38: s = coco_string_create(L"??? expected"); break;
-			case 39: s = coco_string_create(L"invalid Cuerpo2"); break;
-			case 40: s = coco_string_create(L"invalid Tipov"); break;
-			case 41: s = coco_string_create(L"invalid Estatuto"); break;
-			case 42: s = coco_string_create(L"invalid Param"); break;
-			case 43: s = coco_string_create(L"invalid Var_Cte"); break;
-			case 44: s = coco_string_create(L"invalid Tipof"); break;
-			case 45: s = coco_string_create(L"invalid Asignacion"); break;
-			case 46: s = coco_string_create(L"invalid Exp6"); break;
+			case 17: s = coco_string_create(L"sign expected"); break;
+			case 18: s = coco_string_create(L"\";\" expected"); break;
+			case 19: s = coco_string_create(L"\"(\" expected"); break;
+			case 20: s = coco_string_create(L"\")\" expected"); break;
+			case 21: s = coco_string_create(L"\",\" expected"); break;
+			case 22: s = coco_string_create(L"\"{\" expected"); break;
+			case 23: s = coco_string_create(L"\"}\" expected"); break;
+			case 24: s = coco_string_create(L"\"=\" expected"); break;
+			case 25: s = coco_string_create(L"\"||\" expected"); break;
+			case 26: s = coco_string_create(L"\"&&\" expected"); break;
+			case 27: s = coco_string_create(L"\">\" expected"); break;
+			case 28: s = coco_string_create(L"\"<\" expected"); break;
+			case 29: s = coco_string_create(L"\">=\" expected"); break;
+			case 30: s = coco_string_create(L"\"<=\" expected"); break;
+			case 31: s = coco_string_create(L"\"==\" expected"); break;
+			case 32: s = coco_string_create(L"\"!=\" expected"); break;
+			case 33: s = coco_string_create(L"\"+\" expected"); break;
+			case 34: s = coco_string_create(L"\"-\" expected"); break;
+			case 35: s = coco_string_create(L"\"*\" expected"); break;
+			case 36: s = coco_string_create(L"\"/\" expected"); break;
+			case 37: s = coco_string_create(L"\"%\" expected"); break;
+			case 38: s = coco_string_create(L"\"!\" expected"); break;
+			case 39: s = coco_string_create(L"??? expected"); break;
+			case 40: s = coco_string_create(L"invalid Cuerpo2"); break;
+			case 41: s = coco_string_create(L"invalid Tipov"); break;
+			case 42: s = coco_string_create(L"invalid Estatuto"); break;
+			case 43: s = coco_string_create(L"invalid Param"); break;
+			case 44: s = coco_string_create(L"invalid Var_Cte"); break;
+			case 45: s = coco_string_create(L"invalid Tipof"); break;
+			case 46: s = coco_string_create(L"invalid Asignacion"); break;
+			case 47: s = coco_string_create(L"invalid Exp6"); break;
 
 		default:
 		{

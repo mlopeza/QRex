@@ -47,9 +47,11 @@ class Node {
 };
 
 class List {
-	Node *head;
 	public:
-		List() { head = NULL; };
+		Node *head;
+		int size;
+
+		List() { head = NULL; size = 0;};
 		void Append(int data){
 			// Crea nuevo nodo
 			Node* newNode = new Node();
@@ -72,6 +74,7 @@ class List {
 				// Asigna el primer Nodo
 				head = newNode;
 			}
+			size++;
 		};
 
 		void Print(){
@@ -94,6 +97,27 @@ class List {
 				tmp=tmp2;
 			}
 		};
+
+		bool Equals(List *lista){
+			Node *tmp = head;
+			Node *x = lista->head;
+
+			//Tienen la misma cantidad de parametros?
+			if(lista->size != this->size)
+				return false;
+
+			//Checa si son del mismo tipo
+			while(tmp != NULL){
+
+				if(x->Data() != tmp->Data())
+					return false;
+				x = x->Next();
+				tmp = tmp->Next();
+			}
+
+			//Los parametros son iguales
+			return true;
+		};
 };
 
 /*Funciones*/
@@ -101,6 +125,7 @@ class FuncionX{
 	public:
 		std::wstring nombre;
 		int tipo;
+		int definida;
 		List *parametros;
 		std::map<std::wstring, Variable *> vhash;
 		int intNum;
@@ -109,6 +134,7 @@ class FuncionX{
 
 	FuncionX(){
 		tipo = 0;
+		definida = 0;
 		parametros = new List();
 		intNum = PROCINT-1;
 		floatNum = PROCFLOAT-1;
