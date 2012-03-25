@@ -117,9 +117,19 @@ int //operadores
 
 	std::wstring identificador;
 
+	//Hash de Cuadruplos (Manejo de Cuadruplos)
+	int contCuadruplos;
+	std::map<int,Cuadruplo *> hashCuadruplos;
+
+	//Pilas de Expresiones
+	Pila *Poper;
+	Pila *PilaO;
+	Pila *PilaS;
+	
+
 	//Tabla de variables globales
 
-	void InitDeclarations() { // it must exist
+	void InitDeclarations() {
 		MAS=0;
 		MENOS=1;
 		POR=2;
@@ -139,6 +149,16 @@ int //operadores
 		PIZQ = 16;
 		PDER = 17;
 	
+		//Hash de Cuadruplos (Manejo de Cuadruplos)
+		contCuadruplos = 0;
+		//std::map<int,Cuadruplo *> hashCuadruplos; Este maneja los cuadruplos
+
+		//Pilas de Expresiones
+		Poper = new Pila();
+		PilaO = new Pila();
+		PilaS = new Pila();
+
+
 		//Inicializa la tabla de Variables
 		tab = new TablaDeVariables();
 

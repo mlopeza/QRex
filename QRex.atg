@@ -370,7 +370,8 @@ sign = "sign".
 
 IGNORE cr + lf + tab
 
-
+COMMENTS FROM "/*" TO "*/" NESTED
+COMMENTS FROM "//" TO cr lf
 
 PRODUCTIONS
 //Inicia QRex----------------------------------------------------------------------
