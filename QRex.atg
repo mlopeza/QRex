@@ -171,8 +171,9 @@ COMPILER QRex
 
 	//Esto se utiliza para registrar la funcion main en la tabla de funciones
 	void registraMain(){
+
 		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(L"main");
-		if( it == tab->fhash.end() && identificador != f->nombre) {
+		if( it == tab->fhash.end()) {
 		//Checa si hay una funcion antes de crear la funcion main
 			if(f->nombre == std::wstring(L"")){
 				f->nombre=std::wstring(L"main");
@@ -398,8 +399,6 @@ QRex (.InitDeclarations();.) //Inicializa las variables
 sign FuncionFirma ';'			
 					(.firma = 0;.)
 } 
-					//Agrega la ultima firma
-					(.tab->fhash.insert(std::make_pair(f->nombre,f));.)
 
 QRex2.
 
@@ -615,7 +614,7 @@ return (Expresion|
 /*Auxiliares*/
 ID<wchar_t* name> = id 
 
-			(. 	std::wcout << identificador << L"\n";
+			(. 	//std::wcout << identificador << L"\n";
 				//Si el cuerpo de la funcion es omitido simplemente se aplica el return
 				if(omiteCuerpo == 1){
 					return;
