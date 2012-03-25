@@ -76,6 +76,15 @@ namespace QRex{
 				}
 				size++;
 			};
+			~List(){
+				Node *tmp = head;
+				Node *tmp2;
+				while(tmp != NULL){
+					tmp2=tmp->Next();
+					delete(tmp);
+					tmp=tmp2;
+				}
+			}
 
 			void Print(){
 				Node *tmp = head;
@@ -174,6 +183,54 @@ namespace QRex{
 
 	};
 
+	class Temporales{
+		public:
+			std::map<int, Variable *> vhash;
+			int intNum;
+			int floatNum;
+			int stringNum;
+
+			Temporales(int enteros,int flotantes,int cadenas){
+				intNum = enteros;
+				floatNum = flotantes;
+				stringNum = cadenas;
+				std::wcout << L"intNum:" << intNum << L" floatNum:" << floatNum << L"\n";
+			}
+
+			int AsignaTemporal(int tipo){
+				Variable *v;
+				switch(tipo){
+					case 11:
+						v = new Variable();
+						v->direccion =intNum;v->tipo=tipo;
+						vhash.insert(std::make_pair(intNum,v));
+						intNum++;
+						return intNum -1;
+						break;
+					case 12:
+						v = new Variable();
+						v->direccion =floatNum;v->tipo=tipo;
+						vhash.insert(std::make_pair(floatNum,v));
+						floatNum++;
+						return floatNum -1;
+						break;
+					default: return -1;
+
+						break;
+				}
+			}
+
+			int LiberTemporales(){
+				vhash.clear();
+			}
+
+			~Temporales(){
+				vhash.clear();
+			}
+
+	};
+
+
 	/*Definicion de la Tabla de Variables*/
 	class TablaDeVariables{
 		public:
@@ -190,11 +247,11 @@ namespace QRex{
 			int operador2;
 			int resultado;
 
-			Cuadruplo(){
-				op = -1;
-				operador1 = -1;
-				operador2 = -1;
-				resultado = -1;
+			Cuadruplo(int a, int b, int c, int d){
+				op = a;
+				operador1 = b;
+				operador2 = c;
+				resultado = d;
 			}
 
 			~Cuadruplo(){}
@@ -210,7 +267,15 @@ namespace QRex{
 			nodos = 0;
 		};
 
-		~Pila(){};
+		~Pila(){
+			Node *tmp = head;
+			Node *tmp2;
+			while(tmp != NULL){
+				tmp2=tmp->Next();
+				delete(tmp);
+				tmp=tmp2;
+			}
+		};
 
 		void Push(int dato){
 			//Crea el Nodo
@@ -226,7 +291,7 @@ namespace QRex{
 			
 			//Suma uno en nodos
 			nodos++;
-		};
+		}
 
 		int Pop(){
 			if(head == NULL)
@@ -247,24 +312,24 @@ namespace QRex{
 
 			//Regresa el dato
 			return dato;
-		};
+		}
 
 		int Peek(){
 			if(head == NULL)
-				return -1;
+				return -100;
 			return head->Data();
-		};
+		}
 
 		bool Vacio(){
 			if (head == NULL)
 				return true;
 
 			return false;			
-		};
+		}
 		
 		int Size(){
 			return nodos;
-		};
+		}
 
 	};
 

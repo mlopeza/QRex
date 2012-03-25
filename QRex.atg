@@ -11,6 +11,9 @@
 #define CONSTANT_FLOAT	18000
 #define CONSTANT_STRING 20000
 
+#define TEMP_INT 0
+#define TEMP_FLOAT 1000
+#define TEMP_STRING 2000
 /*-------------------------------------------------------------*/
 COMPILER QRex
 
@@ -41,6 +44,9 @@ COMPILER QRex
 	int //CHeca si es una firma o una funcion
 	firma,definefunc,omiteCuerpo;
 
+	int //Se usa para las expresiones
+	operadorActual;
+
 	/*Parte para codigos de operacion*/
 
 	TablaDeVariables *tab;		
@@ -51,7 +57,7 @@ COMPILER QRex
 	//Tabla de Variables globales y Constantes
 	Contexto *tabconstantes;
 	Contexto *tabglobales;
-
+	Temporales *temporales;
 	std::wstring identificador;
 
 	//Hash de Cuadruplos (Manejo de Cuadruplos)
@@ -86,6 +92,8 @@ COMPILER QRex
 		PIZQ = 16;
 		PDER = 17;
 	
+		//Se usa para las expresiones
+		operadorActual = -1;
 		//Hash de Cuadruplos (Manejo de Cuadruplos)
 		contCuadruplos = 0;
 		//std::map<int,Cuadruplo *> hashCuadruplos; Este maneja los cuadruplos
@@ -95,6 +103,8 @@ COMPILER QRex
 		PilaO = new Pila();
 		PilaS = new Pila();
 
+		//Tabla de temporales
+		temporales = new Temporales(TEMP_INT,TEMP_FLOAT,TEMP_STRING);
 
 		//Inicializa la tabla de Variables
 		tab = new TablaDeVariables();
@@ -229,7 +239,16 @@ COMPILER QRex
 			std::wcout << L" direccion:" << var->direccion << L'\n';
 			it2++;
 		}
-
+		
+		std::wcout<<L"\n\nCuadruplos de Expresiones\n";
+		std::map<int,Cuadruplo *>::iterator iterator = hashCuadruplos.begin();
+		Cuadruplo *c;
+		while(iterator != hashCuadruplos.end()){
+			c = iterator->second;
+			std::wcout<< c->op << L"," << c->operador1 << L"," << c->operador2 << L","<< c->resultado << L"\n";
+			iterator++;
+		}
+		
 	}
 
 	//Registra las constantes encontradas en el programa
@@ -340,6 +359,62 @@ COMPILER QRex
 
 	}
 
+	/*Logica de Expresiones Aritmeticas*/
+	void metePilaO(){
+		std::wcout << L"Mete PilaO("<<identificador<<L")\n";
+		std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
+		int dato = it->second->direccion;
+		PilaO->Push(dato);
+	}
+	void metePilaOV(){
+		std::wcout << L"Mete PilaOV("<<identificador<<L")\n";
+		std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
+		if(it == f->vhash.end()){
+			it = tabglobales->vhash.find(identificador);
+		}
+		if(it == tabglobales->vhash.end()){
+			std::wcout<< L"No se encontro la variable"<< identificador << L":no se usara en expresion\n";
+			exit(-1);
+		}
+		int dato = it->second->direccion;
+		PilaO->Push(dato);
+	}
+	void metePoper(){
+		std::wcout << L"Mete Operador("<<operadorActual<<L")\n";
+		Poper->Push(operadorActual);
+	}
+
+	void sacaPoper(){
+		int operador = Poper->Pop();
+		std::wcout << L"Saca Poper("<<operador<<L")\n";
+		if(operador != PIZQ){
+			std::wcout << L"Se esperaba )\n";
+			exit(-1);
+		}
+	}
+
+	void gCuadruplo(){
+		int operador = Poper->Pop();
+		if(operador == NOT || operador == NEGATIVO || operador == ASIGNA){
+			int operando = PilaO->Pop();
+			int temp = temporales->AsignaTemporal(11);	
+			Cuadruplo *cuadruplo = new Cuadruplo(operador,operando,-1,temp);
+			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+			contCuadruplos++;
+			PilaO->Push(temp);
+
+		}else{
+			int operando2 = PilaO->Pop();
+			int operando1 = PilaO->Pop();
+			int temp = temporales->AsignaTemporal(11);
+			Cuadruplo *cuadruplo = new Cuadruplo(operador,operando1,operando2,temp);
+			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+			contCuadruplos++;
+			PilaO->Push(temp);
+		}
+
+
+	}
 /*-------------------------------------------------------------*/
 CHARACTERS
 letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".
@@ -448,6 +523,9 @@ Var_Cte(.wchar_t* name;.) =
 						identificador = std::wstring(name);
 						coco_string_delete(name);
 						registraConstante();
+						if(expresion == 1){
+							metePilaO();
+						}
 					.)
 	| cte_float
 					(.tipovariable = flotantev;
@@ -455,8 +533,19 @@ Var_Cte(.wchar_t* name;.) =
 						identificador = std::wstring(name);
 						coco_string_delete(name);
 						registraConstante();
+						if(expresion == 1){
+							metePilaO();
+						}
 					.)
-	| ID<name> [Llamada].
+	| ID<name> [(.llamada = 1;.)Llamada]  
+
+					(.if (llamada != 1){
+						metePilaOV();
+					}llamada = 0;
+
+					.)
+
+	.
 
 Param (.wchar_t* name;.) = 
 	(Expresion|
@@ -510,8 +599,11 @@ Cuerpo [else Cuerpo].
 
 
 //Finaliza Condicion ----------------------------------------------------------------
-Asignacion (. wchar_t* name; .) = ID<name> '=' (Expresion | 
-		cte_string
+Asignacion (. wchar_t* name; .) = ID<name> '=' 
+
+(Expresion 
+
+| cte_string
 					(.tipovariable = cadenav;
 						name = coco_string_create(t->val);
 						identificador = std::wstring(name);
@@ -561,22 +653,108 @@ Estatuto = Asignacion
 
 Expresion =
 				 (.expresion = 1;.)
-Exp1 ["||" Expresion]
+
+Exp1 
+				(.
+				int peek = Poper->Peek();
+				if(peek == OR){
+					std::wcout << "Se genero en EXP1\n";
+					gCuadruplo();
+
+					}
+				.)
+["||" 			
+				(.operadorActual=OR; metePoper();.) 
+Expresion]
+
 				 (.expresion = 0;.)
 .
 
-Exp1 = Exp2 ["&&" Exp1].
+Exp1 = Exp2 
+				(.
+				int peek = Poper->Peek();
+				if(peek == AND){
+					std::wcout << "Se genero en EXP1\n";
+					gCuadruplo();
 
-Exp2 = Exp3 [('>'|'<'|">="|"<="|"=="|"!=") Exp3].
+					}
+				.)
+["&&" 
+				(. operadorActual = AND;metePoper();.) 
+Exp1].
 
-Exp3 = Exp4 [('+'|'-') Exp3].
+Exp2 = Exp3 [
+('>' 				(.operadorActual=MAYOR;.)
+|'<' 				(.operadorActual=MENOR;.)
+|">=" 				(.operadorActual=MAYQUE;.)
+|"<=" 				(.operadorActual=MENQUE;.)
+|"==" 				(.operadorActual=IGUAL;.)
+|"!=" 				(.operadorActual=DIFERENTE;.)
+) 
+				(.metePoper();.)
+Exp3 
+				(.gCuadruplo();	std::wcout << "Se genero en EXP2\n";.)
+].
 
-Exp4 = Exp5 [('*'|'/'|'%') Exp4].
+Exp3 = Exp4 
+				(. int peek = Poper->Peek();
+					if(peek == MAS || peek == MENOS){
+						std::wcout << "Se genero en EXP3\n";
+						gCuadruplo();}
+				.)
+[
+('+'				(.operadorActual=MAS;.)
+|'-'				(.operadorActual=MENOS;.)
+) 
+				(.metePoper();.) 
+Exp3].
 
-Exp5 = ['!'] Exp6.
+Exp4 = Exp5 
+				(.
+				int peek = Poper->Peek();
+				if(peek == POR || peek == DIVISION || peek == MODULO){
+					std::wcout << "Se genero en EXP4\n";
+					gCuadruplo();
 
-Exp6 = '(' Expresion ')'
-    | [('+'|'-')] Var_Cte.
+				}
+				.)
+[
+('*'				(.operadorActual=POR;.)
+|'/'				(.operadorActual=DIVISION;.)
+|'%'				(.operadorActual=MODULO;.)
+) 
+				(.metePoper();.) 
+Exp4].
+
+Exp5 = 
+['!'				(.
+					operadorActual=NOT;
+					metePoper();
+				.) 
+] 
+Exp6
+				(.int peek = Poper->Peek();
+					if(peek == NOT){
+						std::wcout << "Se genero en EXP5\n";
+						gCuadruplo();
+					}
+				.)
+.
+				/*Esto sirve para poner los fondos a la pila*/
+Exp6 = '(' 			(.operadorActual=PIZQ;metePoper();.) 
+Expresion ')' 			(.operadorActual=PDER;sacaPoper();.)
+    | [
+	('+'			
+	|'-'			(.operadorActual=NEGATIVO;.)
+	)] Var_Cte 
+				(.int peek = Poper->Peek();
+					if(peek == NEGATIVO){
+						std::wcout << "Se genero en EXP6\n";
+						gCuadruplo();
+
+					}
+				.)
+.
 
 //Inicio Cuerpo 2 (Cuerpo funcion)------------------------------------------------------------
 Cuerpo2 (.wchar_t* name;.) = '{' {Declaracion} {Estatuto} [
@@ -600,7 +778,7 @@ return (Expresion|
 /*Auxiliares*/
 ID<wchar_t* name> = id 
 
-			(. 	std::wcout << identificador << L"\n";
+			(. 	//std::wcout << identificador << L"\n";
 				//Si el cuerpo de la funcion es omitido simplemente se aplica el return
 				if(omiteCuerpo == 1){
 					return;
