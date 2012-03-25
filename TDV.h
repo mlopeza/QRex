@@ -200,5 +200,84 @@ namespace QRex{
 			~Cuadruplo(){}
 	};
 
+	class Pila{
+		Node *head;
+		int nodos;
+
+		public:
+		Pila(){
+			head = NULL;
+			nodos = 0;
+		};
+
+		~Pila(){};
+
+		void Push(int dato){
+			//Crea el Nodo
+			Node *n = new Node();
+			n->SetData(dato);
+
+			if(head == NULL){
+				head = n;
+			}else{
+				n->SetNext(head);
+				head = n;
+			}
+			
+			//Suma uno en nodos
+			nodos++;
+		};
+
+		int Pop(){
+			if(head == NULL)
+				return -1;
+
+			//Resta uno en nodos
+			nodos--;
+
+			//Toma el valor
+			Node *tmp = head;
+			int dato = tmp->Data();
+
+			//Asigna el siguiente valor en la pila
+			head = head->Next();
+
+			//Borra el nodo de memoria
+			delete tmp;
+
+			//Regresa el dato
+			return dato;
+		};
+
+		int Peek(){
+			if(head == NULL)
+				return -1;
+			return head->Data();
+		};
+
+		bool Vacio(){
+			if (head == NULL)
+				return true;
+
+			return false;			
+		};
+		
+		int Size(){
+			return nodos;
+		};
+
+	};
+
 };
 #endif
+
+
+
+
+
+
+
+
+
+
+

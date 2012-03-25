@@ -78,7 +78,7 @@ public:
 	Token *la;			// lookahead token
 
 int //operadores
-	MAS,MENOS,POR,DIVISION,MODULO,MAYOR,MENOR,DIFERENTE,IGUAL,MAYQUE,MENQUE,AND,OR,NOT,ASIGNA;
+	MAS,MENOS,POR,DIVISION,MODULO,MAYOR,MENOR,DIFERENTE,IGUAL,MAYQUE,MENQUE,AND,OR,NOT,ASIGNA,PIZQ,PDER,NEGATIVO;
 
 
 	int //tipos
@@ -135,6 +135,9 @@ int //operadores
 		OR=12;
 		NOT=13;
 		ASIGNA=14;
+		NEGATIVO = 15;
+		PIZQ = 16;
+		PDER = 17;
 	
 		//Inicializa la tabla de Variables
 		tab = new TablaDeVariables();
