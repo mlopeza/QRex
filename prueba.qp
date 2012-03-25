@@ -19,8 +19,6 @@ int Func(int a, float b, int c,float blah,float plu) {
     return w;
 }
 
-
-
 main ()
 {
     int x,r;
