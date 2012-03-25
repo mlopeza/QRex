@@ -11,9 +11,9 @@
 #define CONSTANT_FLOAT	18000
 #define CONSTANT_STRING 20000
 
-#define TEMP_INT 0
-#define TEMP_FLOAT 1000
-#define TEMP_STRING 2000
+#define TEMP_INT 22000
+#define TEMP_FLOAT 23000
+#define TEMP_STRING 24000
 /*-------------------------------------------------------------*/
 COMPILER QRex
 
@@ -395,7 +395,7 @@ COMPILER QRex
 
 	void gCuadruplo(){
 		int operador = Poper->Pop();
-		if(operador == NOT || operador == NEGATIVO || operador == ASIGNA){
+		if(operador == NOT || operador == NEGATIVO){
 			int operando = PilaO->Pop();
 			int temp = temporales->AsignaTemporal(11);	
 			Cuadruplo *cuadruplo = new Cuadruplo(operador,operando,-1,temp);
@@ -403,6 +403,12 @@ COMPILER QRex
 			contCuadruplos++;
 			PilaO->Push(temp);
 
+		}else if(operador == ASIGNA){
+			int operando = PilaO->Pop();
+			int resultado = PilaO->Pop();
+			Cuadruplo *cuadruplo = new Cuadruplo(operador,operando,-1,resultado);
+			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+			contCuadruplos++;
 		}else{
 			int operando2 = PilaO->Pop();
 			int operando1 = PilaO->Pop();
@@ -600,9 +606,14 @@ Cuerpo [else Cuerpo].
 
 //Finaliza Condicion ----------------------------------------------------------------
 Asignacion (. wchar_t* name; .) = ID<name> '=' 
-
-(Expresion 
-
+				//Asignacion de una expresion
+(				(.Poper->Push(ASIGNA);
+				  metePilaOV();
+				.)
+Expresion 
+				(.
+				gCuadruplo();
+				.)
 | cte_string
 					(.tipovariable = cadenav;
 						name = coco_string_create(t->val);
@@ -778,15 +789,20 @@ return (Expresion|
 /*Auxiliares*/
 ID<wchar_t* name> = id 
 
-			(. 	//std::wcout << identificador << L"\n";
+			(. 
+				//Crea el string de coco 
+				//Conversion para meter el string a la tabla de hash
+				//Eliminar el string de coco
+
+				name = coco_string_create(t->val);identificador = std::wstring(name);
+				coco_string_delete(name);
+
+
+				//std::wcout << identificador << L"\n";
 				//Si el cuerpo de la funcion es omitido simplemente se aplica el return
 				if(omiteCuerpo == 1){
 					return;
 				}
-				//Crea el string de coco 
-				//Conversion para meter el string a la tabla de hash
-				//Eliminar el string de coco
-				name = coco_string_create(t->val);identificador = std::wstring(name);coco_string_delete(name);
 
 				/*Crea las firmas de las funciones*/
 				if(tipo == funcionfirma && firma == 1){
