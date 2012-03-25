@@ -368,10 +368,11 @@ return = "return".
 global = "global".
 sign = "sign".
 
-IGNORE cr + lf + tab
-
 COMMENTS FROM "/*" TO "*/" NESTED
 COMMENTS FROM "//" TO cr lf
+
+IGNORE cr + lf + tab
+
 
 PRODUCTIONS
 //Inicia QRex----------------------------------------------------------------------
@@ -566,11 +567,11 @@ Expresion =
 
 Exp1 = Exp2 ["&&" Exp1].
 
-Exp2 = Exp3 [('>'|'<'|">="|"<="|"=="|"!=") Exp3].
+Exp2 = Exp3 [('>'|'<'|">="|"<="|"=="|"!=") Exp2].
 
-Exp3 = Exp4 [('+'|'-') Exp4].
+Exp3 = Exp4 [('+'|'-') Exp3].
 
-Exp4 = Exp5 [('*'|'/'|'%') Exp5].
+Exp4 = Exp5 [('*'|'/'|'%') Exp4].
 
 Exp5 = ['!'] Exp6.
 

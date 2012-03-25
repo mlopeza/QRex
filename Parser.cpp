@@ -595,7 +595,7 @@ void Parser::Exp2() {
 				break;
 			}
 			}
-			Exp3();
+			Exp2();
 		}
 }
 
@@ -607,7 +607,7 @@ void Parser::Exp3() {
 			} else {
 				Get();
 			}
-			Exp4();
+			Exp3();
 		}
 }
 
@@ -621,7 +621,7 @@ void Parser::Exp4() {
 			} else {
 				Get();
 			}
-			Exp5();
+			Exp4();
 		}
 }
 
