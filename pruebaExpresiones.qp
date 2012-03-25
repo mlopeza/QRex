@@ -1,0 +1,23 @@
+main(){
+	int a,b,c,d,e,f,g,h;
+
+	/*Prueba Asignacion*/
+	a = 100;
+
+	/*Prueba Multiplicacion*/
+	b = 10*5;
+
+	/*Prueba Division*/
+	c = a/b;
+
+	/*Prueba Negativo*/
+	d = -a;
+
+	/*Prueba Expresion Compleja*/
+	e = -5 * (a+b*c)/d + 10 +(5%3);
+	
+	/*Prueba NOT*/	
+	f = !1;
+	g = !0;
+	h = !100;
+}
