@@ -595,7 +595,7 @@ void Parser::Exp2() {
 				break;
 			}
 			}
-			Exp2();
+			Exp3();
 		}
 }
 
