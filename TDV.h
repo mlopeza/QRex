@@ -194,7 +194,6 @@ namespace QRex{
 				intNum = enteros;
 				floatNum = flotantes;
 				stringNum = cadenas;
-				std::wcout << L"intNum:" << intNum << L" floatNum:" << floatNum << L"\n";
 			}
 
 			int AsignaTemporal(int tipo){

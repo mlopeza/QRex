@@ -152,19 +152,22 @@ COMPILER QRex
 		undef = 10;
 
 		int cubo_sematico[4][4][14] = {
-		{{11,11,11,11,11,11,11,11,11,11,11,11,11,11},
+			{{11,11,11,11,11,11,11,11,11,11,11,11,11,11},
 			{12,12,12,12,12,11,11,11,11,11,11,11,11,-666},
 			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
 			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}},
-		{{12,12,12,12,12,11,11,11,11,11,11,-666,-666,12},
+
+			{{12,12,12,12,12,11,11,11,11,11,11,-666,-666,12},
 			{12,12,12,12,12,11,11,11,11,11,11,-666,-666,12},
 			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
 			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}},
-		{{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
+
+			{{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
 			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
 			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,13},
 			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}},
-		{{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
+
+			{{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
 			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
 			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,13},
 			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}}};
@@ -377,13 +380,13 @@ COMPILER QRex
 
 	/*Logica de Expresiones Aritmeticas*/
 	void metePilaO(){
-		std::wcout << L"Mete PilaO("<<identificador<<L")\n";
+		//std::wcout << L"Mete PilaO("<<identificador<<L")\n";
 		std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
 		int dato = it->second->direccion;
 		PilaO->Push(dato);
 	}
 	void metePilaOV(){
-		std::wcout << L"Mete PilaOV("<<identificador<<L")\n";
+	//	std::wcout << L"Mete PilaOV("<<identificador<<L")\n";
 		std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
 		if(it == f->vhash.end()){
 			it = tabglobales->vhash.find(identificador);
@@ -396,13 +399,13 @@ COMPILER QRex
 		PilaO->Push(dato);
 	}
 	void metePoper(){
-		std::wcout << L"Mete Operador("<<operadorActual<<L")\n";
+	//	std::wcout << L"Mete Operador("<<operadorActual<<L")\n";
 		Poper->Push(operadorActual);
 	}
 
 	void sacaPoper(){
 		int operador = Poper->Pop();
-		std::wcout << L"Saca Poper("<<operador<<L")\n";
+	//	std::wcout << L"Saca Poper("<<operador<<L")\n";
 		if(operador != PIZQ){
 			std::wcout << L"Se esperaba )\n";
 			exit(-1);
@@ -683,7 +686,7 @@ Exp1
 				(.
 				int peek = Poper->Peek();
 				if(peek == OR){
-					std::wcout << "Se genero en EXP1\n";
+					//std::wcout << "Se genero en EXP1\n";
 					gCuadruplo();
 
 					}
@@ -699,7 +702,7 @@ Exp1 = Exp2
 				(.
 				int peek = Poper->Peek();
 				if(peek == AND){
-					std::wcout << "Se genero en EXP1\n";
+					//std::wcout << "Se genero en EXP1\n";
 					gCuadruplo();
 
 					}
@@ -718,13 +721,16 @@ Exp2 = Exp3 [
 ) 
 				(.metePoper();.)
 Exp3 
-				(.gCuadruplo();	std::wcout << "Se genero en EXP2\n";.)
+				(.gCuadruplo();	
+					//std::wcout << "Se genero en EXP2\n";
+
+				.)
 ].
 
 Exp3 = Exp4 
 				(. int peek = Poper->Peek();
 					if(peek == MAS || peek == MENOS){
-						std::wcout << "Se genero en EXP3\n";
+					//	std::wcout << "Se genero en EXP3\n";
 						gCuadruplo();}
 				.)
 [
@@ -738,7 +744,7 @@ Exp4 = Exp5
 				(.
 				int peek = Poper->Peek();
 				if(peek == POR || peek == DIVISION || peek == MODULO){
-					std::wcout << "Se genero en EXP4\n";
+					//std::wcout << "Se genero en EXP4\n";
 					gCuadruplo();
 
 				}
@@ -760,7 +766,7 @@ Exp5 =
 Exp6
 				(.int peek = Poper->Peek();
 					if(peek == NOT){
-						std::wcout << "Se genero en EXP5\n";
+						//std::wcout << "Se genero en EXP5\n";
 						gCuadruplo();
 					}
 				.)
@@ -774,7 +780,7 @@ Expresion ')' 			(.operadorActual=PDER;sacaPoper();.)
 	)] Var_Cte 
 				(.int peek = Poper->Peek();
 					if(peek == NEGATIVO){
-						std::wcout << "Se genero en EXP6\n";
+						//std::wcout << "Se genero en EXP6\n";
 						gCuadruplo();
 
 					}
@@ -803,7 +809,6 @@ return (Expresion|
 /*Auxiliares*/
 ID<wchar_t* name> = id 
 
-<<<<<<< HEAD
 			(. 
 				//Crea el string de coco 
 				//Conversion para meter el string a la tabla de hash
@@ -814,9 +819,6 @@ ID<wchar_t* name> = id
 
 
 				//std::wcout << identificador << L"\n";
-=======
-			(. 	//std::wcout << identificador << L"\n";
->>>>>>> 37673726f980ce89bf9aaf2b14dd2a8e55b52aae
 				//Si el cuerpo de la funcion es omitido simplemente se aplica el return
 				if(omiteCuerpo == 1){
 					return;
