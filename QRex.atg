@@ -561,7 +561,7 @@ Estatuto = Asignacion
 
 Expresion =
 				 (.expresion = 1;.)
- Exp1 ["||" Expresion]
+Exp1 ["||" Expresion]
 				 (.expresion = 0;.)
 .
 
@@ -600,7 +600,7 @@ return (Expresion|
 /*Auxiliares*/
 ID<wchar_t* name> = id 
 
-			(. 	
+			(. 	std::wcout << identificador << L"\n";
 				//Si el cuerpo de la funcion es omitido simplemente se aplica el return
 				if(omiteCuerpo == 1){
 					return;
