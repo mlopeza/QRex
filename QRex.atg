@@ -24,7 +24,8 @@
 COMPILER QRex
 
 	int //operadores
-	MAS,MENOS,POR,DIVISION,MODULO,MAYOR,MENOR,DIFERENTE,IGUAL,MAYQUE,MENQUE,AND,OR,NOT,ASIGNA,PIZQ,PDER,NEGATIVO;
+	MAS,MENOS,POR,DIVISION,MODULO,MAYOR,MENOR,DIFERENTE,IGUAL,MAYQUE,MENQUE,AND,OR,NOT,ASIGNA,PIZQ,PDER,NEGATIVO,
+	PRINT;
 
 
 	int //tipos
@@ -75,7 +76,6 @@ COMPILER QRex
 	Pila *PilaO;
 	Pila *PilaS;
 	
-
 	void InitDeclarations() {
 		MAS=0;
 		MENOS=1;
@@ -95,6 +95,7 @@ COMPILER QRex
 		NEGATIVO = 15;
 		PIZQ = 16;
 		PDER = 17;
+		PRINT = 20;
 	
 		//Se usa para las expresiones
 		operadorActual = -1;
@@ -479,6 +480,12 @@ COMPILER QRex
 			Cuadruplo *cuadruplo = new Cuadruplo(operador,operando,-1,resultado);
 			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
 			contCuadruplos++;
+		}else if(operador == PRINT){
+			//Saca lo que se va a imprimir
+			int resultado = PilaO->Pop();
+			Cuadruplo *cuadruplo = new Cuadruplo(operador,resultado,-1,-1);
+			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+			contCuadruplos++;
 		}else{
 			int operando2 = PilaO->Pop();
 			int operando1 = PilaO->Pop();
@@ -630,13 +637,29 @@ Var_Cte(.wchar_t* name;.) =
 	.
 
 Param (.wchar_t* name;.) = 
-	(Expresion|
-		cte_string
+	(
+					(.
+						Poper->Push(PRINT);
+
+					.)				
+	Expresion 			(.if(tipo == escritura){
+						gCuadruplo();
+					}
+
+					.)
+
+	| cte_string
 					(.tipovariable = cadenav;
 						name = coco_string_create(t->val);
 						identificador = std::wstring(name);
 						coco_string_delete(name);
 						registraConstante();
+						if(tipo == escritura){
+							std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
+							Poper->Push(PRINT);
+							PilaO->Push((it->second)->direccion);
+							gCuadruplo();
+						}
 					.)
 
 ) [',' Param].
