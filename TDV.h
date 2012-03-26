@@ -4,9 +4,6 @@
 #include <utility>
 #include <string>
 
-#define PROCINT 4000
-#define PROCFLOAT 6000
-#define PROCSTRING 8000
 namespace std
 {
 	typedef basic_string<char> string;

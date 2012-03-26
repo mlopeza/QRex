@@ -1,7 +1,9 @@
 #include <iostream>
 #include <string>
-#include "TDV.h"
-#include "wchar.h"
+
+#define PROCINT 4000
+#define PROCFLOAT 6000
+#define PROCSTRING 8000
 
 #define GLOBAL_INT 	10000
 #define GLOBAL_FLOAT	12000
@@ -14,6 +16,10 @@
 #define TEMP_INT 22000
 #define TEMP_FLOAT 23000
 #define TEMP_STRING 24000
+
+#include "TDV.h"
+#include "wchar.h"
+
 /*-------------------------------------------------------------*/
 COMPILER QRex
 
@@ -70,8 +76,6 @@ COMPILER QRex
 	Pila *PilaS;
 	
 
-	//Tabla de variables globales
-
 	void InitDeclarations() {
 		MAS=0;
 		MENOS=1;
@@ -86,8 +90,8 @@ COMPILER QRex
 		MENQUE=10;
 		AND=11;
 		OR=12;
-		NOT=13;
-		ASIGNA=14;
+		ASIGNA=13;
+		NOT=14;
 		NEGATIVO = 15;
 		PIZQ = 16;
 		PDER = 17;
@@ -150,30 +154,6 @@ COMPILER QRex
 		regreso = 8;
 		funcionfirma = 9;
 		undef = 10;
-
-		int cubo_sematico[4][4][14] = {
-			{{11,11,11,11,11,11,11,11,11,11,11,11,11,11},
-			{12,12,12,12,12,11,11,11,11,11,11,11,11,-666},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}},
-
-			{{12,12,12,12,12,11,11,11,11,11,11,-666,-666,12},
-			{12,12,12,12,12,11,11,11,11,11,11,-666,-666,12},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}},
-
-			{{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,13},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}},
-
-			{{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,13},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}}};
-
-		int matriz_semantica[2][4] = {{11,-666,-666,-666},
-			{11,12,-666,-666}};
 		
 	}
 
@@ -378,6 +358,62 @@ COMPILER QRex
 
 	}
 
+	/*Verifica de que tipo es una variable segun su dirección*/
+	int dameTipo(int direccion){
+		if((direccion >= PROCINT && direccion < PROCFLOAT) 
+			|| (direccion >= GLOBAL_INT && direccion < GLOBAL_FLOAT) 
+			|| (direccion >= CONSTANT_INT && direccion < CONSTANT_FLOAT)
+			|| (direccion >= TEMP_INT && direccion < TEMP_FLOAT) )
+		{
+			return enterov;			
+
+		}else if((direccion >= PROCFLOAT && direccion < PROCSTRING) 
+			|| (direccion >= GLOBAL_FLOAT && direccion < GLOBAL_STRING) 
+			|| (direccion >= CONSTANT_FLOAT && direccion < CONSTANT_STRING)
+			|| (direccion >= TEMP_FLOAT && direccion < TEMP_STRING) )
+		{
+			return flotantev;
+		}
+
+		return cadenav;
+	}
+
+	/*Verifica que las operaciones sean valida*/
+	int verificaCubo(int operador, int operando1, int operando2){
+	int cubo_semantico[4][4][14]= {
+			{
+			{11,11,11,11,11,11,11,11,11,11,11,11,11,11},
+			{12,12,12,12,12,11,11,11,11,11,11,11,11,-666},
+			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
+			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}},
+
+			{
+			{12,12,12,12,12,11,11,11,11,11,11,-666,-666,12},
+			{12,12,12,12,12,11,11,11,11,11,11,-666,-666,12},
+			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
+			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}},
+
+			{{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
+			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
+			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,13},
+			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}},
+
+			{{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
+			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
+			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,13},
+			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}}};
+	
+		//Los mueve de tal forma que cambien a las dimensiones del cubo
+		return cubo_semantico[operando2-11][operando1-11][operador];
+	}
+
+	int verificaMatriz(int operador, int operando){
+	int matriz_semantica[2][4] = {{11,-666,-666,-666},
+			{11,12,-666,-666}};
+		std::wcout <<operador-14<<L" "<<operando<<L"\n";
+		return matriz_semantica[operador-14][operando-11];
+	}
+
 	/*Logica de Expresiones Aritmeticas*/
 	void metePilaO(){
 		//std::wcout << L"Mete PilaO("<<identificador<<L")\n";
@@ -416,7 +452,17 @@ COMPILER QRex
 		int operador = Poper->Pop();
 		if(operador == NOT || operador == NEGATIVO){
 			int operando = PilaO->Pop();
-			int temp = temporales->AsignaTemporal(11);	
+
+			//Ve si la operacion resulta en algo valido
+			int tipo = verificaMatriz(operador,dameTipo(operando));
+
+			//Si no termina la compilacion
+			if(tipo == -666){
+				Err(L"Invalid Operation");
+				exit(-1);
+			}
+
+			int temp = temporales->AsignaTemporal(tipo);	
 			Cuadruplo *cuadruplo = new Cuadruplo(operador,operando,-1,temp);
 			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
 			contCuadruplos++;
@@ -425,13 +471,26 @@ COMPILER QRex
 		}else if(operador == ASIGNA){
 			int operando = PilaO->Pop();
 			int resultado = PilaO->Pop();
+			int tipo = verificaCubo(operador,dameTipo(operando),dameTipo(resultado));
+			if(tipo == -666){
+				Err(L"Assignation of different types");
+				exit(-1);
+			}
 			Cuadruplo *cuadruplo = new Cuadruplo(operador,operando,-1,resultado);
 			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
 			contCuadruplos++;
 		}else{
 			int operando2 = PilaO->Pop();
 			int operando1 = PilaO->Pop();
-			int temp = temporales->AsignaTemporal(11);
+		
+			//Ve si la operacion resulta en algo valido
+			int tipo = verificaCubo(operador,dameTipo(operando1),dameTipo(operando2));
+			if(tipo == -666){
+				Err(L"Invalid Operation");
+				exit(-1);
+			}
+
+			int temp = temporales->AsignaTemporal(tipo);
 			Cuadruplo *cuadruplo = new Cuadruplo(operador,operando1,operando2,temp);
 			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
 			contCuadruplos++;
@@ -776,7 +835,7 @@ Exp6 = '(' 			(.operadorActual=PIZQ;metePoper();.)
 Expresion ')' 			(.operadorActual=PDER;sacaPoper();.)
     | [
 	('+'			
-	|'-'			(.operadorActual=NEGATIVO;.)
+	|'-'			(.operadorActual=NEGATIVO;metePoper();.)
 	)] Var_Cte 
 				(.int peek = Poper->Peek();
 					if(peek == NEGATIVO){
