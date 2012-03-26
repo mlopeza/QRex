@@ -25,7 +25,7 @@ COMPILER QRex
 
 	int //operadores
 	MAS,MENOS,POR,DIVISION,MODULO,MAYOR,MENOR,DIFERENTE,IGUAL,MAYQUE,MENQUE,AND,OR,NOT,ASIGNA,PIZQ,PDER,NEGATIVO,
-	PRINT;
+	PRINT,READ;
 
 
 	int //tipos
@@ -96,6 +96,7 @@ COMPILER QRex
 		PIZQ = 16;
 		PDER = 17;
 		PRINT = 20;
+		READ = 24;
 	
 		//Se usa para las expresiones
 		operadorActual = -1;
@@ -480,7 +481,7 @@ COMPILER QRex
 			Cuadruplo *cuadruplo = new Cuadruplo(operador,operando,-1,resultado);
 			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
 			contCuadruplos++;
-		}else if(operador == PRINT){
+		}else if(operador == PRINT || operador == READ){
 			//Saca lo que se va a imprimir
 			int resultado = PilaO->Pop();
 			Cuadruplo *cuadruplo = new Cuadruplo(operador,resultado,-1,-1);
@@ -1012,8 +1013,16 @@ ID<wchar_t* name> = id
 				if(tipo == lectura){
 					std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
 					std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
-					if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
-						//Read Variable
+					if( it != f->vhash.end() ){
+						//Genera Cuadruplo de Read
+						Poper->Push(READ);
+						PilaO->Push((it->second)->direccion);
+						gCuadruplo();	
+					}else if(itglobal != tabglobales->vhash.end()) {
+						//Genera Cuadruplo de Read
+						Poper->Push(READ);
+						PilaO->Push((itglobal->second)->direccion);
+						gCuadruplo();	
 					}else{
 						std::wcout <<L"("<< identificador<<L")";
 						Err(L"Trying to read and variable doesn't exist.");
