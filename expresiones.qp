@@ -6,6 +6,12 @@ main ()
 	b = a;
 	a = -a;
 
+	while(a>b){
+	b = a;
+	a = -a;
+
+	}
+
 	read(a);
 	print(a,b,10000,"Genial :D", 2+2*6 && 3 );
 }

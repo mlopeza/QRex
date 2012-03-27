@@ -24,8 +24,8 @@
 COMPILER QRex
 
 	int //operadores
-	MAS,MENOS,POR,DIVISION,MODULO,MAYOR,MENOR,DIFERENTE,IGUAL,MAYQUE,MENQUE,AND,OR,NOT,ASIGNA,PIZQ,PDER,NEGATIVO,
-	PRINT,READ;
+	MAS,MENOS,POR,DIVISION,MODULO,MAYOR,MENOR,DIFERENTE,IGUAL,MAYQUE,MENQUE,AND,OR,NOT,ASIGNA,PIZQ,PDER,NEGATIVO,GOTOF,GOTOV,GOTO,
+	PRINT,IFF,READ;
 
 
 	int //tipos
@@ -95,7 +95,11 @@ COMPILER QRex
 		NEGATIVO = 15;
 		PIZQ = 16;
 		PDER = 17;
+		GOTOF = 18;
+		GOTOV = 19;
 		PRINT = 20;
+		GOTO = 21;
+		IFF = 22;
 		READ = 24;
 	
 		//Se usa para las expresiones
@@ -487,6 +491,31 @@ COMPILER QRex
 			Cuadruplo *cuadruplo = new Cuadruplo(operador,resultado,-1,-1);
 			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
 			contCuadruplos++;
+
+		}else if(operador == GOTOF || operador == GOTOV){
+			int resultado = PilaO->Pop();
+
+			Cuadruplo *cuadruplo = new Cuadruplo(operador,resultado,-1,-1);
+			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+			PilaS->Push(contCuadruplos++);
+			contCuadruplos++;
+
+		}else if(operador == GOTO){
+			int falso = PilaS->Pop();
+			int regreso = PilaS->Pop();
+			std::map<int,Cuadruplo *>::iterator it;
+
+			//Sacar salto de PilaS
+
+			Cuadruplo *cuadruplo = new Cuadruplo(operador,-1,-1,regreso);
+			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+			contCuadruplos++;
+			it = hashCuadruplos.find(falso);
+
+			Cuadruplo *c = (it->second);
+			c->resultado=contCuadruplos;
+
+
 		}else{
 			int operando2 = PilaO->Pop();
 			int operando1 = PilaO->Pop();
@@ -699,9 +728,13 @@ Tipov
 //Inicia Condicion ----------------------------------------------------------------
 Condicion = if
 			(.tipo = condicion;.)
- '(' Expresion ')' 
+ '(' Expresion 
+			(.operadorActual=GOTOF; metePoper(); gCuadruplo();.)
+ ')' 
 			(.tipo = undef;.)
-Cuerpo [else Cuerpo].
+Cuerpo 
+
+[else Cuerpo].
 
 
 //Finaliza Condicion ----------------------------------------------------------------
@@ -736,9 +769,12 @@ Escritura = print 			(.tipo = escritura;.)
 
 Ciclo = while 
 			(.tipo = ciclo;.)
-'(' Expresion ')' 
+'('			(.PilaS->Push(contCuadruplos);.)
+Expresion 
+			(.operadorActual=GOTOF; metePoper(); gCuadruplo();.)
+')' 
 			(.tipo = undef;.)
-Cuerpo.
+Cuerpo			(.operadorActual=GOTO; metePoper();gCuadruplo();.).
 
 //Inicia Tipo de Funcion--------------------------------------------------
 Tipof = int (. tipofuncion = enterof;   .)
