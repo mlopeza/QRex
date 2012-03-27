@@ -4,6 +4,22 @@
 #include <utility>
 #include <string>
 
+#define PROCINT 4000
+#define PROCFLOAT 6000
+#define PROCSTRING 8000
+
+#define GLOBAL_INT 	10000
+#define GLOBAL_FLOAT	12000
+#define GLOBAL_STRING	14000
+
+#define CONSTANT_INT	16000
+#define CONSTANT_FLOAT	18000
+#define CONSTANT_STRING 20000
+
+#define TEMP_INT 22000
+#define TEMP_FLOAT 23000
+#define TEMP_STRING 24000
+
 namespace std
 {
 	typedef basic_string<char> string;
@@ -73,15 +89,6 @@ namespace QRex{
 				}
 				size++;
 			};
-			~List(){
-				Node *tmp = head;
-				Node *tmp2;
-				while(tmp != NULL){
-					tmp2=tmp->Next();
-					delete(tmp);
-					tmp=tmp2;
-				}
-			}
 
 			void Print(){
 				Node *tmp = head;
@@ -180,6 +187,100 @@ namespace QRex{
 
 	};
 
+	/*Definicion de la Tabla de Variables*/
+	class TablaDeVariables{
+		public:
+			std::map<std::wstring, FuncionX *> fhash;
+
+			TablaDeVariables(){}
+			~TablaDeVariables(){fhash.clear();}
+	};
+
+	class Cuadruplo{
+		public:
+			int op;
+			int operador1;
+			int operador2;
+			int resultado;
+
+			Cuadruplo(int a, int b, int c, int d){
+				op = a;
+				operador1 = b;
+				operador2 = c;
+				resultado = d;
+			}
+
+			~Cuadruplo(){}
+	};
+
+	class Pila{
+		Node *head;
+		int nodos;
+
+		public:
+		Pila(){
+			head = NULL;
+			nodos = 0;
+		};
+
+		~Pila(){};
+
+		void Push(int dato){
+			//Crea el Nodo
+			Node *n = new Node();
+			n->SetData(dato);
+
+			if(head == NULL){
+				head = n;
+			}else{
+				n->SetNext(head);
+				head = n;
+			}
+			
+			//Suma uno en nodos
+			nodos++;
+		};
+
+		int Pop(){
+			if(head == NULL)
+				return -1;
+
+			//Resta uno en nodos
+			nodos--;
+
+			//Toma el valor
+			Node *tmp = head;
+			int dato = tmp->Data();
+
+			//Asigna el siguiente valor en la pila
+			head = head->Next();
+
+			//Borra el nodo de memoria
+			delete tmp;
+
+			//Regresa el dato
+			return dato;
+		};
+
+		int Peek(){
+			if(head == NULL)
+				return -1;
+			return head->Data();
+		};
+
+		bool Vacio(){
+			if (head == NULL)
+				return true;
+
+			return false;			
+		};
+		
+		int Size(){
+			return nodos;
+		};
+
+	};
+
 	class Temporales{
 		public:
 			std::map<int, Variable *> vhash;
@@ -223,109 +324,6 @@ namespace QRex{
 			~Temporales(){
 				vhash.clear();
 			}
-
-	};
-
-
-	/*Definicion de la Tabla de Variables*/
-	class TablaDeVariables{
-		public:
-			std::map<std::wstring, FuncionX *> fhash;
-
-			TablaDeVariables(){}
-			~TablaDeVariables(){fhash.clear();}
-	};
-
-	class Cuadruplo{
-		public:
-			int op;
-			int operador1;
-			int operador2;
-			int resultado;
-
-			Cuadruplo(int a, int b, int c, int d){
-				op = a;
-				operador1 = b;
-				operador2 = c;
-				resultado = d;
-			}
-
-			~Cuadruplo(){}
-	};
-
-	class Pila{
-		Node *head;
-		int nodos;
-
-		public:
-		Pila(){
-			head = NULL;
-			nodos = 0;
-		};
-
-		~Pila(){
-			Node *tmp = head;
-			Node *tmp2;
-			while(tmp != NULL){
-				tmp2=tmp->Next();
-				delete(tmp);
-				tmp=tmp2;
-			}
-		};
-
-		void Push(int dato){
-			//Crea el Nodo
-			Node *n = new Node();
-			n->SetData(dato);
-
-			if(head == NULL){
-				head = n;
-			}else{
-				n->SetNext(head);
-				head = n;
-			}
-			
-			//Suma uno en nodos
-			nodos++;
-		}
-
-		int Pop(){
-			if(head == NULL)
-				return -1;
-
-			//Resta uno en nodos
-			nodos--;
-
-			//Toma el valor
-			Node *tmp = head;
-			int dato = tmp->Data();
-
-			//Asigna el siguiente valor en la pila
-			head = head->Next();
-
-			//Borra el nodo de memoria
-			delete tmp;
-
-			//Regresa el dato
-			return dato;
-		}
-
-		int Peek(){
-			if(head == NULL)
-				return -100;
-			return head->Data();
-		}
-
-		bool Vacio(){
-			if (head == NULL)
-				return true;
-
-			return false;			
-		}
-		
-		int Size(){
-			return nodos;
-		}
 
 	};
 

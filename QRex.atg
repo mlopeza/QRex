@@ -1,581 +1,701 @@
 #include <iostream>
 #include <string>
-
-#define PROCINT 4000
-#define PROCFLOAT 6000
-#define PROCSTRING 8000
-
-#define GLOBAL_INT 	10000
-#define GLOBAL_FLOAT	12000
-#define GLOBAL_STRING	14000
-
-#define CONSTANT_INT	16000
-#define CONSTANT_FLOAT	18000
-#define CONSTANT_STRING 20000
-
-#define TEMP_INT 22000
-#define TEMP_FLOAT 23000
-#define TEMP_STRING 24000
-
 #include "TDV.h"
 #include "wchar.h"
+
+
 
 /*-------------------------------------------------------------*/
 COMPILER QRex
 
-int //operadores
-MAS,MENOS,POR,DIVISION,MODULO,MAYOR,MENOR,DIFERENTE,IGUAL,MAYQUE,MENQUE,AND,OR,NOT,ASIGNA,PIZQ,PDER,NEGATIVO,GOTOF,GOTOV,GOTO,
+	int //operadores
+	MAS,MENOS,POR,DIVISION,MODULO,MAYOR,MENOR,DIFERENTE,IGUAL,MAYQUE,MENQUE,AND,OR,NOT,ASIGNA,PIZQ,PDER,NEGATIVO,GOTOF,GOTOV,GOTO,
 	PRINT,IFF,READ;
 
 
-int //tipos
-tipovariable,enterov,flotantev,cadenav,errorv;
-int 
-tipofuncion,enterof,flotantef,voidf,errorf;
+	int //tipos
+	tipovariable,enterov,flotantev,cadenav,errorv;
+	int 
+	tipofuncion,enterof,flotantef,voidf,errorf;
 
-int //tipos de objetos
-tipo,variable,funcion,llamada,undef,lectura,escritura,condicion,ciclo,regreso,funcionfirma;
+	int //tipos de objetos
+	tipo,variable,funcion,llamada,undef,lectura,escritura,condicion,ciclo,regreso,funcionfirma;
+	
+	int //Manejo de expresiones
+	expresion;
 
-int //Manejo de expresiones
-expresion;
+	int //Manejo de retornos
+	retorno;
+	
+	int //Declaraciones Globales
+	global;
 
-int //Manejo de retornos
-retorno;
+	int //Declaracion de parametros en una funcion
+	parametros;
 
-int //Declaraciones Globales
-global;
+	int //Operador actual en la expresion
+	operadorActual;
 
-int //Declaracion de parametros en una funcion
-parametros;
+	int //CHeca si es una firma o una funcion
+	firma,definefunc,omiteCuerpo;
 
-int //CHeca si es una firma o una funcion
-firma,definefunc,omiteCuerpo;
+	/*Parte para codigos de operacion*/
 
-int //Se usa para las expresiones
-operadorActual;
+	TablaDeVariables *tab;		
+	FuncionX *f;
+	Variable *v;
+	FuncionX *ftemp;
+	Temporales *temporales;
 
-/*Parte para codigos de operacion*/
+	//Tabla de Variables globales y Constantes
+	Contexto *tabconstantes;
+	Contexto *tabglobales;
 
-TablaDeVariables *tab;		
-FuncionX *f;
-Variable *v;
-FuncionX *ftemp;
+	std::wstring identificador;
 
-//Tabla de Variables globales y Constantes
-Contexto *tabconstantes;
-Contexto *tabglobales;
-Temporales *temporales;
-std::wstring identificador;
-
-//Hash de Cuadruplos (Manejo de Cuadruplos)
-int contCuadruplos;
-std::map<int,Cuadruplo *> hashCuadruplos;
-
-//Pilas de Expresiones
-Pila *Poper;
-Pila *PilaO;
-Pila *PilaS;
-
-void InitDeclarations() {
-	MAS=0;
-	MENOS=1;
-	POR=2;
-	DIVISION=3;
-	MODULO=4;
-	MAYOR=5;
-	MENOR=6;
-	DIFERENTE=7;
-	IGUAL=8;
-	MAYQUE=9;
-	MENQUE=10;
-	AND=11;
-	OR=12;
-	ASIGNA=13;
-	NOT=14;
-	NEGATIVO = 15;
-	PIZQ = 16;
-	PDER = 17;
-	GOTOF = 18;
-	GOTOV = 19;
-	PRINT = 20;
-	GOTO = 21;
-	IFF = 22;
-	READ = 24;
-
-	//Se usa para las expresiones
-	operadorActual = -1;
 	//Hash de Cuadruplos (Manejo de Cuadruplos)
-	contCuadruplos = 0;
-	//std::map<int,Cuadruplo *> hashCuadruplos; Este maneja los cuadruplos
+	int contCuadruplos;
+	std::map<int,Cuadruplo *> hashCuadruplos;
 
 	//Pilas de Expresiones
-	Poper = new Pila();
-	PilaO = new Pila();
-	PilaS = new Pila();
+	Pila *Poper;
+	Pila *PilaO;
+	Pila *PilaS;
+	
+	int cubo_semantico[4][4][14];
+	int matriz_semantica[2][4];
 
-	//Tabla de temporales
-	temporales = new Temporales(TEMP_INT,TEMP_FLOAT,TEMP_STRING);
+	
+	//Funcion de cubo semantico
+	void inicializaSemantica(){
+		cubo_semantico[0][0][0]=11;cubo_semantico[0][0][1]=11;cubo_semantico[0][0][2]=11;cubo_semantico[0][0][3]=11;
+		cubo_semantico[0][0][4]=11;cubo_semantico[0][0][5]=11;cubo_semantico[0][0][6]=11;cubo_semantico[0][0][7]=11;
+		cubo_semantico[0][0][8]=11;cubo_semantico[0][0][9]=11;cubo_semantico[0][0][10]=11;cubo_semantico[0][0][11]=11;
+		cubo_semantico[0][0][12]=11;cubo_semantico[0][0][13]=11;cubo_semantico[0][1][0]=12;cubo_semantico[0][1][1]=12;
+		cubo_semantico[0][1][2]=12;cubo_semantico[0][1][3]=12;cubo_semantico[0][1][4]=12;cubo_semantico[0][1][5]=11;
+		cubo_semantico[0][1][6]=11;cubo_semantico[0][1][7]=11;cubo_semantico[0][1][8]=11;cubo_semantico[0][1][9]=11;
+		cubo_semantico[0][1][10]=11;cubo_semantico[0][1][11]=11;cubo_semantico[0][1][12]=11;cubo_semantico[0][1][13]=-666;
+		cubo_semantico[0][2][0]=-666;cubo_semantico[0][2][1]=-666;cubo_semantico[0][2][2]=-666;cubo_semantico[0][2][3]=-666;
+		cubo_semantico[0][2][4]=-666;cubo_semantico[0][2][5]=-666;cubo_semantico[0][2][6]=-666;cubo_semantico[0][2][7]=-666;
+		cubo_semantico[0][2][8]=-666;cubo_semantico[0][2][9]=-666;cubo_semantico[0][2][10]=-666;cubo_semantico[0][2][11]=-666;
+		cubo_semantico[0][2][12]=-666;cubo_semantico[0][2][13]=-666;cubo_semantico[0][3][0]=-666;cubo_semantico[0][3][1]=-666;
+		cubo_semantico[0][3][2]=-666;cubo_semantico[0][3][3]=-666;cubo_semantico[0][3][4]=-666;cubo_semantico[0][3][5]=-666;
+		cubo_semantico[0][3][6]=-666;cubo_semantico[0][3][7]=-666;cubo_semantico[0][3][8]=-666;cubo_semantico[0][3][9]=-666;
+		cubo_semantico[0][3][10]=-666;cubo_semantico[0][3][11]=-666;cubo_semantico[0][3][12]=-666;cubo_semantico[0][3][13]=-666;
+		cubo_semantico[1][0][0]=12;cubo_semantico[1][0][1]=12;cubo_semantico[1][0][2]=12;cubo_semantico[1][0][3]=12;
+		cubo_semantico[1][0][4]=12;cubo_semantico[1][0][5]=11;cubo_semantico[1][0][6]=11;cubo_semantico[1][0][7]=11;
+		cubo_semantico[1][0][8]=11;cubo_semantico[1][0][9]=11;cubo_semantico[1][0][10]=11;cubo_semantico[1][0][11]=-666;
+		cubo_semantico[1][0][12]=-666;cubo_semantico[1][0][13]=12;cubo_semantico[1][1][0]=12;cubo_semantico[1][1][1]=12;
+		cubo_semantico[1][1][2]=12;cubo_semantico[1][1][3]=12;cubo_semantico[1][1][4]=12;cubo_semantico[1][1][5]=11;
+		cubo_semantico[1][1][6]=11;cubo_semantico[1][1][7]=11;cubo_semantico[1][1][8]=11;cubo_semantico[1][1][9]=11;
+		cubo_semantico[1][1][10]=11;cubo_semantico[1][1][11]=-666;cubo_semantico[1][1][12]=-666;cubo_semantico[1][1][13]=12;
+		cubo_semantico[1][2][0]=-666;cubo_semantico[1][2][1]=-666;cubo_semantico[1][2][2]=-666;cubo_semantico[1][2][3]=-666;
+		cubo_semantico[1][2][4]=-666;cubo_semantico[1][2][5]=-666;cubo_semantico[1][2][6]=-666;cubo_semantico[1][2][7]=-666;
+		cubo_semantico[1][2][8]=-666;cubo_semantico[1][2][9]=-666;cubo_semantico[1][2][10]=-666;cubo_semantico[1][2][11]=-666;
+		cubo_semantico[1][2][12]=-666;cubo_semantico[1][2][13]=-666;cubo_semantico[1][3][0]=-666;cubo_semantico[1][3][1]=-666;
+		cubo_semantico[1][3][2]=-666;cubo_semantico[1][3][3]=-666;cubo_semantico[1][3][4]=-666;cubo_semantico[1][3][5]=-666;
+		cubo_semantico[1][3][6]=-666;cubo_semantico[1][3][7]=-666;cubo_semantico[1][3][8]=-666;cubo_semantico[1][3][9]=-666;
+		cubo_semantico[1][3][10]=-666;cubo_semantico[1][3][11]=-666;cubo_semantico[1][3][12]=-666;cubo_semantico[1][3][13]=-666;
+		cubo_semantico[2][0][0]=-666;cubo_semantico[2][0][1]=-666;cubo_semantico[2][0][2]=-666;cubo_semantico[2][0][3]=-666;
+		cubo_semantico[2][0][4]=-666;cubo_semantico[2][0][5]=-666;cubo_semantico[2][0][6]=-666;cubo_semantico[2][0][7]=-666;
+		cubo_semantico[2][0][8]=-666;cubo_semantico[2][0][9]=-666;cubo_semantico[2][0][10]=-666;cubo_semantico[2][0][11]=-666;
+		cubo_semantico[2][0][12]=-666;cubo_semantico[2][0][13]=-666;cubo_semantico[2][1][0]=-666;cubo_semantico[2][1][1]=-666;
+		cubo_semantico[2][1][2]=-666;cubo_semantico[2][1][3]=-666;cubo_semantico[2][1][4]=-666;cubo_semantico[2][1][5]=-666;
+		cubo_semantico[2][1][6]=-666;cubo_semantico[2][1][7]=-666;cubo_semantico[2][1][8]=-666;cubo_semantico[2][1][9]=-666;
+		cubo_semantico[2][1][10]=-666;cubo_semantico[2][1][11]=-666;cubo_semantico[2][1][12]=-666;cubo_semantico[2][1][13]=-666;
+		cubo_semantico[2][2][0]=-666;cubo_semantico[2][2][1]=-666;cubo_semantico[2][2][2]=-666;cubo_semantico[2][2][3]=-666;
+		cubo_semantico[2][2][4]=-666;cubo_semantico[2][2][5]=-666;cubo_semantico[2][2][6]=-666;cubo_semantico[2][2][7]=-666;
+		cubo_semantico[2][2][8]=-666;cubo_semantico[2][2][9]=-666;cubo_semantico[2][2][10]=-666;cubo_semantico[2][2][11]=-666;
+		cubo_semantico[2][2][12]=-666;cubo_semantico[2][2][13]=13;cubo_semantico[2][3][0]=-666;cubo_semantico[2][3][1]=-666;
+		cubo_semantico[2][3][2]=-666;cubo_semantico[2][3][3]=-666;cubo_semantico[2][3][4]=-666;cubo_semantico[2][3][5]=-666;
+		cubo_semantico[2][3][6]=-666;cubo_semantico[2][3][7]=-666;cubo_semantico[2][3][8]=-666;cubo_semantico[2][3][9]=-666;
+		cubo_semantico[2][3][10]=-666;cubo_semantico[2][3][11]=-666;cubo_semantico[2][3][12]=-666;cubo_semantico[2][3][13]=-666;
+		cubo_semantico[3][0][0]=-666;cubo_semantico[3][0][1]=-666;cubo_semantico[3][0][2]=-666;cubo_semantico[3][0][3]=-666;
+		cubo_semantico[3][0][4]=-666;cubo_semantico[3][0][5]=-666;cubo_semantico[3][0][6]=-666;cubo_semantico[3][0][7]=-666;
+		cubo_semantico[3][0][8]=-666;cubo_semantico[3][0][9]=-666;cubo_semantico[3][0][10]=-666;cubo_semantico[3][0][11]=-666;
+		cubo_semantico[3][0][12]=-666;cubo_semantico[3][0][13]=-666;cubo_semantico[3][1][0]=-666;cubo_semantico[3][1][1]=-666;
+		cubo_semantico[3][1][2]=-666;cubo_semantico[3][1][3]=-666;cubo_semantico[3][1][4]=-666;cubo_semantico[3][1][5]=-666;
+		cubo_semantico[3][1][6]=-666;cubo_semantico[3][1][7]=-666;cubo_semantico[3][1][8]=-666;cubo_semantico[3][1][9]=-666;
+		cubo_semantico[3][1][10]=-666;cubo_semantico[3][1][11]=-666;cubo_semantico[3][1][12]=-666;cubo_semantico[3][1][13]=-666;
+		cubo_semantico[3][2][0]=-666;cubo_semantico[3][2][1]=-666;cubo_semantico[3][2][2]=-666;cubo_semantico[3][2][3]=-666;
+		cubo_semantico[3][2][4]=-666;cubo_semantico[3][2][5]=-666;cubo_semantico[3][2][6]=-666;cubo_semantico[3][2][7]=-666;
+		cubo_semantico[3][2][8]=-666;cubo_semantico[3][2][9]=-666;cubo_semantico[3][2][10]=-666;cubo_semantico[3][2][11]=-666;
+		cubo_semantico[3][2][12]=-666;cubo_semantico[3][2][13]=13;cubo_semantico[3][3][0]=-666;cubo_semantico[3][3][1]=-666;
+		cubo_semantico[3][3][2]=-666;cubo_semantico[3][3][3]=-666;cubo_semantico[3][3][4]=-666;cubo_semantico[3][3][5]=-666;
+		cubo_semantico[3][3][6]=-666;cubo_semantico[3][3][7]=-666;cubo_semantico[3][3][8]=-666;cubo_semantico[3][3][9]=-666;
+		cubo_semantico[3][3][10]=-666;cubo_semantico[3][3][11]=-666;cubo_semantico[3][3][12]=-666;cubo_semantico[3][3][13]=-666;
+		matriz_semantica[0][0]=11;matriz_semantica[0][1]=-666;matriz_semantica[0][2]=-666;matriz_semantica[0][3]=-666;
+		matriz_semantica[1][0]=11;matriz_semantica[1][1]=12;matriz_semantica[1][2]=-666;matriz_semantica[1][3]=-666;
 
-	//Inicializa la tabla de Variables
-	tab = new TablaDeVariables();
-
-	//Inicializa tabla de Constantes
-	tabconstantes = new Contexto(CONSTANT_INT,CONSTANT_FLOAT,CONSTANT_STRING);
-
-	//Inicializa tabla de globales
-	tabglobales = new Contexto(GLOBAL_INT,GLOBAL_FLOAT,GLOBAL_STRING);
-
-	//Inicializa la funcion
-	f = new FuncionX();
-	// Codigos de funciones y variables
-	tipovariable=-1;enterov=11;flotantev=12;cadenav=13;errorv=14;
-
-	tipofuncion=-1;enterof=21;flotantef=22;voidf=23;errorf=24;
-
-	//Manejo de expresiones
-	expresion = 0;
-
-	//Manejo de retorno
-	retorno = 0;
-
-	//Declaraciones globales
-	global = 0;
-
-	//Declaracion de parametros
-	parametros = 0;
-
-	//Verificar si es una firma o la definicion de una funcion
-	firma = 0;
-	definefunc = 0;
-	omiteCuerpo = 0;
-
-	//Tipo de objetos
-	variable = 0;
-	funcion = 1;
-	llamada = 3;
-	lectura = 4;
-	escritura = 5;
-	condicion = 6;
-	ciclo = 7;
-	regreso = 8;
-	funcionfirma = 9;
-	undef = 10;
-
-}
-
-void Err(wchar_t* msg) {
-	errors->Error(la->line, la->col, msg);
-}
-
-
-//Esto se utiliza para registrar la funcion main en la tabla de funciones
-void registraMain(){
-
-	std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(L"main");
-	if( it == tab->fhash.end()) {
-		//Checa si hay una funcion antes de crear la funcion main
-		if(f->nombre == std::wstring(L"")){
-			f->nombre=std::wstring(L"main");
-			f->tipo=voidf;
-
-		}else{
-			//Inserta la funcion  al hash y crea la funcion main
-			tab->fhash.insert(std::make_pair(f->nombre,f));
-			f = new FuncionX();
-			f->nombre=std::wstring(L"main");
-			f->tipo=voidf;
-		}
-	}else{
-		Err(L"No puede haber dos funciones main()");
 	}
 
-}
+	void InitDeclarations() {
+		MAS=0;
+		MENOS=1;
+		POR=2;
+		DIVISION=3;
+		MODULO=4;
+		MAYOR=5;
+		MENOR=6;
+		DIFERENTE=7;
+		IGUAL=8;
+		MAYQUE=9;
+		MENQUE=10;
+		AND=11;
+		OR=12;
+		ASIGNA=13;
+		NOT=14;
+		NEGATIVO = 15;
+		PIZQ = 16;
+		PDER = 17;
+		GOTOF = 18;
+		GOTOV = 19;
+		PRINT = 20;
+		GOTO = 21;
+		IFF = 22;
+		READ = 24;
+	
+		//Hash de Cuadruplos (Manejo de Cuadruplos)
+		contCuadruplos = 0;
+		//std::map<int,Cuadruplo *> hashCuadruplos; Este maneja los cuadruplos
 
-/*Imprime todos los registros de Funciones
-  La tabla de variables globales y la tabla de constantes
- */
-void imprimeRegistros(){
-	FuncionX *func;
-	Variable *var;
+		//Pilas de Expresiones
+		Poper = new Pila();
+		PilaO = new Pila();
+		PilaS = new Pila();
 
-	std::wcout<<L"\n\nTabla de Funciones y Variables\n";
-	std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.begin();
-	while (it != tab->fhash.end()){
-		func = it->second;
-		std::wcout<<L" "<< func->tipo<< L" " << func->nombre << L'\n';
 
-		//Imprime Parametros si los tiene.
-		func->parametros->Print();
+		//Inicializa la tabla de Variables
+		tab = new TablaDeVariables();
 
-		std::wcout << L"intNum:"<< func->intNum << L" floatNum:";
-		std::wcout << func->floatNum << L" stringNum:" << func->stringNum << L'\n';
+		//Tabla de temporales
+		temporales = new Temporales(TEMP_INT,TEMP_FLOAT,TEMP_STRING);
+		//Inicializa tabla de Constantes
+		tabconstantes = new Contexto(CONSTANT_INT,CONSTANT_FLOAT,CONSTANT_STRING);
+		
+		//Inicializa tabla de globales
+		tabglobales = new Contexto(GLOBAL_INT,GLOBAL_FLOAT,GLOBAL_STRING);
 
-		//Variables Dentro
-		std::map<std::wstring,Variable *>::iterator it2 = func->vhash.begin();
-		while(it2 != it->second->vhash.end()){
+		//Inicializa la funcion
+		f = new FuncionX();
+		// Codigos de funciones y variables
+		tipovariable=-1;enterov=11;flotantev=12;cadenav=13;errorv=14;
+
+		tipofuncion=-1;enterof=21;flotantef=22;voidf=23;errorf=24;
+
+		//Manejo de expresiones
+		expresion = 0;
+
+		//Manejo de retorno
+		retorno = 0;
+
+		//Declaraciones globales
+		global = 0;
+
+		//Declaracion de parametros
+		parametros = 0;
+	
+		//Verificar si es una firma o la definicion de una funcion
+		firma = 0;
+		definefunc = 0;
+		omiteCuerpo = 0;
+
+		//Tipo de objetos
+		variable = 0;
+		funcion = 1;
+		llamada = 3;
+		lectura = 4;
+		escritura = 5;
+		condicion = 6;
+		ciclo = 7;
+		regreso = 8;
+		funcionfirma = 9;
+		undef = 10;
+
+		//operador Actual en al expresion
+		operadorActual = -1;		
+
+		inicializaSemantica();
+		
+	}
+
+	void Err(wchar_t* msg) {
+		errors->Error(la->line, la->col, msg);
+	}
+
+
+	//Esto se utiliza para registrar la funcion main en la tabla de funciones
+	void registraMain(){
+
+		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(L"main");
+		if( it == tab->fhash.end()) {
+		//Checa si hay una funcion antes de crear la funcion main
+			if(f->nombre == std::wstring(L"")){
+				f->nombre=std::wstring(L"main");
+				f->tipo=voidf;
+					
+			}else{
+			//Inserta la funcion  al hash y crea la funcion main
+				tab->fhash.insert(std::make_pair(f->nombre,f));
+				f = new FuncionX();
+				f->nombre=std::wstring(L"main");
+				f->tipo=voidf;
+			}
+		}else{
+			Err(L"No puede haber dos funciones main()");
+		}
+
+	}
+
+	/*Imprime todos los registros de Funciones
+		La tabla de variables globales y la tabla de constantes
+	*/
+	void imprimeRegistros(){
+		FuncionX *func;
+		Variable *var;
+
+		std::wcout<<L"\n\nTabla de Funciones y Variables\n";
+		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.begin();
+		while (it != tab->fhash.end()){
+			func = it->second;
+			std::wcout<<L" "<< func->tipo<< L" " << func->nombre << L'\n';
+			
+			//Imprime Parametros si los tiene.
+			func->parametros->Print();
+			
+			std::wcout << L"intNum:"<< func->intNum << L" floatNum:";
+			std::wcout << func->floatNum << L" stringNum:" << func->stringNum << L'\n';
+	
+			//Variables Dentro
+			std::map<std::wstring,Variable *>::iterator it2 = func->vhash.begin();
+			while(it2 != it->second->vhash.end()){
+				var = it2->second;
+				std::wcout << L"		nombre:" << var->nombre;
+				std::wcout << L" tipo:" << var->tipo;
+				std::wcout << L" direccion:" << var->direccion << L'\n';
+	
+				it2++;
+			}
+			
+			it++;
+			std::wcout << L"\n\n";
+		}
+
+		std::wcout<<L"Tabla de Variables Globales\n";
+		std::map<std::wstring,Variable *>::iterator it2 = tabglobales->vhash.begin();
+		while (it2 != tabglobales->vhash.end()){
 			var = it2->second;
-			std::wcout << L"		nombre:" << var->nombre;
+			std::wcout << L"	nombre:" << var->nombre;
 			std::wcout << L" tipo:" << var->tipo;
 			std::wcout << L" direccion:" << var->direccion << L'\n';
-
 			it2++;
 		}
 
-		it++;
-		std::wcout << L"\n\n";
-	}
-
-	std::wcout<<L"Tabla de Variables Globales\n";
-	std::map<std::wstring,Variable *>::iterator it2 = tabglobales->vhash.begin();
-	while (it2 != tabglobales->vhash.end()){
-		var = it2->second;
-		std::wcout << L"	nombre:" << var->nombre;
-		std::wcout << L" tipo:" << var->tipo;
-		std::wcout << L" direccion:" << var->direccion << L'\n';
-		it2++;
-	}
-
-	std::wcout<<L"Tabla de Variables Constantes\n";
-	it2 = tabconstantes->vhash.begin();
-	while (it2 != tabconstantes->vhash.end()){
-		var = it2->second;
-		std::wcout << L"	nombre:" << var->nombre;
-		std::wcout << L" tipo:" << var->tipo;
-		std::wcout << L" direccion:" << var->direccion << L'\n';
-		it2++;
-	}
-
-	std::wcout<<L"\n\nCuadruplos de Expresiones\n";
-	std::map<int,Cuadruplo *>::iterator iterator = hashCuadruplos.begin();
-	Cuadruplo *c;
-	while(iterator != hashCuadruplos.end()){
-		c = iterator->second;
-		std::wcout<< c->op << L"," << c->operador1 << L"," << c->operador2 << L","<< c->resultado << L"\n";
-		iterator++;
-	}
-
-}
-
-//Registra las constantes encontradas en el programa
-void registraConstante(){
-	std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
-	if(it == tabconstantes->vhash.end()){
-		v = new Variable();
-		v->nombre = identificador;
-		v->tipo = tipovariable;
-		switch(tipovariable){
-			case 11://entero
-				v->direccion=tabconstantes->intNum;
-				tabconstantes->intNum++;
-				break;
-			case 12://flotante
-				v->direccion=tabconstantes->floatNum;
-				tabconstantes->floatNum++;
-				break;
-			case 13://string
-				v->direccion=tabconstantes->stringNum;
-				tabconstantes->stringNum++;
-				break;
+		std::wcout<<L"Tabla de Variables Constantes\n";
+		it2 = tabconstantes->vhash.begin();
+		while (it2 != tabconstantes->vhash.end()){
+			var = it2->second;
+			std::wcout << L"	nombre:" << var->nombre;
+			std::wcout << L" tipo:" << var->tipo;
+			std::wcout << L" direccion:" << var->direccion << L'\n';
+			it2++;
 		}
-		//Se registra la constante
-		tabconstantes->vhash.insert(std::make_pair(v->nombre,v));			
-	}
-}
-
-//Agrega el parametro a la lista de la funcion
-void registraParametroFirma(){
-	f->parametros->Append(tipovariable);
-}
-//Checa si efectivamente la firma es igual a la declaracion
-void verificaRegistroFuncion(){
-	std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(ftemp->nombre);
-	if(it == tab->fhash.end()){
-		std::wcout <<L"("<< ftemp->nombre<<L")";
-		Err(L"Function signtarue not declared.");
-		delete(ftemp);
-		omiteCuerpo = 1;
-	}else if(it->second->tipo != ftemp->tipo){
-		std::wcout <<L"("<< ftemp->nombre<<L")";
-		Err(L"Signature return type mismatch.");
-		delete(ftemp);
-		omiteCuerpo = 1;
-	}else if(!(it->second->parametros->Equals(ftemp->parametros))){
-		std::wcout <<L"("<< ftemp->nombre<<L")";
-		Err(L"Signature parameters mismatch.");	
-		delete(ftemp);
-		omiteCuerpo =1;
-	}else{
-		//Asigna la funcion para que agregue variables a la tabla
-		f=it->second;
-		f->definida = 1;
-		omiteCuerpo = 0;
-		std::map<std::wstring,Variable *>::iterator it = ftemp->vhash.begin();
-		while(it != ftemp->vhash.end()){
-
-			f->vhash.insert(std::make_pair(it->first,it->second));
-			it++;
+		std::wcout<<L"\n\nCuadruplos de Expresiones\n";
+		std::map<int,Cuadruplo *>::iterator iterator = hashCuadruplos.begin();
+		Cuadruplo *c;
+		while(iterator != hashCuadruplos.end()){
+			c = iterator->second;
+			std::wcout<< c->op << L"," << c->operador1 << L"," << c->operador2 << L","<< c->resultado << L"\n";
+			iterator++;
 		}
-		//Paso de contador de direcciones virtuales
-		f->intNum = ftemp->intNum;
-		f->floatNum = ftemp->floatNum;
-		f->stringNum = ftemp->stringNum;
-		//Se libera memoria de la funcion temporal
-		delete (ftemp);
-		//Se necesita explicitamente NULL por que C++ no lo hace
-		ftemp = NULL;
+
 	}
 
-}
+	//Registra las constantes encontradas en el programa
+	void registraConstante(){
+		std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
+			if(it == tabconstantes->vhash.end()){
+				v = new Variable();
+				v->nombre = identificador;
+				v->tipo = tipovariable;
+				switch(tipovariable){
+					case 11://entero
+						v->direccion=tabconstantes->intNum;
+						tabconstantes->intNum++;
+						break;
+					case 12://flotante
+						v->direccion=tabconstantes->floatNum;
+						tabconstantes->floatNum++;
+						break;
+					case 13://string
+						v->direccion=tabconstantes->stringNum;
+						tabconstantes->stringNum++;
+						break;
+				}
+				//Se registra la constante
+				tabconstantes->vhash.insert(std::make_pair(v->nombre,v));			
+			}
+	}
 
-//Metodo para agregar variable actual a funcion
-void agregaVariable(FuncionX *funcion){
-	//Por ahora solo se guardan las variables
-	//Mas adelante se guasrdaran los valores en la estructura
-	std::map<std::wstring,Variable *>::iterator it = funcion->vhash.find(identificador);
-	std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
-	if( it != funcion->vhash.end() || itglobal != tabglobales->vhash.end()) {
-		std::wcout << L"("<<identificador<<L")";
-		Err(L"Variable already declared.");
-	}else{
-		//Si es un prametro de la funcion
-		//Tambien se agrega a la lista de parametros
-		if(parametros == 1){
+	//Agrega el parametro a la lista de la funcion
+	void registraParametroFirma(){
+			f->parametros->Append(tipovariable);
+	}
+	//Checa si efectivamente la firma es igual a la declaracion
+	void verificaRegistroFuncion(){
+		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(ftemp->nombre);
+		if(it == tab->fhash.end()){
+			std::wcout <<L"("<< ftemp->nombre<<L")";
+			Err(L"Function signature not declared.");
+			ftemp->parametros->Print();
+			delete ftemp;
+			omiteCuerpo = 1;
+		}else if(it->second->tipo != ftemp->tipo){
+			std::wcout <<L"("<< ftemp->nombre<<L")";
+			Err(L"Signature return type mismatch.");
+			delete ftemp;
+			omiteCuerpo = 1;
+		}else if(!(it->second->parametros->Equals(ftemp->parametros))){
+			std::wcout <<L"("<< it->second->nombre<<L")";
+			Err(L"Signature parameters mismatch.");	
+			delete ftemp ;
+			omiteCuerpo =1;
+		}else if(it->second->definida == 1){
+			std::wcout <<L"("<< it->second->nombre<<L")";
+			Err(L"Function already defined.");	
+			delete ftemp ;
+			omiteCuerpo =1;
+
+		}else{
+			//Asigna la funcion para que agregue variables a la tabla
+			f=it->second;
+			f->definida = 1;
+			omiteCuerpo = 0;
+			std::map<std::wstring,Variable *>::iterator it = ftemp->vhash.begin();
+			while(it != ftemp->vhash.end()){
+				
+				f->vhash.insert(std::make_pair(it->first,it->second));
+				it++;
+			}
+			//Paso de contador de direcciones virtuales
+			f->intNum = ftemp->intNum;
+			f->floatNum = ftemp->floatNum;
+			f->stringNum = ftemp->stringNum;
+			//Se libera memoria de la funcion temporal
+			delete ftemp;
+			//Se necesita explicitamente NULL por que C++ no lo hace
+			ftemp = NULL;
+		}
+
+	}
+
+
+
+	void registraVariable(FuncionX *funcion){
+		if(omiteCuerpo == 1)
+			return;
+		//Cambia el nombre del identificador
+		wchar_t* name = coco_string_create(t->val);
+		identificador = std::wstring(name);
+		coco_string_delete(name);
+
+		std::map<std::wstring,Variable *>::iterator it = funcion->vhash.find(identificador);
+		std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
+		if( it != funcion->vhash.end() || itglobal != tabglobales->vhash.end()) {
+			std::wcout << L"("<<identificador<<L")";
+			Err(L"Variable already declared.");
+		}else{
+			v = new Variable();
+			v->nombre = identificador;
+			v->tipo = tipovariable;
+			switch(tipovariable){
+				case 11://entero
+					funcion->intNum++;
+					v->direccion=funcion->intNum;
+					break;
+				case 12://flotante
+					funcion->floatNum++;
+					v->direccion=funcion->floatNum;
+					break;
+				case 13://string
+					funcion->stringNum++;
+					v->direccion=funcion->stringNum;
+					break;
+			}
+
+			funcion->vhash.insert(std::make_pair(v->nombre,v));
+		}
+	}
+	//Registra los parametros a la funcion activa para comprarlos despues
+	void registraParametroFuncion(FuncionX *funcion){
+		if(omiteCuerpo == 1)
+			return;
+		//Cambia el nombre del identificador
+		wchar_t* name = coco_string_create(t->val);
+		identificador = std::wstring(name);
+		coco_string_delete(name);
+
+		std::map<std::wstring,Variable *>::iterator it = funcion->vhash.find(identificador);
+		std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
+		if( it != funcion->vhash.end() || itglobal != tabglobales->vhash.end()) {
+			std::wcout << L"("<<identificador<<L")";
+			Err(L"Variable already declared.");
+		}else{
 			funcion->parametros->Append(tipovariable);
+			//Si es un prametro de la funcion
+			//Tambien se agrega a la lista de parametros
+			v = new Variable();
+			v->nombre = identificador;
+			v->tipo = tipovariable;
+			switch(tipovariable){
+				case 11://entero
+					funcion->intNum++;
+					v->direccion=funcion->intNum;
+					break;
+				case 12://flotante
+					funcion->floatNum++;
+					v->direccion=funcion->floatNum;
+					break;
+				case 13://string
+					funcion->stringNum++;
+					v->direccion=funcion->stringNum;
+					break;
+			}
+
+			funcion->vhash.insert(std::make_pair(v->nombre,v));
 		}
-		v = new Variable();
-		v->nombre = identificador;
-		v->tipo = tipovariable;
-		switch(tipovariable){
-			case 11://entero
-				funcion->intNum++;
-				v->direccion=funcion->intNum;
-				break;
-			case 12://flotante
-				funcion->floatNum++;
-				v->direccion=funcion->floatNum;
-				break;
-			case 13://string
-				funcion->stringNum++;
-				v->direccion=funcion->stringNum;
-				break;
-		}
-		funcion->vhash.insert(std::make_pair(v->nombre,v));
+
 	}
 
-}
 
-/*Verifica de que tipo es una variable segun su dirección*/
-int dameTipo(int direccion){
-	if((direccion >= PROCINT && direccion < PROCFLOAT) 
-			|| (direccion >= GLOBAL_INT && direccion < GLOBAL_FLOAT) 
-			|| (direccion >= CONSTANT_INT && direccion < CONSTANT_FLOAT)
-			|| (direccion >= TEMP_INT && direccion < TEMP_FLOAT) )
-	{
-		return enterov;			
-
-	}else if((direccion >= PROCFLOAT && direccion < PROCSTRING) 
-			|| (direccion >= GLOBAL_FLOAT && direccion < GLOBAL_STRING) 
-			|| (direccion >= CONSTANT_FLOAT && direccion < CONSTANT_STRING)
-			|| (direccion >= TEMP_FLOAT && direccion < TEMP_STRING) )
-	{
-		return flotantev;
+	//Definiciones semanticas de lectura
+	void verificaExistenciaLectura(){
+		wchar_t* name = coco_string_create(t->val);
+		identificador = std::wstring(name);
+		coco_string_delete(name);
+		std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
+		std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
+		if( it != f->vhash.end() ){
+			//Genera Cuadruplo de Read
+			Poper->Push(READ);
+			PilaO->Push((it->second)->direccion);
+			gCuadruplo();	
+		}else if(itglobal != tabglobales->vhash.end()) {
+			//Genera Cuadruplo de Read
+			Poper->Push(READ);
+			PilaO->Push((itglobal->second)->direccion);
+			gCuadruplo();	
+		}else{
+			std::wcout <<L"("<< identificador<<L")";
+			Err(L"Trying to read and variable doesn't exist.");
+		}
 	}
 
-	return cadenav;
-}
+	void registraFirma(){
+		wchar_t* name = coco_string_create(t->val);
+		identificador = std::wstring(name);
+		coco_string_delete(name);
+		//Busca en la tabla si es que existe la firma
+		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(identificador);
+		//Con esto se sobreescribe la funcion poniendo la ultima en la lista
+		//Es una forma de lidiar con funciones con el mismo nombre
+		if(identificador == f->nombre){
+			std::wcout <<L"("<< identificador<<L")";
+			Err(L"Firm already declared. Using first declared.");
+			firma = 0;
+		}else if( it == tab->fhash.end()) {
+			//Checa si hay una firma antes de crearla
+			if(f->nombre == std::wstring(L"")){
+				f->nombre=identificador;
+				f->tipo=tipofuncion;
+				tab->fhash.insert(std::make_pair(f->nombre,f));
+			}else{
+				//Inserta la funcion  al hash y crea la nueva
+				tab->fhash.insert(std::make_pair(f->nombre,f));
+				f = new FuncionX();
+				f->nombre=identificador;
+				f->tipo=tipofuncion;
+				tab->fhash.insert(std::make_pair(f->nombre,f));
+			}
+		}else{
+			//Ejecuta lo mismo que el primer if, solo que cuando ya existe en el hash
+			std::wcout <<L"("<< identificador<<L")";
+			Err(L"Firm already declared. Using first declared.");
+			firma = 0;
+		}
+	}
 
-/*Verifica que las operaciones sean valida*/
-int verificaCubo(int operador, int operando1, int operando2){
-	int cubo_semantico[4][4][14]= {
+	void registraGlobal(){
+		wchar_t* name = coco_string_create(t->val);
+		identificador = std::wstring(name);
+		coco_string_delete(name);
+
+		std::map<std::wstring,Variable *>::iterator it = tabglobales->vhash.find(identificador);
+			
+		if(it != tabglobales->vhash.end()){
+			std::wcout << L"Global("<<identificador<<")";
+			Err(L"Variable already declared.");
+		}else{
+			v = new Variable();
+			v->nombre = identificador;
+			v->tipo = tipovariable;
+			switch(tipovariable){
+				case 11://entero
+					v->direccion=tabglobales->intNum;
+					tabglobales->intNum++;
+					break;
+				case 12://flotante
+					v->direccion=tabglobales->floatNum;
+					tabglobales->floatNum++;
+					break;
+				case 13://string
+					v->direccion=tabglobales->stringNum;
+					tabglobales->stringNum++;
+					break;
+			}	
+		}
+		//Insertar en tabla de variables Globales
+		tabglobales->vhash.insert(std::make_pair(v->nombre,v));
+	}
+
+
+
+	/*Verifica de que tipo es una variable segun su dirección*/
+	int dameTipo(int direccion){
+		if((direccion >= PROCINT && direccion < PROCFLOAT) 
+				|| (direccion >= GLOBAL_INT && direccion < GLOBAL_FLOAT) 
+				|| (direccion >= CONSTANT_INT && direccion < CONSTANT_FLOAT)
+				|| (direccion >= TEMP_INT && direccion < TEMP_FLOAT) )
 		{
-			{11,11,11,11,11,11,11,11,11,11,11,11,11,11},
-			{12,12,12,12,12,11,11,11,11,11,11,11,11,-666},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}},
-
+			return enterov;			
+	
+		}else if((direccion >= PROCFLOAT && direccion < PROCSTRING) 
+				|| (direccion >= GLOBAL_FLOAT && direccion < GLOBAL_STRING) 
+				|| (direccion >= CONSTANT_FLOAT && direccion < CONSTANT_STRING)
+				|| (direccion >= TEMP_FLOAT && direccion < TEMP_STRING) )
 		{
-			{12,12,12,12,12,11,11,11,11,11,11,-666,-666,12},
-			{12,12,12,12,12,11,11,11,11,11,11,-666,-666,12},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}},
-
-		{{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,13},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}},
-
-		{{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,13},
-			{-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666,-666}}};
-
-	//Los mueve de tal forma que cambien a las dimensiones del cubo
-	return cubo_semantico[operando2-11][operando1-11][operador];
-}
-
-int verificaMatriz(int operador, int operando){
-	int matriz_semantica[2][4] = {{11,-666,-666,-666},
-		{11,12,-666,-666}};
-	std::wcout <<operador-14<<L" "<<operando<<L"\n";
-	return matriz_semantica[operador-14][operando-11];
-}
-
-/*Logica de Expresiones Aritmeticas*/
-void metePilaO(){
-	//std::wcout << L"Mete PilaO("<<identificador<<L")\n";
-	std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
-	int dato = it->second->direccion;
-	PilaO->Push(dato);
-}
-void metePilaOV(){
-	//	std::wcout << L"Mete PilaOV("<<identificador<<L")\n";
-	std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
-	if(it == f->vhash.end()){
-		it = tabglobales->vhash.find(identificador);
+			return flotantev;
+		}
+	
+		return cadenav;
 	}
-	if(it == tabglobales->vhash.end()){
-		std::wcout<< L"No se encontro la variable"<< identificador << L":no se usara en expresion\n";
-		exit(-1);
+	
+	/*Verifica que las operaciones sean valida*/
+	int verificaCubo(int operador, int operando1, int operando2){
+		//Los mueve de tal forma que cambien a las dimensiones del cubo
+		return cubo_semantico[operando2-11][operando1-11][operador];
 	}
-	int dato = it->second->direccion;
-	PilaO->Push(dato);
-}
-void metePoper(){
-	//	std::wcout << L"Mete Operador("<<operadorActual<<L")\n";
-	Poper->Push(operadorActual);
-}
-
-void sacaPoper(){
-	int operador = Poper->Pop();
-	//	std::wcout << L"Saca Poper("<<operador<<L")\n";
-	if(operador != PIZQ){
-		std::wcout << L"Se esperaba )\n";
-		exit(-1);
+	
+	int verificaMatriz(int operador, int operando){
+		return matriz_semantica[operador-14][operando-11];
 	}
-}
 
-void gCuadruplo(){
-	int operador = Poper->Pop();
-	if(operador == NOT || operador == NEGATIVO){
-		int operando = PilaO->Pop();
+	void metePilaO(){
+		//std::wcout << L"Mete PilaO("<<identificador<<L")\n";
+		std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
+		int dato = it->second->direccion;
+		PilaO->Push(dato);
+	}
 
-		//Ve si la operacion resulta en algo valido
-		int tipo = verificaMatriz(operador,dameTipo(operando));
+	void metePilaOV(){
 
-		//Si no termina la compilacion
-		if(tipo == -666){
-			Err(L"Invalid Operation");
+		wchar_t* name = coco_string_create(t->val);
+		identificador = std::wstring(name);
+		coco_string_delete(name);
+		//	std::wcout << L"Mete PilaOV("<<identificador<<L")\n";
+		std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
+		if(it == f->vhash.end()){
+			it = tabglobales->vhash.find(identificador);
+		}
+		if(it == tabglobales->vhash.end()){
+			std::wcout<< L"Variable not found:"<< identificador << L"\n";
 			exit(-1);
 		}
+		int dato = it->second->direccion;
+		PilaO->Push(dato);
+	}
 
-		int temp = temporales->AsignaTemporal(tipo);	
-		Cuadruplo *cuadruplo = new Cuadruplo(operador,operando,-1,temp);
-		hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
-		contCuadruplos++;
-		PilaO->Push(temp);
 
-	}else if(operador == ASIGNA){
-		int operando = PilaO->Pop();
-		int resultado = PilaO->Pop();
-		int tipo = verificaCubo(operador,dameTipo(operando),dameTipo(resultado));
-		if(tipo == -666){
-			Err(L"Assignation of different types");
+	//Funciones para expresiones
+	void metePoper(){
+		//	std::wcout << L"Mete Operador("<<operadorActual<<L")\n";
+		Poper->Push(operadorActual);
+	}
+
+	void sacaPoper(){
+	int operador = Poper->Pop();
+		//	std::wcout << L"Saca Poper("<<operador<<L")\n";	
+		if(operador != PIZQ){
+			std::wcout << L"Se esperaba )\n";
 			exit(-1);
 		}
-		Cuadruplo *cuadruplo = new Cuadruplo(operador,operando,-1,resultado);
-		hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
-		contCuadruplos++;
-	}else if(operador == PRINT || operador == READ){
-		//Saca lo que se va a imprimir
-		int resultado = PilaO->Pop();
-		Cuadruplo *cuadruplo = new Cuadruplo(operador,resultado,-1,-1);
-		hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
-		contCuadruplos++;
-
-	}else if(operador == GOTOF || operador == GOTOV){
-		int resultado = PilaO->Pop();
-
-		Cuadruplo *cuadruplo = new Cuadruplo(operador,resultado,-1,-1);
-		hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
-		PilaS->Push(contCuadruplos++);
-		contCuadruplos++;
-
-	}else{
-		int operando2 = PilaO->Pop();
-		int operando1 = PilaO->Pop();
-
-		//Ve si la operacion resulta en algo valido
-		int tipo = verificaCubo(operador,dameTipo(operando1),dameTipo(operando2));
-		if(tipo == -666){
-			Err(L"Invalid Operation");
-			exit(-1);
-		}
-
-		int temp = temporales->AsignaTemporal(tipo);
-		Cuadruplo *cuadruplo = new Cuadruplo(operador,operando1,operando2,temp);
-		hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
-		contCuadruplos++;
-		PilaO->Push(temp);
 	}
 
-
-}
-
-void gCuadruploGOTOWhile(){
-	int operador = Poper->Pop();
-	//	goto while
-	if(operador == GOTO){
-		int falso = PilaS->Pop();
-		int regreso = PilaS->Pop();
-
-		Cuadruplo *cuadruplo = new Cuadruplo(operador,-1,-1,regreso);
-		hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
-		contCuadruplos++;
-
-		//Rellena el gotof anterior
-		std::map<int,Cuadruplo *>::iterator it;
-		it = hashCuadruplos.find(falso);
-		Cuadruplo *c = (it->second);
-		c->resultado=contCuadruplos;
-	}
-}
-
-
-//Goto de if	
-//inicio de else
-void gCuadruploGOTOElse(){
-	int operador = Poper->Pop();
-	if(operador ==GOTO){
-		Cuadruplo *cuadruplo = new Cuadruplo(operador,-1,-1,-1);
-		hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
-		contCuadruplos++;
-
-		int falso = PilaS->Pop();
-		//Rellena el gotof anterior
-		std::map<int,Cuadruplo *>::iterator it;
-		it = hashCuadruplos.find(falso);
-		Cuadruplo *c = (it->second);
-		c->resultado=contCuadruplos;
-		PilaS->Push(contCuadruplos - 1);
-	}
-}
-
-//fin del if
-
-void gCuadruploGOTOIf(){
-	int operador = Poper->Pop();
-	if(operador ==GOTO){
+	void gCuadruplo(){
 		int operador = Poper->Pop();
-		int falso = PilaS->Pop();
-		//Rellena el gotof anterior
-		std::map<int,Cuadruplo *>::iterator it;
-		it = hashCuadruplos.find(falso);
-		Cuadruplo *c = (it->second);
-		c->resultado=contCuadruplos;
+		if(operador == NOT || operador == NEGATIVO){
+			int operando = PilaO->Pop();
+
+			//Ve si la operacion resulta en algo valido
+			int tipo = verificaMatriz(operador,dameTipo(operando));
+	
+			//Si no termina la compilacion
+			if(tipo == -666){
+				Err(L"Invalid Operation");
+				exit(-1);
+			}
+	
+			int temp = temporales->AsignaTemporal(tipo);	
+			Cuadruplo *cuadruplo = new Cuadruplo(operador,operando,-1,temp);
+			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+			contCuadruplos++;
+			PilaO->Push(temp);
+	
+		}else if(operador == ASIGNA){
+			int operando = PilaO->Pop();
+			int resultado = PilaO->Pop();
+			int tipo = verificaCubo(operador,dameTipo(operando),dameTipo(resultado));
+			if(tipo == -666){
+				Err(L"Assignation of different types");
+				exit(-1);
+			}
+			Cuadruplo *cuadruplo = new Cuadruplo(operador,operando,-1,resultado);
+			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+			contCuadruplos++;
+		}else if(operador == PRINT || operador == READ){
+			//Saca lo que se va a imprimir
+			int resultado = PilaO->Pop();
+			Cuadruplo *cuadruplo = new Cuadruplo(operador,resultado,-1,-1);
+			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+			contCuadruplos++;
+	
+		}else if(operador == GOTOF || operador == GOTOV){
+			int resultado = PilaO->Pop();
+			
+			Cuadruplo *cuadruplo = new Cuadruplo(operador,resultado,-1,-1);
+			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+			PilaS->Push(contCuadruplos++);
+			contCuadruplos++;
+	
+		}else{
+			int operando2 = PilaO->Pop();
+			int operando1 = PilaO->Pop();
+	
+			//Ve si la operacion resulta en algo valido
+			int tipo = verificaCubo(operador,dameTipo(operando1),dameTipo(operando2));
+			if(tipo == -666){
+				Err(L"Invalid Operation");
+				exit(-1);
+			}
+
+			int temp = temporales->AsignaTemporal(tipo);
+			Cuadruplo *cuadruplo = new Cuadruplo(operador,operando1,operando2,temp);
+			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+			contCuadruplos++;
+			PilaO->Push(temp);
 	}
+
 }
-
-
 /*-------------------------------------------------------------*/
 CHARACTERS
 letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".
@@ -613,11 +733,11 @@ IGNORE cr + lf + tab
 PRODUCTIONS
 //Inicia QRex----------------------------------------------------------------------
 QRex (.InitDeclarations();.) //Inicializa las variables
-= 
+	= 
 {global DeclaracionGlobal | 
-	(.firma = 1;.) 
-		sign FuncionFirma ';'			
-		(.firma = 0;.)
+					(.firma = 1;.) 
+sign FuncionFirma ';'			
+					(.firma = 0;.)
 } 
 
 QRex2.
@@ -625,32 +745,33 @@ QRex2.
 
 QRex2 = 
 {				//Aqui se hace la definicion de la funcion
-	(.definefunc = 1;.)
-		Funcion 			
-		(.verificaRegistroFuncion();.)
-		Cuerpo2 
-		(.definefunc = 0;omiteCuerpo=0;.)
+				(.definefunc = 1;.)
+Funcion 			
+				(.verificaRegistroFuncion();.)
+Cuerpo2 
+				(.definefunc = 0;omiteCuerpo=0;.)
 }
 
-(.tipo = funcion;.)
+				(.tipo = funcion;.)
 main '(' ')'
-(.registraMain();.) 
-(.tipo = undef;.)
+				(.registraMain();.) 
+				(.tipo = undef;.)
 Cuerpo
-(.
- //Inserta la funcion main al final de todo
- tab->fhash.insert(std::make_pair(f->nombre,f));
- .)
+				(.
+					//Inserta la funcion main al final de todo
+					tab->fhash.insert(std::make_pair(f->nombre,f));
+				.)
 
 (.imprimeRegistros();.).
 //Fin QRex-------------------------------------------------------------------------
 
 //Inicia Declaracion---------------------------------------------------------------
-DeclaracionGlobal (. wchar_t* name; global = 1; .) 
+DeclaracionGlobal
 = 
-(.tipo = variable;		.) 
-Tipov ID<name> {',' ID<name>} ';'
-(. tipo = undef; global = 0;	.)
+Tipov ID 					(.registraGlobal();.)
+{',' 
+ID						(.registraGlobal();.)
+} ';'
 .
 //Finaliza Declaracion-----------------------------------------------------------------
 
@@ -661,503 +782,323 @@ Cuerpo = '{'{Declaracion} {Estatuto} '}'.
 
 
 //Inicia Declaracion---------------------------------------------------------------
-Declaracion (. wchar_t* name; .) = 
-(.tipo = variable;.) 
-Tipov ID<name> {',' ID<name>} ';'
-(. tipo = undef;.)
+Declaracion = 
+						(.tipo = variable;.) 
+						//Registra las variables declaradas
+Tipov ID					(.registraVariable(f);.)
+
+{',' ID						(.registraVariable(f);.)
+
+} ';'
+						(. tipo = undef;.)
 .
 //Finaliza Declaracion-----------------------------------------------------------------
 Llamada = '(' [Param] ')'.
 
-Lectura (. wchar_t* name; .) = read '(' 
-(.tipo=lectura;.)
-ID<name> ')' ';'
-(.tipo = undef;.)
+Lectura= read '(' 
+					//Verifica que exista el ID antes de leer
+ID					(.verificaExistenciaLectura();.)
+
+')' ';'
 .
 
-Var_Cte(.wchar_t* name;.) = 
-cte_int
-(.tipovariable = enterov;
- name = coco_string_create(t->val);
- identificador = std::wstring(name);
- coco_string_delete(name);
- registraConstante();
- if(expresion == 1){
- metePilaO();
- }
- .)
-| cte_float
-(.tipovariable = flotantev;
- name = coco_string_create(t->val);
- identificador = std::wstring(name);
- coco_string_delete(name);
- registraConstante();
- if(expresion == 1){
- metePilaO();
- }
- .)
-| ID<name> [(.llamada = 1;.)Llamada]  
-
-(.if (llamada != 1){
- metePilaOV();
- }llamada = 0;
-
- .)
+Var_Cte= 
+	  cte_int
+					(.	tipovariable = enterov;
+						wchar_t* name = coco_string_create(t->val);
+						identificador = std::wstring(name);
+						coco_string_delete(name);
+						registraConstante();
+						if(expresion == 1){
+							metePilaO();
+						}
+					.)
+	| cte_float
+					(.	tipovariable = flotantev;
+						wchar_t* name = coco_string_create(t->val);
+						identificador = std::wstring(name);
+						coco_string_delete(name);
+						registraConstante();
+						if(expresion == 1){
+							metePilaO();
+						}
+					.)
+	| ID [				(.	llamada = 1;	.)
+	Llamada]  
+					(.	if (llamada != 1){
+							metePilaOV();
+						}
+						llamada = 0;
+					.)
 
 .
 
-Param (.wchar_t* name;.) = 
+Param = 
 (
- (.
-  Poper->Push(PRINT);
+					(.
+						if(tipo == escritura){
+							Poper->Push(PRINT);
+						}
+					.)
+Expresion
+					(.
+						if(tipo == escritura){
+							gCuadruplo();
+						}
+					.)
+|
 
-  .)				
- Expresion 			(.if(tipo == escritura){
-	 gCuadruplo();
-	 }
+cte_string
+					(.	tipovariable = cadenav;
+						wchar_t* name = coco_string_create(t->val);
+						identificador = std::wstring(name);
+						coco_string_delete(name);
+						registraConstante();
+						if(tipo == escritura){
+							std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
+							Poper->Push(PRINT);
+							PilaO->Push((it->second)->direccion);
+							gCuadruplo();
+						}
 
-	 .)
+					.)
 
- | cte_string
- (.tipovariable = cadenav;
-  name = coco_string_create(t->val);
-  identificador = std::wstring(name);
-  coco_string_delete(name);
-  registraConstante();
-  if(tipo == escritura){
-  std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
-  Poper->Push(PRINT);
-  PilaO->Push((it->second)->direccion);
-  gCuadruplo();
-  }
-  .)
+) [',' Param].
 
- ) [',' Param].
+//Inicia Funcion () ----------------------------------------------------------------
+Funcion = Tipof 
+					(.tipo = funcion;.)
+ID
+					(. 
+						//Crea la funcion temporal
+						wchar_t* name = coco_string_create(t->val);
+						identificador = std::wstring(name);
+						coco_string_delete(name);
+						ftemp = new FuncionX();
+						ftemp->nombre = identificador;
+						ftemp->tipo =tipofuncion;
+					.)
+'(' [Dec_Param] ')'			
+					(.tipo = undef;.)
+.
+//Finaliza Funcion () ----------------------------------------------------------------
 
- //Inicia Funcion () ----------------------------------------------------------------
- Funcion (. wchar_t* name; .) = Tipof 
- (.tipo = funcion;.)
- ID<name>
- (.tipo = variable;.)
- '(' [Dec_Param] ')'
- (.tipo = undef;.)
- .
- //Finaliza Funcion () ----------------------------------------------------------------
+//Inicia Funcion Firma----------------------------------------------------------------
+FuncionFirma = 
+Tipof 
+					//Registra la firma si es que no existe
+ID					(.registraFirma();.)
+'(' [Dec_ParamFirma] ')'
+.
+//Finaliza Funcion Firma--------------------------------------------------------------
 
- //Inicia Funcion Firma----------------------------------------------------------------
- FuncionFirma (. wchar_t* name; .) = Tipof 
- (.tipo = funcionfirma;.)
- ID<name>
- (.tipo = variable;.)
- '(' [Dec_ParamFirma] ')'
- (.tipo = undef;.)
- .
- //Finaliza Funcion Firma--------------------------------------------------------------
+//Inicia Delcaracion de parametros de funcion-----------------------------------------
+Dec_Param = 
+					//Registra lso parametros de la funcion
+Tipov ID 				(.registraParametroFuncion(ftemp);.)
+[',' Dec_Param].
+//Finaliza Delcaracion de parametros de funcion-----------------------------------------
 
- //Inicia Delcaracion de parametros de funcion-----------------------------------------
- Dec_Param (. wchar_t* name; .) = (.parametros = 1;.)Tipov ID<name> (.parametros = 0;.) [',' Dec_Param].
- //Finaliza Delcaracion de parametros de funcion-----------------------------------------
+//Inicia Delcaracion de parametros de firma funcion-------------------------------------
+Dec_ParamFirma = 
+Tipov					(. 
+						//Esto sirve para cuando se repiten las firmas no entre
+						//Y registre las variables de la siguiente firma
+						if(firma == 1)
+						registraParametroFirma();
 
- //Inicia Delcaracion de parametros de firma funcion-------------------------------------
- Dec_ParamFirma (. wchar_t* name; .) = 
- Tipov
- (. registraParametroFirma();.)
- [',' Dec_ParamFirma].
- //Finaliza Delcaracion de parametros de firma funcion-----------------------------------
+					.)
+[',' Dec_ParamFirma].
+//Finaliza Delcaracion de parametros de firma funcion-----------------------------------
 
- //Inicia Condicion ----------------------------------------------------------------
- Condicion = if
-		 (.tipo = condicion;.)
- '(' Expresion 	 (.operadorActual=GOTOF; metePoper(); gCuadruplo();.)
- ')' 
-	         (.tipo = undef;.)
- Cuerpo
-
-
- [else		 (.operadorActual=GOTO; metePoper();gCuadruploGOTOElse();.)
- 
- Cuerpo]	 (.operadorActual=GOTO; metePoper();gCuadruploGOTOIf();.)
- .
-
-
- //Finaliza Condicion ----------------------------------------------------------------
- Asignacion (. wchar_t* name; .) = ID<name> '=' 
- //Asignacion de una expresion
- (				(.Poper->Push(ASIGNA);
-				 metePilaOV();
-				 .)
-				Expresion 
-				(.
-				 gCuadruplo();
-				 .)
-				| cte_string
-				(.tipovariable = cadenav;
-				 name = coco_string_create(t->val);
-				 identificador = std::wstring(name);
-				 coco_string_delete(name);
-				 registraConstante();
-				 .)
-
- ) ';'.
+//Inicia Condicion ----------------------------------------------------------------
+Condicion = if
+			(.tipo = condicion;.)
+ '(' Expresion ')' 
+			(.tipo = undef;.)
+Cuerpo [else Cuerpo].
 
 
+//Finaliza Condicion ----------------------------------------------------------------
+Asignacion = ID 			(.	metePilaOV();		.)
+		'='(
+					(.	Poper->Push(ASIGNA);	.)
 
- //Inicia Escritura--------------------------------------------------
- Escritura = print 			(.tipo = escritura;.)
- '(' Param ')' ';'
- (.tipo = undef;.)
- .
- //Finaliza Escritura--------------------------------------------------
+		Expresion 
+					(. 	gCuadruplo();	.)
+		| cte_string
+					(.
+						tipovariable = cadenav;
+						wchar_t* name = coco_string_create(t->val);
+						identificador = std::wstring(name);
+						coco_string_delete(name);
+						registraConstante();
+					.)
 
-
- Ciclo = while 
- (.tipo = ciclo;.)
- '('			(.PilaS->Push(contCuadruplos);.)
- Expresion 
- (.operadorActual=GOTOF; metePoper(); gCuadruplo();.)
- ')' 
- (.tipo = undef;.)
- Cuerpo			(.operadorActual=GOTO; metePoper();gCuadruploGOTOWhile();.).
-
- //Inicia Tipo de Funcion--------------------------------------------------
- Tipof = int (. tipofuncion = enterof;   .)
- | float (. tipofuncion = flotantef; .)
- | void  (. tipofuncion = voidf; .).
-
- //Finaliza tipo de funcion -----------------------------------------------
+) ';'.
 
 
- //Inicia tipo de variable ------------------------------------------------
- Tipov = int   (. tipovariable = enterov;    .)
- | float   (. tipovariable = flotantev;  .)
- | string  (. tipovariable = cadenav;    .).
 
- //Finaliza tipo de variable ----------------------------------------------
+//Inicia Escritura--------------------------------------------------
+Escritura = print 			(.tipo = escritura;.)
+'(' Param ')' ';'
+					(.tipo = undef;.)
+.
+//Finaliza Escritura--------------------------------------------------
 
 
- Estatuto = Asignacion
- | Condicion
- | Escritura
- | Lectura
- | Ciclo.
+Ciclo = while 
+			(.tipo = ciclo;.)
+'(' Expresion ')' 
+			(.tipo = undef;.)
+Cuerpo.
 
- Expresion =
- (.expresion = 1;.)
+//Inicia Tipo de Funcion--------------------------------------------------
+Tipof = int (. tipofuncion = enterof;   .)
+    | float (. tipofuncion = flotantef; .)
+    | void  (. tipofuncion = voidf; .).
 
- Exp1 
- (.
-  int peek = Poper->Peek();
-  if(peek == OR){
-  //std::wcout << "Se genero en EXP1\n";
-  gCuadruplo();
+//Finaliza tipo de funcion -----------------------------------------------
 
-  }
-  .)
- ["||" 			
- (.operadorActual=OR; metePoper();.) 
- Expresion]
 
- (.expresion = 0;.)
- .
+//Inicia tipo de variable ------------------------------------------------
+Tipov = int   (. tipovariable = enterov;    .)
+    | float   (. tipovariable = flotantev;  .)
+    | string  (. tipovariable = cadenav;    .).
 
- Exp1 = Exp2 
- (.
-  int peek = Poper->Peek();
-  if(peek == AND){
-  //std::wcout << "Se genero en EXP1\n";
-  gCuadruplo();
+//Finaliza tipo de variable ----------------------------------------------
 
-  }
-  .)
- ["&&" 
- (. operadorActual = AND;metePoper();.) 
- Exp1].
 
- Exp2 = Exp3 [
+Estatuto = Asignacion
+    | Condicion
+    | Escritura
+    | Lectura
+    | Ciclo.
+
+Expresion =
+				(.expresion = 1;.)
+Exp1 
+				(.	int peek = Poper->Peek();
+					if(peek == OR){
+						//std::wcout << "Se genero en EXP1\n";
+						gCuadruplo();
+					}
+				.)
+
+["||"				(.operadorActual=OR; metePoper();.) 
+Expresion]
+				(.expresion = 0;.)
+.
+
+Exp1 = Exp2 
+				(.	int peek = Poper->Peek();
+					if(peek == AND){
+					//std::wcout << "Se genero en EXP1\n";
+						gCuadruplo();
+					}
+				.)
+["&&"				(. operadorActual = AND;metePoper();.)
+Exp1].
+
+Exp2 = Exp3 [
  ('>' 				(.operadorActual=MAYOR;.)
   |'<' 				(.operadorActual=MENOR;.)
-  |">=" 				(.operadorActual=MAYQUE;.)
-  |"<=" 				(.operadorActual=MENQUE;.)
-  |"==" 				(.operadorActual=IGUAL;.)
-  |"!=" 				(.operadorActual=DIFERENTE;.)
- ) 
- (.metePoper();.)
- Exp3 
- (.gCuadruplo();	
-  //std::wcout << "Se genero en EXP2\n";
+  |">=" 			(.operadorActual=MAYQUE;.)
+  |"<=" 			(.operadorActual=MENQUE;.)
+  |"==" 			(.operadorActual=IGUAL;.)
+  |"!=" 			(.operadorActual=DIFERENTE;.)
+ )
+				(.metePoper();.)
+Exp3
+				(.gCuadruplo();	
+				  //std::wcout << "Se genero en EXP2\n";
 
-  .)
- ].
+				.)
+].
 
- Exp3 = Exp4 
- (. int peek = Poper->Peek();
-  if(peek == MAS || peek == MENOS){
-  //	std::wcout << "Se genero en EXP3\n";
-  gCuadruplo();}
-  .)
- [
- ('+'				(.operadorActual=MAS;.)
-  |'-'				(.operadorActual=MENOS;.)
- ) 
- (.metePoper();.) 
- Exp3].
+Exp3 = Exp4
+				(.	int peek = Poper->Peek();
+					if(peek == MAS || peek == MENOS){
+					//std::wcout << "Se genero en EXP3\n";
+						gCuadruplo();
+					}
+				.)
+[
+(
+ '+'				(.operadorActual=MAS;.)
+|'-'				(.operadorActual=MENOS;.)
+)
+				(.metePoper();.)
+Exp3].
 
- Exp4 = Exp5 
- (.
-  int peek = Poper->Peek();
-  if(peek == POR || peek == DIVISION || peek == MODULO){
-  //std::wcout << "Se genero en EXP4\n";
-  gCuadruplo();
-
-  }
-  .)
- [
- ('*'				(.operadorActual=POR;.)
+Exp4 = Exp5
+				(.	int peek = Poper->Peek();
+					if(peek == POR || peek == DIVISION || peek == MODULO){
+					//std::wcout << "Se genero en EXP4\n";
+						gCuadruplo();
+					}
+				.)
+[
+(  '*'				(.operadorActual=POR;.)
   |'/'				(.operadorActual=DIVISION;.)
   |'%'				(.operadorActual=MODULO;.)
- ) 
- (.metePoper();.) 
- Exp4].
+)				(.metePoper();.)
 
- Exp5 = 
- ['!'				(.
-		 operadorActual=NOT;
-		 metePoper();
-		 .) 
- ] 
- Exp6
- (.int peek = Poper->Peek();
-  if(peek == NOT){
-  //std::wcout << "Se genero en EXP5\n";
-  gCuadruplo();
-  }
-  .)
- .
+Exp4].
+
+Exp5 = 
+['!'				(.operadorActual=NOT;metePoper(); .) 
+] 
+Exp6				(.	int peek = Poper->Peek();
+					if(peek == NOT){
+					//std::wcout << "Se genero en EXP5\n";
+						gCuadruplo();
+					}
+				.)
+.
  /*Esto sirve para poner los fondos a la pila*/
- Exp6 = '(' 			(.operadorActual=PIZQ;metePoper();.) 
- Expresion ')' 			(.operadorActual=PDER;sacaPoper();.)
- | [
- ('+'			
-  |'-'			(.operadorActual=NEGATIVO;metePoper();.)
- )] Var_Cte 
- (.int peek = Poper->Peek();
-  if(peek == NEGATIVO){
-  //std::wcout << "Se genero en EXP6\n";
-  gCuadruplo();
+ Exp6 = 
+'(' 				(.operadorActual=PIZQ;metePoper();.) 
+ Expresion 
+')' 				(.operadorActual=PDER;sacaPoper();.)
+|
+[ 
+('+'			
+|'-'				(.operadorActual=NEGATIVO;metePoper();.)
+)
+] Var_Cte 
+				(.	int peek = Poper->Peek();
+					if(peek == NEGATIVO){
+					//std::wcout << "Se genero en EXP6\n";
+						gCuadruplo();
+					}
+				.)
+.
 
-  }
-  .)
- .
+//Inicio Cuerpo 2 (Cuerpo funcion)------------------------------------------------------------
+Cuerpo2 = '{' {Declaracion} {Estatuto} [
+return (Expresion|
+			cte_string
 
- //Inicio Cuerpo 2 (Cuerpo funcion)------------------------------------------------------------
- Cuerpo2 (.wchar_t* name;.) = '{' {Declaracion} {Estatuto} [
- (.retorno = 1;tipo = regreso;.)
- return (Expresion|
-		 cte_string
-
-		 (.tipovariable = cadenav;
-		  name = coco_string_create(t->val);
-		  identificador = std::wstring(name);
-		  coco_string_delete(name);
-		  registraConstante();
-		  .)
-
-
-	)';'] '}'
- (.retorno = 0;tipo = undef;.)
- .
- //Finaliza Cuerpo 2 (Cuerpo funcion)------------------------------------------------------------
-
- /*Auxiliares*/
- ID<wchar_t* name> = id 
-
- (. 
-  //Crea el string de coco 
-  //Conversion para meter el string a la tabla de hash
-  //Eliminar el string de coco
-
-  name = coco_string_create(t->val);identificador = std::wstring(name);
-  coco_string_delete(name);
+					(.tipovariable = cadenav;
+						wchar_t* name = coco_string_create(t->val);
+						identificador = std::wstring(name);
+						coco_string_delete(name);
+						registraConstante();
+					.)
 
 
-  //std::wcout << identificador << L"\n";
-  //Si el cuerpo de la funcion es omitido simplemente se aplica el return
-  if(omiteCuerpo == 1){
-  return;
-  }
+)';'] '}'
+.
+//Finaliza Cuerpo 2 (Cuerpo funcion)------------------------------------------------------------
+ID = id (.
 
-  /*Crea las firmas de las funciones*/
-  if(tipo == funcionfirma && firma == 1){
-  std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(identificador);
-
-  //Con esto se sobreescribe la funcion poniendo la ultima en la lista
-  //Es una forma de lidiar con funciones con el mismo nombre
-  if(identificador == f->nombre){
-	  delete(f);
-	  f = new FuncionX();
-	  f->nombre = identificador;
-	  f->tipo = tipofuncion;
-	  std::wcout <<L"("<< identificador<<L")";
-	  Err(L"Function already declared.");
-  }else if( it == tab->fhash.end()) {
-	  //Checa si hay una funcion antes de crear la funcion main
-	  if(f->nombre == std::wstring(L"")){
-		  f->nombre=identificador;
-		  f->tipo=tipofuncion;
-
-	  }else{
-		  //Inserta la funcion  al hash y crea la funcion main
-		  tab->fhash.insert(std::make_pair(f->nombre,f));
-		  f = new FuncionX();
-		  f->nombre=identificador;
-		  f->tipo=tipofuncion;
-	  }
-  }else{
-	  //Ejecuta lo mismo que el primer if, solo que cuando ya existe en el hash
-	  tab->fhash.insert(std::make_pair(f->nombre,f));
-	  tab->fhash.erase(it);
-	  f = new FuncionX();
-	  f->nombre = identificador;
-	  std::wcout <<L"("<< identificador<<L")";
-	  Err(L"Function already declared.");
-  }
-  return;
-
-  }
-
-//Se agregan parametros para comparar a la funcion temporal con la firma
-if(tipo == variable && definefunc == 1){
-	//Agrega a la tabla de variables temporal
-	if(ftemp == NULL){
-		agregaVariable(f);
-	}else{					
-		agregaVariable(ftemp);
-
-	}
-	return;
-}
-
-//Registro de la funcion
-if(tipo == funcion && definefunc == 1){
-	//Crea la funcion a comparar con la firma
-	//Y asigna los atributos necesarios
-	ftemp = new FuncionX();
-	ftemp->tipo = tipofuncion;
-	ftemp->nombre = identificador;
-	return;					
-
-} 
+	.)
+.
 
 
-/*Registra las variables globales*/				
-if(tipo == variable && global == 1){
-	std::map<std::wstring,Variable *>::iterator it = tabglobales->vhash.find(identificador);
 
-	if(it != tabglobales->vhash.end()){
-		std::wcout << L"Global("<<identificador<<")";
-		Err(L"Variable already declared.");
-	}else{
-		v = new Variable();
-		v->nombre = identificador;
-		v->tipo = tipovariable;
-		switch(tipovariable){
-			case 11://entero
-				v->direccion=tabglobales->intNum;
-				tabglobales->intNum++;
-				break;
-			case 12://flotante
-				v->direccion=tabglobales->floatNum;
-				tabglobales->floatNum++;
-				break;
-			case 13://string
-				v->direccion=tabglobales->stringNum;
-				tabglobales->stringNum++;
-				break;
-		}	
-	}
-	//Insertar en tabla de variables Globales
-	tabglobales->vhash.insert(std::make_pair(v->nombre,v));
-	return;
 
-}
-
-//Registra las variables de las funciones
-if(tipo == variable){
-	//Registra la variable en la funcion
-	agregaVariable(f);
-	return;
-}
-
-//Definiciones semanticas de lectura
-if(tipo == lectura){
-	std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
-	std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
-	if( it != f->vhash.end() ){
-		//Genera Cuadruplo de Read
-		Poper->Push(READ);
-		PilaO->Push((it->second)->direccion);
-		gCuadruplo();	
-	}else if(itglobal != tabglobales->vhash.end()) {
-		//Genera Cuadruplo de Read
-		Poper->Push(READ);
-		PilaO->Push((itglobal->second)->direccion);
-		gCuadruplo();	
-	}else{
-		std::wcout <<L"("<< identificador<<L")";
-		Err(L"Trying to read and variable doesn't exist.");
-	}
-	return;	
-}
-
-//Definiciones semanticas de escritura
-if(tipo == escritura){
-	std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
-	std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
-	if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
-		//Write Variable
-	}else{
-		std::wcout <<L"("<< identificador<<L")";
-		Err(L"Trying to write and variable doesn't exist.");
-	}
-
-	return;		
-}
-
-//Definiciones semanticas de ciclo o condicion
-if(tipo == condicion || tipo == ciclo){
-	std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
-	std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
-	if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
-		//Do whatever
-	}else{
-		if((it->second)->tipo == 13 ){
-			std::wcout <<L"("<< identificador<<L")";
-			Err(L"Trying use a String value in expresion.");
-		}else{
-			std::wcout <<L"("<< identificador<<L")";
-			Err(L"Trying use a variable that doesn't exist.");
-		}
-	}
-
-	return;		
-
-}
-
-//Define semantica de retorno
-if(tipo == regreso){
-	std::map<std::wstring,Variable *>::iterator it = f->vhash.find(identificador);
-	std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(identificador);
-	if( it != f->vhash.end() || itglobal != tabglobales->vhash.end()) {
-		//Do Return
-	}else{
-		std::wcout <<L"("<< identificador<<L")";
-		Err(L"Trying use a variable that doesn't exist.");
-	}
-
-	return;
-}
-
-.).
 
 
 END QRex.

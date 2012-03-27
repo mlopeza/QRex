@@ -1,5 +1,5 @@
 all:
-	g++ *.cpp -o QRex -Wno-write-strings -std=c++0x
+	g++ *.cpp -o QRex -Wno-write-strings
 
 clean:
 	rm -f QRex
