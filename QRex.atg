@@ -768,7 +768,7 @@ Param (.wchar_t* name;.) =
  //Inicia Condicion ----------------------------------------------------------------
  Condicion = if
 		 (.tipo = condicion;.)
- '(' Expresion 	 (.isIf=1; operadorActual=GOTOF; metePoper(); gCuadruplo();.)
+ '(' Expresion 	 (.operadorActual=GOTOF; metePoper(); gCuadruplo();.)
  ')' 
 	         (.tipo = undef;.)
  Cuerpo
