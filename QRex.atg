@@ -640,7 +640,9 @@ Var_Cte(.wchar_t* name;.) =
 Param (.wchar_t* name;.) = 
 	(
 					(.
-						Poper->Push(PRINT);
+						if(tipo == escritura){
+							Poper->Push(PRINT);
+						}
 
 					.)				
 	Expresion 			(.if(tipo == escritura){
@@ -901,7 +903,7 @@ ID<wchar_t* name> = id
 				coco_string_delete(name);
 
 
-				//std::wcout << identificador << L"\n";
+				std::wcout << identificador << L"\n";
 				//Si el cuerpo de la funcion es omitido simplemente se aplica el return
 				if(omiteCuerpo == 1){
 					return;
