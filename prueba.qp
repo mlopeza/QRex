@@ -25,4 +25,15 @@ main ()
 {
 	int a,b,c,d,e,f,g,h;
 	a = 1*2 + b -c / h + 5 * 2;
+
+	while (a<b) {
+		a=1;
+	}
+
+	if (a<b){
+		a=1;
+	}
+	else{
+		a=1;
+	}
 }

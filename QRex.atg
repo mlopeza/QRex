@@ -696,6 +696,61 @@ COMPILER QRex
 	}
 
 }
+
+void gCuadruploGOTOWhile(){
+	int operador = Poper->Pop();
+	//      goto while
+	if(operador == GOTO){
+		int falso = PilaS->Pop();
+		int regreso = PilaS->Pop();
+
+		Cuadruplo *cuadruplo = new Cuadruplo(operador,-1,-1,regreso);
+		hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+		contCuadruplos++;
+
+		//Rellena el gotof anterior
+		std::map<int,Cuadruplo *>::iterator it;
+		it = hashCuadruplos.find(falso);
+		Cuadruplo *c = (it->second);
+		c->resultado=contCuadruplos;
+	}
+}
+
+//Goto de if    
+//inicio de else
+void gCuadruploGOTOElse(){
+	int operador = Poper->Pop();
+	if(operador ==GOTO){
+		Cuadruplo *cuadruplo = new Cuadruplo(operador,-1,-1,-1);
+		hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+		contCuadruplos++;
+
+		int falso = PilaS->Pop();
+		//Rellena el gotof anterior
+		std::map<int,Cuadruplo *>::iterator it;
+		it = hashCuadruplos.find(falso);
+		Cuadruplo *c = (it->second);
+		c->resultado=contCuadruplos;
+		PilaS->Push(contCuadruplos - 1);
+	}
+}
+
+//fin del if
+
+void gCuadruploGOTOIf(){
+	int operador = Poper->Pop();
+	if(operador ==GOTO){
+		int operador = Poper->Pop();
+		int falso = PilaS->Pop();
+		//Rellena el gotof anterior
+		std::map<int,Cuadruplo *>::iterator it;
+		it = hashCuadruplos.find(falso);
+		Cuadruplo *c = (it->second);
+		c->resultado=contCuadruplos;
+	}
+}
+
+
 /*-------------------------------------------------------------*/
 CHARACTERS
 letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".
@@ -914,9 +969,17 @@ Tipov					(.
 //Inicia Condicion ----------------------------------------------------------------
 Condicion = if
 			(.tipo = condicion;.)
- '(' Expresion ')' 
+
+ '(' Expresion 		(.operadorActual=GOTOF; metePoper(); gCuadruplo();.)
+ 
+ ')' 
 			(.tipo = undef;.)
-Cuerpo [else Cuerpo].
+
+Cuerpo [else		(.operadorActual=GOTO; metePoper();gCuadruploGOTOElse();.)
+
+Cuerpo]			(.operadorActual=GOTO; metePoper();gCuadruploGOTOIf();.)
+
+.
 
 
 //Finaliza Condicion ----------------------------------------------------------------
@@ -949,9 +1012,15 @@ Escritura = print 			(.tipo = escritura;.)
 
 Ciclo = while 
 			(.tipo = ciclo;.)
-'(' Expresion ')' 
+
+'('			(.PilaS->Push(contCuadruplos);.)
+
+Expresion 		(.operadorActual=GOTOF; metePoper(); gCuadruplo();.)
+
+')' 
 			(.tipo = undef;.)
-Cuerpo.
+
+Cuerpo			(.operadorActual=GOTO; metePoper();gCuadruploGOTOWhile();.).
 
 //Inicia Tipo de Funcion--------------------------------------------------
 Tipof = int (. tipofuncion = enterof;   .)
