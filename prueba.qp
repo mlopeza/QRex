@@ -2,12 +2,13 @@ global int w,alsk,d;
 global float y;
 global string z;
 sign int Func(int,float,int,float,float);
-sign int Pato(int,int);
+sign int Pato(int,int,int);
 sign int Func(int,int);
 sign int Func(float,int);
 
-int Pato(int alkjsakl,int aklsjklajs) {
+int Pato(int pito, int alkjsakl,int aklsjklajs) {
 	int x;
+	pito = 3;
 	return 3;
     }
 void Func(int a, float e) {

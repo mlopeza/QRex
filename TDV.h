@@ -144,6 +144,7 @@ namespace QRex{
 			int intNum;
 			int floatNum;
 			int stringNum;
+			int dirInicial;
 
 			FuncionX(){
 				tipo = 0;
@@ -152,6 +153,7 @@ namespace QRex{
 				intNum = PROCINT-1;
 				floatNum = PROCFLOAT-1;
 				stringNum = PROCSTRING-1;
+				dirInicial = -1;
 			}
 
 			void Insert(int n){

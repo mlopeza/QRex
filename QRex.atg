@@ -12,6 +12,8 @@ COMPILER QRex
 	MAS,MENOS,POR,DIVISION,MODULO,MAYOR,MENOR,DIFERENTE,IGUAL,MAYQUE,MENQUE,AND,OR,NOT,ASIGNA,PIZQ,PDER,NEGATIVO,GOTOF,GOTOV,GOTO,
 	PRINT,IFF,READ;
 
+	int //operadores saltos de funcion
+	ERA, PARAM, GOSUB, RETORNO; 
 
 	int //tipos
 	tipovariable,enterov,flotantev,cadenav,errorv;
@@ -154,6 +156,10 @@ COMPILER QRex
 		GOTO = 21;
 		IFF = 22;
 		READ = 24;
+		ERA =25;
+		PARAM = 26;
+		GOSUB = 27;
+		RETORNO = 28; 
 	
 		//Hash de Cuadruplos (Manejo de Cuadruplos)
 		contCuadruplos = 0;
@@ -240,6 +246,7 @@ COMPILER QRex
 				f = new FuncionX();
 				f->nombre=std::wstring(L"main");
 				f->tipo=voidf;
+				f->dirInicial = contCuadruplos;
 			}
 		}else{
 			Err(L"No puede haber dos funciones main()");
@@ -259,6 +266,8 @@ COMPILER QRex
 		while (it != tab->fhash.end()){
 			func = it->second;
 			std::wcout<<L" "<< func->tipo<< L" " << func->nombre << L'\n';
+			//Direccion de inicio
+			std::wcout<<L"Direccion de Inicio "<< func->dirInicial<< L'\n';
 			
 			//Imprime Parametros si los tiene.
 			func->parametros->Print();
@@ -381,6 +390,10 @@ COMPILER QRex
 			f->intNum = ftemp->intNum;
 			f->floatNum = ftemp->floatNum;
 			f->stringNum = ftemp->stringNum;
+
+			//Agregar dir. inicial a la funcion
+			f->dirInicial = contCuadruplos;
+
 			//Se libera memoria de la funcion temporal
 			delete ftemp;
 			//Se necesita explicitamente NULL por que C++ no lo hace
@@ -671,12 +684,23 @@ COMPILER QRex
 	
 		}else if(operador == GOTOF || operador == GOTOV){
 			int resultado = PilaO->Pop();
+			int tipo = dameTipo(resultado);
+			if(tipo != enterov){
+				Err(L"Assignation of different types");
+				exit(-1);
+			}
 			
 			Cuadruplo *cuadruplo = new Cuadruplo(operador,resultado,-1,-1);
 			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
 			PilaS->Push(contCuadruplos++);
 			contCuadruplos++;
 	
+		}else if(operador == RETORNO){
+			Cuadruplo *cuadruplo = new Cuadruplo(operador,-1,-1,-1);
+			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+			PilaS->Push(contCuadruplos++);
+			contCuadruplos++;
+			
 		}else{
 			int operando2 = PilaO->Pop();
 			int operando1 = PilaO->Pop();
@@ -1157,7 +1181,13 @@ return (Expresion|
 					.)
 
 
-)';'] '}'
+)';'] '}' //Generar cuadruplo de retorno
+					(.if(omiteCuerpo ==1){
+						operadorActual=RETORNO;
+						metePoper();
+						gCuadruplo();
+						}.)
+
 .
 //Finaliza Cuerpo 2 (Cuerpo funcion)------------------------------------------------------------
 ID = id.
