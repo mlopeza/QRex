@@ -64,15 +64,15 @@ bool Parser::WeakSeparator(int n, int syFol, int repFol) {
 
 void Parser::QRex() {
 		InitDeclarations();
-		while (la->kind == _global || la->kind == _sign) {
-			if (la->kind == _global) {
+		while (la->kind == 16 || la->kind == 17) {
+			if (la->kind == 16) {
 				Get();
 				DeclaracionGlobal();
 			} else {
 				firma = 1;
 				Get();
 				FuncionFirma();
-				Expect(18 /* ";" */);
+				Expect(18);
 				firma = 0;
 			}
 		}
@@ -85,11 +85,11 @@ void Parser::DeclaracionGlobal() {
 		tipo = variable;		
 		Tipov();
 		ID(name);
-		while (la->kind == 21 /* "," */) {
+		while (la->kind == 21) {
 			Get();
 			ID(name);
 		}
-		Expect(18 /* ";" */);
+		Expect(18);
 		tipo = undef; global = 0;	
 }
 
@@ -99,16 +99,16 @@ void Parser::FuncionFirma() {
 		tipo = funcionfirma;
 		ID(name);
 		tipo = variable;
-		Expect(19 /* "(" */);
-		if (la->kind == _int || la->kind == _float || la->kind == _string) {
+		Expect(19);
+		if (la->kind == 5 || la->kind == 6 || la->kind == 7) {
 			Dec_ParamFirma();
 		}
-		Expect(20 /* ")" */);
+		Expect(20);
 		tipo = undef;
 }
 
 void Parser::QRex2() {
-		while (la->kind == _int || la->kind == _float || la->kind == _void) {
+		while (la->kind == 5 || la->kind == 6 || la->kind == 14) {
 			definefunc = 1;
 			Funcion();
 			verificaRegistroFuncion();
@@ -116,9 +116,9 @@ void Parser::QRex2() {
 			definefunc = 0;omiteCuerpo=0;
 		}
 		tipo = funcion;
-		Expect(_main);
-		Expect(19 /* "(" */);
-		Expect(20 /* ")" */);
+		Expect(11);
+		Expect(19);
+		Expect(20);
 		registraMain();
 		tipo = undef;
 		Cuerpo();
@@ -133,29 +133,29 @@ void Parser::Funcion() {
 		tipo = funcion;
 		ID(name);
 		tipo = variable;
-		Expect(19 /* "(" */);
-		if (la->kind == _int || la->kind == _float || la->kind == _string) {
+		Expect(19);
+		if (la->kind == 5 || la->kind == 6 || la->kind == 7) {
 			Dec_Param();
 		}
-		Expect(20 /* ")" */);
+		Expect(20);
 		tipo = undef;
 }
 
 void Parser::Cuerpo2() {
 		wchar_t* name;
-		Expect(22 /* "{" */);
-		while (la->kind == _int || la->kind == _float || la->kind == _string) {
+		Expect(22);
+		while (la->kind == 5 || la->kind == 6 || la->kind == 7) {
 			Declaracion();
 		}
 		while (StartOf(1)) {
 			Estatuto();
 		}
-		if (la->kind == _return) {
+		if (la->kind == 15) {
 			retorno = 1;tipo = regreso;
 			Get();
 			if (StartOf(2)) {
 				Expresion();
-			} else if (la->kind == _cte_string) {
+			} else if (la->kind == 2) {
 				Get();
 				tipovariable = cadenav;
 				name = coco_string_create(t->val);
@@ -164,38 +164,38 @@ void Parser::Cuerpo2() {
 				registraConstante();
 				
 			} else SynErr(40);
-			Expect(18 /* ";" */);
+			Expect(18);
 		}
-		Expect(23 /* "}" */);
+		Expect(23);
 		retorno = 0;tipo = undef;
 }
 
 void Parser::Cuerpo() {
-		Expect(22 /* "{" */);
-		while (la->kind == _int || la->kind == _float || la->kind == _string) {
+		Expect(22);
+		while (la->kind == 5 || la->kind == 6 || la->kind == 7) {
 			Declaracion();
 		}
 		while (StartOf(1)) {
 			Estatuto();
 		}
-		Expect(23 /* "}" */);
+		Expect(23);
 }
 
 void Parser::Tipov() {
-		if (la->kind == _int) {
+		if (la->kind == 5) {
 			Get();
 			tipovariable = enterov;    
-		} else if (la->kind == _float) {
+		} else if (la->kind == 6) {
 			Get();
 			tipovariable = flotantev;  
-		} else if (la->kind == _string) {
+		} else if (la->kind == 7) {
 			Get();
 			tipovariable = cadenav;    
 		} else SynErr(41);
 }
 
 void Parser::ID(wchar_t* name) {
-		Expect(_id);
+		Expect(1);
 		if(omiteCuerpo == 1){
 		return;
 		}
@@ -375,41 +375,41 @@ void Parser::Declaracion() {
 		tipo = variable;
 		Tipov();
 		ID(name);
-		while (la->kind == 21 /* "," */) {
+		while (la->kind == 21) {
 			Get();
 			ID(name);
 		}
-		Expect(18 /* ";" */);
+		Expect(18);
 		tipo = undef;
 }
 
 void Parser::Estatuto() {
-		if (la->kind == _id) {
+		if (la->kind == 1) {
 			Asignacion();
-		} else if (la->kind == _if) {
+		} else if (la->kind == 8) {
 			Condicion();
-		} else if (la->kind == _print) {
+		} else if (la->kind == 10) {
 			Escritura();
-		} else if (la->kind == _read) {
+		} else if (la->kind == 12) {
 			Lectura();
-		} else if (la->kind == _while) {
+		} else if (la->kind == 13) {
 			Ciclo();
 		} else SynErr(42);
 }
 
 void Parser::Llamada() {
-		Expect(19 /* "(" */);
+		Expect(19);
 		if (StartOf(3)) {
 			Param();
 		}
-		Expect(20 /* ")" */);
+		Expect(20);
 }
 
 void Parser::Param() {
 		wchar_t* name;
 		if (StartOf(2)) {
 			Expresion();
-		} else if (la->kind == _cte_string) {
+		} else if (la->kind == 2) {
 			Get();
 			tipovariable = cadenav;
 			name = coco_string_create(t->val);
@@ -418,7 +418,7 @@ void Parser::Param() {
 			registraConstante();
 			
 		} else SynErr(43);
-		if (la->kind == 21 /* "," */) {
+		if (la->kind == 21) {
 			Get();
 			Param();
 		}
@@ -426,18 +426,18 @@ void Parser::Param() {
 
 void Parser::Lectura() {
 		wchar_t* name; 
-		Expect(_read);
-		Expect(19 /* "(" */);
+		Expect(12);
+		Expect(19);
 		tipo=lectura;
 		ID(name);
-		Expect(20 /* ")" */);
-		Expect(18 /* ";" */);
+		Expect(20);
+		Expect(18);
 		tipo = undef;
 }
 
 void Parser::Var_Cte() {
 		wchar_t* name;
-		if (la->kind == _cte_int) {
+		if (la->kind == 4) {
 			Get();
 			tipovariable = enterov;
 			name = coco_string_create(t->val);
@@ -445,7 +445,7 @@ void Parser::Var_Cte() {
 			coco_string_delete(name);
 			registraConstante();
 			
-		} else if (la->kind == _cte_float) {
+		} else if (la->kind == 3) {
 			Get();
 			tipovariable = flotantev;
 			name = coco_string_create(t->val);
@@ -453,9 +453,9 @@ void Parser::Var_Cte() {
 			coco_string_delete(name);
 			registraConstante();
 			
-		} else if (la->kind == _id) {
+		} else if (la->kind == 1) {
 			ID(name);
-			if (la->kind == 19 /* "(" */) {
+			if (la->kind == 19) {
 				Llamada();
 			}
 		} else SynErr(44);
@@ -464,7 +464,7 @@ void Parser::Var_Cte() {
 void Parser::Expresion() {
 		expresion = 1;
 		Exp1();
-		if (la->kind == 25 /* "||" */) {
+		if (la->kind == 25) {
 			Get();
 			Expresion();
 		}
@@ -472,13 +472,13 @@ void Parser::Expresion() {
 }
 
 void Parser::Tipof() {
-		if (la->kind == _int) {
+		if (la->kind == 5) {
 			Get();
 			tipofuncion = enterof;   
-		} else if (la->kind == _float) {
+		} else if (la->kind == 6) {
 			Get();
 			tipofuncion = flotantef; 
-		} else if (la->kind == _void) {
+		} else if (la->kind == 14) {
 			Get();
 			tipofuncion = voidf; 
 		} else SynErr(45);
@@ -490,7 +490,7 @@ void Parser::Dec_Param() {
 		Tipov();
 		ID(name);
 		parametros = 0;
-		if (la->kind == 21 /* "," */) {
+		if (la->kind == 21) {
 			Get();
 			Dec_Param();
 		}
@@ -500,21 +500,21 @@ void Parser::Dec_ParamFirma() {
 		wchar_t* name; 
 		Tipov();
 		registraParametroFirma();
-		if (la->kind == 21 /* "," */) {
+		if (la->kind == 21) {
 			Get();
 			Dec_ParamFirma();
 		}
 }
 
 void Parser::Condicion() {
-		Expect(_if);
+		Expect(8);
 		tipo = condicion;
-		Expect(19 /* "(" */);
+		Expect(19);
 		Expresion();
-		Expect(20 /* ")" */);
+		Expect(20);
 		tipo = undef;
 		Cuerpo();
-		if (la->kind == _else) {
+		if (la->kind == 9) {
 			Get();
 			Cuerpo();
 		}
@@ -523,10 +523,10 @@ void Parser::Condicion() {
 void Parser::Asignacion() {
 		wchar_t* name; 
 		ID(name);
-		Expect(24 /* "=" */);
+		Expect(24);
 		if (StartOf(2)) {
 			Expresion();
-		} else if (la->kind == _cte_string) {
+		} else if (la->kind == 2) {
 			Get();
 			tipovariable = cadenav;
 			name = coco_string_create(t->val);
@@ -535,32 +535,32 @@ void Parser::Asignacion() {
 			registraConstante();
 			
 		} else SynErr(46);
-		Expect(18 /* ";" */);
+		Expect(18);
 }
 
 void Parser::Escritura() {
-		Expect(_print);
+		Expect(10);
 		tipo = escritura;
-		Expect(19 /* "(" */);
+		Expect(19);
 		Param();
-		Expect(20 /* ")" */);
-		Expect(18 /* ";" */);
+		Expect(20);
+		Expect(18);
 		tipo = undef;
 }
 
 void Parser::Ciclo() {
-		Expect(_while);
+		Expect(13);
 		tipo = ciclo;
-		Expect(19 /* "(" */);
+		Expect(19);
 		Expresion();
-		Expect(20 /* ")" */);
+		Expect(20);
 		tipo = undef;
 		Cuerpo();
 }
 
 void Parser::Exp1() {
 		Exp2();
-		if (la->kind == 26 /* "&&" */) {
+		if (la->kind == 26) {
 			Get();
 			Exp1();
 		}
@@ -570,27 +570,27 @@ void Parser::Exp2() {
 		Exp3();
 		if (StartOf(4)) {
 			switch (la->kind) {
-			case 27 /* ">" */: {
+			case 27: {
 				Get();
 				break;
 			}
-			case 28 /* "<" */: {
+			case 28: {
 				Get();
 				break;
 			}
-			case 29 /* ">=" */: {
+			case 29: {
 				Get();
 				break;
 			}
-			case 30 /* "<=" */: {
+			case 30: {
 				Get();
 				break;
 			}
-			case 31 /* "==" */: {
+			case 31: {
 				Get();
 				break;
 			}
-			case 32 /* "!=" */: {
+			case 32: {
 				Get();
 				break;
 			}
@@ -601,8 +601,8 @@ void Parser::Exp2() {
 
 void Parser::Exp3() {
 		Exp4();
-		if (la->kind == 33 /* "+" */ || la->kind == 34 /* "-" */) {
-			if (la->kind == 33 /* "+" */) {
+		if (la->kind == 33 || la->kind == 34) {
+			if (la->kind == 33) {
 				Get();
 			} else {
 				Get();
@@ -613,10 +613,10 @@ void Parser::Exp3() {
 
 void Parser::Exp4() {
 		Exp5();
-		if (la->kind == 35 /* "*" */ || la->kind == 36 /* "/" */ || la->kind == 37 /* "%" */) {
-			if (la->kind == 35 /* "*" */) {
+		if (la->kind == 35 || la->kind == 36 || la->kind == 37) {
+			if (la->kind == 35) {
 				Get();
-			} else if (la->kind == 36 /* "/" */) {
+			} else if (la->kind == 36) {
 				Get();
 			} else {
 				Get();
@@ -626,20 +626,20 @@ void Parser::Exp4() {
 }
 
 void Parser::Exp5() {
-		if (la->kind == 38 /* "!" */) {
+		if (la->kind == 38) {
 			Get();
 		}
 		Exp6();
 }
 
 void Parser::Exp6() {
-		if (la->kind == 19 /* "(" */) {
+		if (la->kind == 19) {
 			Get();
 			Expresion();
-			Expect(20 /* ")" */);
+			Expect(20);
 		} else if (StartOf(5)) {
-			if (la->kind == 33 /* "+" */ || la->kind == 34 /* "-" */) {
-				if (la->kind == 33 /* "+" */) {
+			if (la->kind == 33 || la->kind == 34) {
+				if (la->kind == 33) {
 					Get();
 				} else {
 					Get();

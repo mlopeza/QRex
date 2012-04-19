@@ -9,6 +9,10 @@
 *~
 *.old
 *.swp
+Parser.cpp
+Parser.h
+Scanner.cpp
+Scanner.h
 QRex
 
 # Packages #
