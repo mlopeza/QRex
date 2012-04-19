@@ -398,6 +398,33 @@ COMPILER QRex
 			delete ftemp;
 			//Se necesita explicitamente NULL por que C++ no lo hace
 			ftemp = NULL;
+
+			//Asigna la variable que se usara para los returns
+			it = tabglobales->vhash.find(f->nombre);
+			if(it != tabglobales->vhash.end()){
+				std::wcout << L"Global("<<identificador<<")";
+				Err(L"Variable already declared.");
+			}else{
+				v = new Variable();
+				v->nombre = f->nombre;
+				v->tipo = f->tipo;
+				switch(f->tipo){
+					case 21://entero
+						v->direccion=tabglobales->intNum;
+						tabglobales->intNum++;
+						break;
+					case 22://flotante
+						v->direccion=tabglobales->floatNum;
+						tabglobales->floatNum++;
+						break;
+					case 23://string
+						v->direccion=tabglobales->stringNum;
+						tabglobales->stringNum++;
+						break;
+				}	
+			}			
+			//Insertar en tabla de variables Globales
+			tabglobales->vhash.insert(std::make_pair(v->nombre,v));
 		}
 
 	}
@@ -1182,7 +1209,7 @@ return (Expresion|
 
 
 )';'] '}' //Generar cuadruplo de retorno
-					(.if(omiteCuerpo ==1){
+					(.if(omiteCuerpo == 0){
 						operadorActual=RETORNO;
 						metePoper();
 						gCuadruplo();
