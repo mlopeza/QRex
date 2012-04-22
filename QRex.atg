@@ -1219,9 +1219,4 @@ return (Expresion|
 //Finaliza Cuerpo 2 (Cuerpo funcion)------------------------------------------------------------
 ID = id.
 
-
-
-
-
-
 END QRex.
