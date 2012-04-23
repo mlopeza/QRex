@@ -33,7 +33,7 @@ COMPILER QRex
 	global;
 
 	int //Declaracion de parametros en una funcion
-	parametros;
+	parametros, contParam;
 
 	int //Operador actual en la expresion
 	operadorActual;
@@ -45,6 +45,8 @@ COMPILER QRex
 
 	TablaDeVariables *tab;		
 	FuncionX *f;
+	FuncionX *l;
+	Node *p;
 	Variable *v;
 	FuncionX *ftemp;
 	Temporales *temporales;
@@ -200,6 +202,7 @@ COMPILER QRex
 
 		//Declaracion de parametros
 		parametros = 0;
+		contParam = 0;
 	
 		//Verificar si es una firma o la definicion de una funcion
 		firma = 0;
@@ -258,6 +261,73 @@ COMPILER QRex
 		La tabla de variables globales y la tabla de constantes
 	*/
 	void imprimeRegistros(){
+		FuncionX *func;
+		Variable *var;
+
+		std::wcout<<L"\n\nTabla de Funciones y Variables\n";
+		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.begin();
+		while (it != tab->fhash.end()){
+			func = it->second;
+			std::wcout<<L" "<< func->tipo<< L" " << func->nombre << L'\n';
+			//Direccion de inicio
+			std::wcout<<L"Direccion de Inicio "<< func->dirInicial<< L'\n';
+			
+			//Imprime Parametros si los tiene.
+			func->parametros->Print();
+			
+			std::wcout << L"intNum:"<< func->intNum << L" floatNum:";
+			std::wcout << func->floatNum << L" stringNum:" << func->stringNum << L'\n';
+	
+			//Variables Dentro
+			std::map<std::wstring,Variable *>::iterator it2 = func->vhash.begin();
+			while(it2 != it->second->vhash.end()){
+				var = it2->second;
+				std::wcout << L"		nombre:" << var->nombre;
+				std::wcout << L" tipo:" << var->tipo;
+				std::wcout << L" direccion:" << var->direccion << L'\n';
+	
+				it2++;
+			}
+			
+			it++;
+			std::wcout << L"\n\n";
+		}
+
+		std::wcout<<L"Tabla de Variables Globales\n";
+		std::map<std::wstring,Variable *>::iterator it2 = tabglobales->vhash.begin();
+		while (it2 != tabglobales->vhash.end()){
+			var = it2->second;
+			std::wcout << L"	nombre:" << var->nombre;
+			std::wcout << L" tipo:" << var->tipo;
+			std::wcout << L" direccion:" << var->direccion << L'\n';
+			it2++;
+		}
+
+		std::wcout<<L"Tabla de Variables Constantes\n";
+		it2 = tabconstantes->vhash.begin();
+		while (it2 != tabconstantes->vhash.end()){
+			var = it2->second;
+			std::wcout << L"	nombre:" << var->nombre;
+			std::wcout << L" tipo:" << var->tipo;
+			std::wcout << L" direccion:" << var->direccion << L'\n';
+			it2++;
+		}
+		std::wcout<<L"\n\nCuadruplos de Expresiones\n";
+		std::map<int,Cuadruplo *>::iterator iterator = hashCuadruplos.begin();
+		Cuadruplo *c;
+		while(iterator != hashCuadruplos.end()){
+			c = iterator->second;
+			std::wcout<< c->op << L"," << c->operador1 << L"," << c->operador2 << L","<< c->resultado << L"\n";
+			iterator++;
+		}
+
+	}
+	
+	/*Imprime todos los registros de Funciones
+		La tabla de variables globales y la tabla de constantes
+		asdf
+	*/
+	void creaObj(){
 		FuncionX *func;
 		Variable *var;
 
@@ -380,6 +450,12 @@ COMPILER QRex
 			f=it->second;
 			f->definida = 1;
 			omiteCuerpo = 0;
+			//Cambia la lista del temporal a la funcion real
+			delete f->parametros;
+			f->parametros = ftemp->parametros;
+			ftemp->parametros=NULL;
+			std::wcout<<"Paso\n";
+			//--
 			std::map<std::wstring,Variable *>::iterator it = ftemp->vhash.begin();
 			while(it != ftemp->vhash.end()){
 				
@@ -481,7 +557,7 @@ COMPILER QRex
 			std::wcout << L"("<<identificador<<L")";
 			Err(L"Variable already declared.");
 		}else{
-			funcion->parametros->Append(tipovariable);
+			funcion->parametros->Append2(tipovariable,identificador);
 			//Si es un prametro de la funcion
 			//Tambien se agrega a la lista de parametros
 			v = new Variable();
@@ -563,6 +639,53 @@ COMPILER QRex
 			Err(L"Firm already declared. Using first declared.");
 			firma = 0;
 		}
+	}
+
+	//verifica si la funcion llamada existe
+	void verificaLlamada(){
+		wchar_t* name = coco_string_create(t->val);
+		identificador = std::wstring(name);
+		coco_string_delete(name);
+
+		//Busca en la tabla si es que existe la firma
+		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(identificador);
+
+		//Se verifica
+		if(identificador == it->second->nombre){
+			// guardo los datos de la funcion en el auxiliar ll
+			l = it->second;
+			p = l->parametros->getNode(1);
+
+			Cuadruplo *cuadruplo = new Cuadruplo(ERA,-1,-1,-1);
+			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+			contCuadruplos++;
+			contParam = 1;
+		}else if( it == tab->fhash.end()) {
+			//Ejecuta lo mismo que el primer if, solo que cuando ya existe en el hash
+			std::wcout<< L"Function not found:"<< identificador << L"\n";
+			exit(-1);
+		}
+	}
+
+	void generaParametro(){
+		//Verifico que el parametro y el argumento sean del mismo tipo
+		int argumento = PilaO->Pop();
+		if (p->Data() != dameTipo(argumento)){
+			std::wcout<< L"Parameter type mismatach: "<< identificador << L"\n";
+			std::wcout<< L"Parameter type: "<< p->Data() << L"\n";
+			std::wcout<< L"Type given: "<< dameTipo(argumento) << L"\n";
+			exit(-1);
+		}
+		std::map<std::wstring,Variable *>::iterator it = l->vhash.find(p->Nombre());
+		int parametro = it->second->direccion;
+
+		Cuadruplo *cuadruplo = new Cuadruplo(PARAM,argumento,-1,parametro);
+		hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+		contCuadruplos++;
+
+		//Dejamos apuntando al siguiente parametro
+		contParam ++;
+		p = l->parametros->getNode(contParam);
 	}
 
 	void registraGlobal(){
@@ -929,7 +1052,9 @@ Var_Cte=
 							metePilaO();
 						}
 					.)
-	| ID [				(.	llamada = 1;	.)
+	| ID [				(.	llamada = 1;	
+						verificaLlamada();
+						.)
 	Llamada]  
 					(.	if (llamada != 1){
 							metePilaOV();
@@ -951,11 +1076,14 @@ Expresion
 						if(tipo == escritura){
 							gCuadruplo();
 						}
+						if(llamada == 1){
+							generaParametro();
+							}
 					.)
 |
 
-cte_string
-					(.	tipovariable = cadenav;
+cte_string				(. 
+						tipovariable = cadenav;
 						wchar_t* name = coco_string_create(t->val);
 						identificador = std::wstring(name);
 						coco_string_delete(name);
@@ -966,6 +1094,31 @@ cte_string
 							PilaO->Push((it->second)->direccion);
 							gCuadruplo();
 						}
+						if(llamada == 1){
+							std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
+							PilaO->Push((it->second)->direccion);
+							generaParametro();
+						/*
+						//Verifico que el parametro y el argumento sean del mismo tipo
+							
+							if (p->Data() != tipovariable){
+								std::wcout<< L"Parameter type mismatach: "<< tipovariable << L"\n";
+								std::wcout<< L"Parameter type: "<< p->Data() << L"\n";
+								std::wcout<< L"Type given: " << L"\n";
+								exit(-1);
+							}
+							std::map<std::wstring,Variable *>::iterator it = l->vhash.find(p->Nombre());
+							std::wcout<< L"dir del parametro:"<< it->second->direccion << L"\n";
+							int parametro = it->second->direccion;
+
+							Cuadruplo *cuadruplo = new Cuadruplo(PARAM,argumento,-1,parametro);
+							hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+							contCuadruplos++;
+							contParam ++;
+							p = l->parametros->getNode(contParam);
+							*/
+}
+
 
 					.)
 

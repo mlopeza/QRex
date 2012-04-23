@@ -2,13 +2,13 @@ global int w,alsk,d;
 global float y;
 global string z;
 sign int Func(int,float,int,float,float);
-sign int Pato(int,int,int);
+sign int Pato(string,int,int);
 sign int Func(int,int);
 sign int Func(float,int);
 
-int Pato(int pito, int alkjsakl,int aklsjklajs) {
+int Pato(string pito, int alkjsakl,int aklsjklajs) {
 	int x;
-	pito = 3;
+	pito = "3";
 	return 3;
     }
 void Func(int a, float e) {
@@ -25,7 +25,8 @@ int Func(int as,float ass,int asa,float ssa,float sas) {
 main ()
 {
 	int a,b,c,d,e,f,g,h;
-	a = 1*2 + b -c / h + 5 * 2;
+	a = 1*2 + b -c / h + 5 * Pato("pitochu",5,6);
+	
 
 	while (a<b) {
 		a=1;
