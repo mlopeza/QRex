@@ -1,7 +1,3 @@
-#define FROM 0
-#define TO 1
-#define COND 2
-
 #include <QtGui>
 #include "diagramitem.h"
 #include "arrow.h"
@@ -154,6 +150,7 @@ void DiagramItem::removeArrowConditional(Arrow *arrow){
 
 }
 
+//Iguala el INDEX de el arreeglo de las flechas a la flecha que se manda
 void DiagramItem::setArrow(const int INDEX,Arrow *arrow){
 	arrowStruct[INDEX]=arrow;
 }
@@ -175,6 +172,32 @@ void DiagramItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 	setSelected(true);
 	myContextMenu->exec(event->screenPos());
 }
+
+
+bool DiagramItem::hasConnection(DiagramItem *item){
+	if(arrowStruct[TO] != NULL)
+		if(arrowStruct[TO]->endItem() == item)
+			return true;
+	if(arrowStruct[FROM] != NULL)
+		if(arrowStruct[FROM]->startItem() == item)
+			return true;
+	if(arrowStruct[COND] != NULL)
+		if(arrowStruct[COND]->endItem() == item)
+			return true;
+	return false;
+}
+
+
+//Retorna los objetos con los que se hace referencia
+DiagramItem *DiagramItem::getFrom()
+{return arrowStruct[FROM]!=NULL?arrowStruct[FROM]->startItem():NULL;}
+
+DiagramItem *DiagramItem::getTo()
+{return arrowStruct[TO]!=NULL?arrowStruct[TO]->endItem():NULL;}
+
+DiagramItem *DiagramItem::getConditional()
+{return arrowStruct[COND]!=NULL?arrowStruct[COND]->endItem():NULL;}
+
 
 QVariant DiagramItem::itemChange(GraphicsItemChange change,
 		const QVariant &value)

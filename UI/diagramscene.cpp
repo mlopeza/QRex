@@ -1,5 +1,6 @@
 #include <QtGui>
-
+#include <QtGlobal>
+#include <QPointF>
 #include "diagramscene.h"
 #include "arrow.h"
 
@@ -94,6 +95,69 @@ void DiagramScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 			addItem(item);
 			item->setPos(mouseEvent->scenePos());
 			emit itemInserted(item);
+			//Si es del tipo StartEnd se agrega a la lista de funciones
+			//Y casos especiales de Condicional y While donde se agrega un elemento mas
+			if(item->isStartEnd()){
+				functions.append(item);
+				qDebug() << "Tamano:" << functions.length()<<" pos:"<<mouseEvent->scenePos().x();
+			}else if(item->isConditional()){
+				qDebug()<<"Se agrego un condicional";
+				//Se crea un nuevo tipo de diagrama
+				DiagramItem *item2 = new DiagramItem(DiagramItem::Step,myItemMenu);
+				//Se pone el color
+				item2->setBrush(myItemColor);
+				//Se agrega a escena
+				addItem(item2);
+				//Se emite la señal de que se inserto un objeto
+				emit itemInserted(item2);
+				//Se cambia la posicion
+				item2->setPos(mouseEvent->scenePos().x()+300,mouseEvent->scenePos().y());
+				//Lo pone como visible
+				item2->setVisible(true);
+		
+				//=====================Se agrega la linea
+				Arrow *arrow = new Arrow(item,item2);
+				item2->addArrowFrom(arrow);
+				item->addArrowTo(arrow);
+				//Color especial
+				arrow->setColor(QColor("purple"));
+				arrow->setZValue(-1000.0);
+				addItem(arrow);
+				arrow->updatePosition();
+				//=====================Se agrega la linea
+
+				//Hace un update del objeto y de la escena
+				item2->update();
+				update();
+			}else if(item->isWhile()){
+				//Se crea un nuevo tipo de diagrama
+				DiagramItem *item2 = new DiagramItem(DiagramItem::Step,myItemMenu);
+				//Se pone el color
+				item2->setBrush(myItemColor);
+				//Se agrega a escena
+				addItem(item2);
+				//Se emite la señal de que se inserto un objeto
+				emit itemInserted(item2);
+				//Se cambia la posicion
+				item2->setPos(mouseEvent->scenePos().x()+300,mouseEvent->scenePos().y());
+				//Lo pone como visible
+				item2->setVisible(true);
+
+				//=====================Se agrega la linea
+				Arrow *arrow = new Arrow(item,item2);
+				item2->addArrowFrom(arrow);
+				item->addArrowTo(arrow);
+				//Color especial
+				arrow->setColor(QColor("purple"));
+				arrow->setZValue(-1000.0);
+				addItem(arrow);
+				arrow->updatePosition();
+				//=====================Se agrega la linea
+
+				//Hace un update del objeto y de la escena
+				item2->update();
+				update();
+			}
 			break;
 		case InsertLine:
 			line = new QGraphicsLineItem(QLineF(mouseEvent->scenePos(),
@@ -164,6 +228,11 @@ void DiagramScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
 			//No se permite que un StartEnd sea la conexion a algo
 			if(endItem->isStartEnd())
 				return;
+
+			//No se permite conexion doble
+			if(startItem->hasConnection(endItem))
+				return;
+
 			//Se Crea la flecha con referencia a los dos objetos creados
 			Arrow *arrow = new Arrow(startItem, endItem);
 

@@ -176,6 +176,7 @@ void MainWindow::sendToBack()
 //Un objeto es insertado
 void MainWindow::itemInserted(DiagramItem *item)
 {
+	qDebug()<<"Se inserto Objeto";
 	//Se selecciona el Elemento del diagrama que se acaba de insertar
 	pointerTypeGroup->button(int(DiagramScene::MoveItem))->setChecked(true);
 	//Se asigna el modo a la escena para saber que acciones se pueden ejecutar
@@ -368,7 +369,7 @@ void MainWindow::createToolBox()
 	toolBox->setMinimumWidth(itemWidget->sizeHint().width());
 
 	//Agrega los menus  al ToolBox
-	toolBox->addItem(itemWidget, tr("Basic Flowchart Shapes"));
+	toolBox->addItem(itemWidget, tr("Flowchart Shapes"));
 	toolBox->addItem(backgroundWidget, tr("Backgrounds"));
 }
 

@@ -1,5 +1,8 @@
 #ifndef DIAGRAMITEM_H
 #define DIAGRAMITEM_H
+#define FROM 0
+#define TO 1
+#define COND 2
 
 #include <QGraphicsPixmapItem>
 #include <QList>
@@ -48,12 +51,21 @@ class DiagramItem : public QGraphicsPolygonItem
 		//Iguala una flecha a un valor u objeto arrow
 		void setArrow(const int INDEX,Arrow *arrow);
 
+		bool hasConnection(DiagramItem *item);
+		DiagramItem *getFrom();
+		DiagramItem *getTo();
+		DiagramItem *getConditional();
+
+
 		QPixmap image() const;
 		int type() const
 		{ return Type;}
 		bool isStartEnd()
 			{return myDiagramType==StartEnd?true:false;}
-
+		bool isConditional()
+			{return myDiagramType==Conditional?true:false;}
+		bool isWhile()
+			{return myDiagramType==While?true:false;}
 	protected:
 		void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
 		QVariant itemChange(GraphicsItemChange change, const QVariant &value);
