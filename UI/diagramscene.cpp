@@ -162,7 +162,7 @@ void DiagramScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 		case InsertLine:
 			line = new QGraphicsLineItem(QLineF(mouseEvent->scenePos(),
 						mouseEvent->scenePos()));
-			line->setPen(QPen(myLineColor, 2));
+			line->setPen(QPen(myLineColor, 5));
 			addItem(line);
 			break;
 		case InsertText:
@@ -178,8 +178,16 @@ void DiagramScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 			textItem->setDefaultTextColor(myTextColor);
 			textItem->setPos(mouseEvent->scenePos());
 			emit textInserted(textItem);
+			break;
+		case InsertConditional:
+			qDebug()<<"Conditional Inserted";
+			line = new QGraphicsLineItem(QLineF(mouseEvent->scenePos(),
+					mouseEvent->scenePos()));
+			line->setPen(QPen(QColor("purple"), 5));
+			addItem(line);
+			break;
 		default:
-			;
+			break;
 	}
 	QGraphicsScene::mousePressEvent(mouseEvent);
 }
@@ -189,9 +197,13 @@ void DiagramScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
 	if (myMode == InsertLine && line != 0) {
 		QLineF newLine(line->line().p1(), mouseEvent->scenePos());
 		line->setLine(newLine);
-	} else if (myMode == MoveItem) {
+	} else if(myMode == InsertConditional && line != 0){
+		QLineF newLine(line->line().p1(), mouseEvent->scenePos());
+		line->setLine(newLine);
+	}else if (myMode == MoveItem) {
 		QGraphicsScene::mouseMoveEvent(mouseEvent);
 	}
+	update();
 }
 
 //En esta parte se agregan las lineas para conectarlas
@@ -230,7 +242,11 @@ void DiagramScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
 				return;
 
 			//No se permite conexion doble
-			if(startItem->hasConnection(endItem))
+			if(startItem->hasConnection(endItem) || endItem->hasConnection(startItem))
+				return;
+
+			//No se permiten reemplazar flechas
+			if(startItem->getTo() != NULL || endItem->getFrom() != NULL)
 				return;
 
 			//Se Crea la flecha con referencia a los dos objetos creados
@@ -238,17 +254,77 @@ void DiagramScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
 
 			//Se agregan los atributos de la flecha
 			arrow->setColor(myLineColor);
+
 			//Se agregan  los apuntadores a los objetos
 			//Colisionados
-			startItem->addArrow(arrow);
-			endItem->addArrow(arrow);
+			startItem->addArrowTo(arrow);
+			endItem->addArrowFrom(arrow);
 
 			//Se agregan los elementos a la escena
 			arrow->setZValue(-1000.0);
 			addItem(arrow);
 			arrow->updatePosition();
 		}
+	}else if (line != 0 && myMode == InsertConditional) {
+		qDebug() << "InsertConditional! New";
+		QList<QGraphicsItem *> startItems = items(line->line().p1());
+		if (startItems.count() && startItems.first() == line)
+			startItems.removeFirst();
+		QList<QGraphicsItem *> endItems = items(line->line().p2());
+		if (endItems.count() && endItems.first() == line)
+			endItems.removeFirst();
+
+		//Se remueve la linea pues solo se usa como
+		//Un temporal de creacion
+		removeItem(line);
+		delete line;
+		qDebug() << "InsertConditional! New";
+		if (startItems.count() > 0 && endItems.count() > 0 &&
+				startItems.first()->type() == DiagramItem::Type &&
+				endItems.first()->type() == DiagramItem::Type &&
+				startItems.first() != endItems.first()) {
+
+			//Se obtienen los apuntadores a los objetos que colisionaron
+			DiagramItem *startItem =
+				qgraphicsitem_cast<DiagramItem *>(startItems.first());
+			DiagramItem *endItem =
+				qgraphicsitem_cast<DiagramItem *>(endItems.first());
+		qDebug() << "InsertConditional! New 1";
+			//Si no es condicional el Start Item no se hace nada
+			if(!(startItem->isConditional() || startItem->isWhile()))
+				return;
+		qDebug() << "InsertConditional! New 2";
+			//No se permite que un StartEnd sea la conexion a algo
+			if(endItem->isStartEnd())
+				return;
+		qDebug() << "InsertConditional! New 3";
+			//No se permite conexion doble
+			if(startItem->hasConnection(endItem) || endItem->hasConnection(startItem))
+				return;
+		qDebug() << "InsertConditional! New 4";
+			//No se permiten reemplazar flechas En este caso la condicional de la primera
+			if(startItem->getConditional() != NULL || endItem->getFrom() != NULL)
+				return;
+		qDebug() << "InsertConditional! New 5";
+			//Se Crea la flecha con referencia a los dos objetos creados
+			Arrow *arrow = new Arrow(startItem, endItem);
+
+			//Se agregan los atributos de la flecha
+			arrow->setColor(QColor("purple"));
+
+			//Se agregan  los apuntadores a los objetos
+			//Colisionados
+			startItem->addArrowConditional(arrow);
+			endItem->addArrowFrom(arrow);
+
+			//Se agregan los elementos a la escena
+			arrow->setZValue(-1000.0);
+			addItem(arrow);
+			arrow->updatePosition();
+			qDebug() << "Conditional Inserted!";
+		}	
 	}
+	update();
 	line = 0;
 	QGraphicsScene::mouseReleaseEvent(mouseEvent);
 }

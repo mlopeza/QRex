@@ -11,9 +11,10 @@ Arrow::Arrow(DiagramItem *startItem, DiagramItem *endItem,
 {
 	myStartItem = startItem;
 	myEndItem = endItem;
+	conditional = 0;
 	setFlag(QGraphicsItem::ItemIsSelectable, true);
 	myColor = Qt::black;
-	setPen(QPen(myColor, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+	setPen(QPen(myColor, 5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 }
 
 QRectF Arrow::boundingRect() const
@@ -39,6 +40,16 @@ void Arrow::updatePosition()
 	setLine(line);
 }
 
+
+//Cambia el valor de si la flecha es condicional o no
+void Arrow::toggleConditional(){
+	conditional=conditional==0?1:0;
+	
+}
+
+bool Arrow::isConditional(){
+	return conditional==1?true:false;
+}
 void Arrow::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
 		QWidget *)
 {
@@ -90,4 +101,5 @@ void Arrow::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
 		myLine.translate(0,-8.0);
 		painter->drawLine(myLine);
 	}
+
 }

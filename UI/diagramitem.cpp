@@ -49,23 +49,52 @@ DiagramItem::DiagramItem(DiagramType diagramType, QMenu *contextMenu,
 	arrowStruct[2]=NULL;
 }
 
+//Elimina una flecha de un Objeto
 void DiagramItem::removeArrow(Arrow *arrow)
 {
-	qDebug() << ">>>>>>>>>>DiagramItem::removeArrow()";
+	qDebug() << "DiagramItem::removeArrow()";
+
+	if(arrow == arrowStruct[TO]){
+		arrowStruct[TO]=NULL;
+	}else if(arrow == arrowStruct[FROM]){
+		arrowStruct[FROM]=NULL;
+	}else if(arrow == arrowStruct[COND]){
+		arrowStruct[COND]=NULL;
+	}
+
+	return;
 	int index = arrows.indexOf(arrow);
 
 	if (index != -1)
 		arrows.removeAt(index);
 }
 
+//Elimina todas las flechas de ub objeto
 void DiagramItem::removeArrows()
 {
-	qDebug()<< ">>>>>>>>>>DiagramItem::removeArrows()";
-	foreach (Arrow *arrow, arrows) {
-		arrow->startItem()->removeArrow(arrow);
-		arrow->endItem()->removeArrow(arrow);
-		scene()->removeItem(arrow);
-		delete arrow;
+	qDebug() << "DiagramItem::removeArrows()";
+	if(arrowStruct[TO] != NULL){
+		qDebug() << ">> delete arrowStruct[TO]";
+		arrowStruct[TO]->endItem()->removeArrow(arrowStruct[TO]);
+		scene()->removeItem(arrowStruct[TO]);
+		delete arrowStruct[TO];
+		arrowStruct[TO]=NULL;
+	}
+
+	if(arrowStruct[FROM] != NULL){
+		qDebug() << ">> delete arrowStruct[FROM]";
+		arrowStruct[FROM]->startItem()->removeArrow(arrowStruct[FROM]);
+		scene()->removeItem(arrowStruct[FROM]);
+		delete arrowStruct[FROM];
+		arrowStruct[FROM]=NULL;
+	}
+
+	if(arrowStruct[COND] != NULL){
+		qDebug() << ">> delete arrowStruct[COND]";
+		arrowStruct[COND]->endItem()->removeArrow(arrowStruct[COND]);
+		scene()->removeItem(arrowStruct[COND]);
+		delete arrowStruct[COND];
+		arrowStruct[COND]=NULL;
 	}
 }
 
@@ -175,15 +204,22 @@ void DiagramItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 
 
 bool DiagramItem::hasConnection(DiagramItem *item){
-	if(arrowStruct[TO] != NULL)
+	qDebug() << "DiagramItem::hasConnection()";
+	if(arrowStruct[TO] != NULL){
+		qDebug() << ">>arrowStruct[TO] != NULL";
 		if(arrowStruct[TO]->endItem() == item)
 			return true;
-	if(arrowStruct[FROM] != NULL)
+	}
+	if(arrowStruct[FROM] != NULL){
+		qDebug() << ">>arrowStruct[FROM] != NULL";
 		if(arrowStruct[FROM]->startItem() == item)
 			return true;
-	if(arrowStruct[COND] != NULL)
+	}
+	if(arrowStruct[COND] != NULL){
+		qDebug() << ">>arrowStruct[COND] != NULL";
 		if(arrowStruct[COND]->endItem() == item)
 			return true;
+	}
 	return false;
 }
 
@@ -203,8 +239,17 @@ QVariant DiagramItem::itemChange(GraphicsItemChange change,
 		const QVariant &value)
 {
 	if (change == QGraphicsItem::ItemPositionChange) {
-		foreach (Arrow *arrow, arrows) {
-			arrow->updatePosition();
+		if(arrowStruct[TO] !=NULL){
+			arrowStruct[TO]->updatePosition();
+			update();
+		}
+		if(arrowStruct[FROM] != NULL){
+			arrowStruct[FROM]->updatePosition();
+			update();
+		}
+		if(arrowStruct[COND] !=NULL){
+			arrowStruct[COND]->updatePosition();
+			update();
 		}
 	}
 

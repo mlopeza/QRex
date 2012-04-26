@@ -18,7 +18,8 @@ class DiagramScene : public QGraphicsScene
 	Q_OBJECT
 
 	public:
-		enum Mode { InsertItem, InsertLine, InsertText, MoveItem };
+		//Tipos Enum para identificar acciones
+		enum Mode { InsertItem, InsertLine, InsertText, MoveItem, InsertConditional };
 
 		DiagramScene(QMenu *itemMenu, QObject *parent = 0);
 		QFont font() const

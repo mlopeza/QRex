@@ -111,6 +111,7 @@ void MainWindow::deleteItem()
 	foreach (QGraphicsItem *item, scene->selectedItems()) {
 		//Si es del tipo flecha deben eliminarse las referencias
 		if (item->type() == Arrow::Type) {
+			qDebug() << "(Arrow) MainWindow::deleteItem()";
 			scene->removeItem(item);
 			Arrow *arrow = qgraphicsitem_cast<Arrow *>(item);
 			arrow->startItem()->removeArrow(arrow);
@@ -124,6 +125,7 @@ void MainWindow::deleteItem()
 	//Si no significa que solo es texto y se elimina
 	foreach (QGraphicsItem *item, scene->selectedItems()) {
 		if (item->type() == DiagramItem::Type) {
+			qDebug() << "(DiagramItem) MainWindow::deleteItem()";
 			qgraphicsitem_cast<DiagramItem *>(item)->removeArrows();
 		}
 		scene->removeItem(item);
@@ -131,7 +133,7 @@ void MainWindow::deleteItem()
 	}
 }
 
-//Se selecciona el tipo de apuntador, si es flecha o seleccion
+//Se selecciona el tipo de apuntador, si es flecha,seleccion o flecha condicional
 void MainWindow::pointerGroupClicked(int)
 {
 	scene->setMode(DiagramScene::Mode(pointerTypeGroup->checkedId()));
@@ -400,7 +402,7 @@ void MainWindow::createActions()
 
 	exitAction = new QAction(tr("E&xit"), this);
 	exitAction->setShortcuts(QKeySequence::Quit);
-	exitAction->setStatusTip(tr("Quit Scenediagram example"));
+	exitAction->setStatusTip(tr("Quit QRex"));
 	connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
 
 	boldAction = new QAction(tr("Bold"), this);
@@ -524,14 +526,21 @@ void MainWindow::createToolbars()
 	pointerButton->setCheckable(true);
 	pointerButton->setChecked(true);
 	pointerButton->setIcon(QIcon(":/images/pointer.png"));
+
 	QToolButton *linePointerButton = new QToolButton;
 	linePointerButton->setCheckable(true);
 	linePointerButton->setIcon(QIcon(":/images/linepointer.png"));
 
+	//Se agrega el pointer para las condicionales
+	QToolButton *condPointerButton = new QToolButton;
+	condPointerButton->setCheckable(true);
+	condPointerButton->setIcon(QIcon(":/images/condpointer.png"));
+
+
 	pointerTypeGroup = new QButtonGroup(this);
 	pointerTypeGroup->addButton(pointerButton, int(DiagramScene::MoveItem));
-	pointerTypeGroup->addButton(linePointerButton,
-			int(DiagramScene::InsertLine));
+	pointerTypeGroup->addButton(linePointerButton,int(DiagramScene::InsertLine));
+	pointerTypeGroup->addButton(condPointerButton,int(DiagramScene::InsertConditional));
 
 	//Conexion para el tipo de pointer (linea o apuntador)
 	connect(pointerTypeGroup, SIGNAL(buttonClicked(int)),
@@ -550,6 +559,7 @@ void MainWindow::createToolbars()
 	pointerToolbar = addToolBar(tr("Pointer type"));
 	pointerToolbar->addWidget(pointerButton);
 	pointerToolbar->addWidget(linePointerButton);
+	pointerToolbar->addWidget(condPointerButton);
 	pointerToolbar->addWidget(sceneScaleCombo);
 }
 
