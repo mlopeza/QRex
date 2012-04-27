@@ -118,7 +118,7 @@ void DiagramScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 				//=====================Se agrega la linea
 				Arrow *arrow = new Arrow(item,item2);
 				item2->addArrowFrom(arrow);
-				item->addArrowTo(arrow);
+				item->addArrowConditional(arrow);
 				//Color especial
 				arrow->setColor(QColor("purple"));
 				arrow->setZValue(-1000.0);
@@ -146,7 +146,7 @@ void DiagramScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 				//=====================Se agrega la linea
 				Arrow *arrow = new Arrow(item,item2);
 				item2->addArrowFrom(arrow);
-				item->addArrowTo(arrow);
+				item->addArrowConditional(arrow);
 				//Color especial
 				arrow->setColor(QColor("purple"));
 				arrow->setZValue(-1000.0);
@@ -240,30 +240,37 @@ void DiagramScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
 			//No se permite que un StartEnd sea la conexion a algo
 			if(endItem->isStartEnd())
 				return;
-
+			qDebug("DiagramScene::MouseReleaseEvent()   endItem->isStartEnd()");
 			//No se permite conexion doble
 			if(startItem->hasConnection(endItem) || endItem->hasConnection(startItem))
 				return;
-
+			qDebug("DiagramScene::MouseReleaseEvent()   hasConnection()");
 			//No se permiten reemplazar flechas
-			if(startItem->getTo() != NULL || endItem->getFrom() != NULL)
+			qDebug() << "Start Item:" << startItem->getTo();
+			if(startItem->getTo() != NULL)
 				return;
-
+			qDebug("DiagramScene::MouseReleaseEvent()   getTo()");
+			if(endItem->getFrom() != NULL)
+				return;
+			qDebug("DiagramScene::MouseReleaseEvent()   getTo() getFrom()");
 			//Se Crea la flecha con referencia a los dos objetos creados
 			Arrow *arrow = new Arrow(startItem, endItem);
-
+			qDebug("1");
 			//Se agregan los atributos de la flecha
 			arrow->setColor(myLineColor);
-
+			qDebug("1");
 			//Se agregan  los apuntadores a los objetos
 			//Colisionados
 			startItem->addArrowTo(arrow);
 			endItem->addArrowFrom(arrow);
-
+			qDebug("1");
 			//Se agregan los elementos a la escena
 			arrow->setZValue(-1000.0);
+			qDebug("1");
 			addItem(arrow);
+			qDebug("1");
 			arrow->updatePosition();
+			qDebug("1");
 		}
 	}else if (line != 0 && myMode == InsertConditional) {
 		qDebug() << "InsertConditional! New";
