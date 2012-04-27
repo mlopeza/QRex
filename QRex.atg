@@ -484,7 +484,7 @@ COMPILER QRex
 			}else{
 				v = new Variable();
 				v->nombre = f->nombre;
-				v->tipo = f->tipo;
+				v->tipo = f->tipo-10;
 				switch(f->tipo){
 					case 21://entero
 						v->direccion=tabglobales->intNum;
@@ -652,7 +652,7 @@ COMPILER QRex
 		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(identificador);
 
 		//Se verifica
-		if(identificador == it->second->nombre){
+		if(identificador == it->second->nombre && it->second->definida == 1){
 			// guardo los datos de la funcion en el auxiliar ll
 			contParam = 1;
 			l = it->second;
@@ -675,6 +675,7 @@ COMPILER QRex
 			std::wcout<< L"Parameter type mismatach: "<< identificador << L"\n";
 			std::wcout<< L"Parameter type: "<< p->Data() << L"\n";
 			std::wcout<< L"Type given: "<< dameTipo(argumento) << L"\n";
+			std::wcout<< L"dir given: "<< argumento << L"\n";
 			exit(-1);
 		}
 		std::map<std::wstring,Variable *>::iterator it = l->vhash.find(p->Nombre());
@@ -820,6 +821,10 @@ COMPILER QRex
 			int resultado = PilaO->Pop();
 			int tipo = verificaCubo(operador,dameTipo(operando),dameTipo(resultado));
 			if(tipo == -666){
+
+				std::wcout<< L"Operando1 "<< operando << L"\n";
+				std::wcout<< L"resultado "<< resultado << L"\n";
+
 				Err(L"Assignation of different types");
 				exit(-1);
 			}
@@ -843,7 +848,7 @@ COMPILER QRex
 			
 			Cuadruplo *cuadruplo = new Cuadruplo(operador,resultado,-1,-1);
 			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
-			PilaS->Push(contCuadruplos++);
+			PilaS->Push(contCuadruplos);
 			contCuadruplos++;
 	
 		}else if(operador == RETORNO){
@@ -852,17 +857,15 @@ COMPILER QRex
 			//PilaS->Push(contCuadruplos++);
 			contCuadruplos++;
 
+			//std::wcout<< L"Cuadruplo retorno"<< contCuadruplos << L"\n";
 
 		}else if(operador == RETURN){
 
 			std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(f->nombre);
 			int resultado = PilaO->Pop();
 			int dir = itglobal->second->direccion;
-//asdf
 
-			std::wcout<< L"asdfsdfsadf "<< dir << L"\n";
-
-			Cuadruplo *cuadruplo = new Cuadruplo(operador,resultado,-1,dir);
+			Cuadruplo *cuadruplo = new Cuadruplo(operador,resultado,666,dir);
 			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
 			contCuadruplos++;
 	
@@ -870,7 +873,7 @@ COMPILER QRex
 			int dir = l->dirInicial;
 			Cuadruplo *cuadruplo = new Cuadruplo(operador,-1,-1,dir);
 			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
-			PilaS->Push(contCuadruplos++);
+			PilaS->Push(contCuadruplos);
 			contCuadruplos++;
 			
 		}else{
@@ -891,6 +894,11 @@ COMPILER QRex
 			PilaO->Push(temp);
 	}
 
+}
+
+void meteLlamada(){
+	std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(l->nombre);
+	PilaO->Push(itglobal->second->direccion);
 }
 
 void gCuadruploGOTOWhile(){
@@ -950,7 +958,7 @@ void gCuadruploGOTOIf(){
 void gCuadruploInicial(){
 	int operador = Poper->Pop();
 	if(operador ==GOTO){
-		std::wcout << contCuadruplos << L" Mete cuadruplo inicial\n";
+	//	std::wcout << contCuadruplos << L" Mete cuadruplo inicial\n";
 		PilaS->Push(contCuadruplos);
 		Cuadruplo *cuadruplo = new Cuadruplo(operador,-1,-1,-1);
 		hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
@@ -961,13 +969,13 @@ void gCuadruploInicial(){
 void gCuadruploGOTOMain(){
 	int main = PilaS->Pop();
 	//Rellena el goto inicial
-	std::wcout << main << L" posicion del primer goto\n";
-	std::wcout << contCuadruplos << L" contador de main\n";
+	//std::wcout << main << L" posicion del primer goto\n";
+	//std::wcout << contCuadruplos << L" contador de main\n";
 	std::map<int,Cuadruplo *>::iterator it;
 	it = hashCuadruplos.find(main);
 	Cuadruplo *c = (it->second);
 	c->resultado=contCuadruplos;
-	std::wcout << c->resultado << L" cuadruplo contador de main\n";
+	//std::wcout << c->resultado << L" cuadruplo contador de main\n";
 }
 
 /*-------------------------------------------------------------*/
@@ -1070,7 +1078,18 @@ Tipov ID					(.registraVariable(f);.)
 						(. tipo = undef;.)
 .
 //Finaliza Declaracion-----------------------------------------------------------------
-Llamada = '(' [Param] ')'.
+Llamada = '('		(.	operadorActual=PIZQ;
+				metePoper();
+			.)
+	[Param]
+	')'		(.	operadorActual=PDER;
+				sacaPoper();
+				meteLlamada();
+
+				
+			.)
+	
+	.
 
 Lectura= read '(' 
 					//Verifica que exista el ID antes de leer
@@ -1153,11 +1172,11 @@ cte_string				(.
 							PilaO->Push((it->second)->direccion);
 							gCuadruplo();
 						}
-						if(llamada == 1){
+					/*	if(llamada == 1){
 							std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
 							PilaO->Push((it->second)->direccion);
 							generaParametro();
-						}
+						}*/
 					.)
 
 ) [',' Param].
@@ -1389,16 +1408,16 @@ Exp6				(.	int peek = Poper->Peek();
 //Inicio Cuerpo 2 (Cuerpo funcion)------------------------------------------------------------
 Cuerpo2 = '{' {Declaracion} {Estatuto} [ return 
 					
-(Expresion		(./*
+(Expresion		(.
+			 		//Se compara el tipo de la funcion con el tipo del valor retornado
 					if (f->tipo != dameTipo(PilaO->Peek())+10 ){
-						//asdf
 						std::wcout<< L"Returned value not expected"<< f->tipo << L"\n";
 						exit(-1);
 					}
 						operadorActual=RETURN;
 						metePoper();
 						gCuadruplo();
-*/
+
 					.)
 		|	cte_string
 
