@@ -52,7 +52,7 @@ signals:
 
 	private:
 		bool isItemChange(int type);
-
+		void addConditionalDiagram(DiagramItem *item,DiagramItem::DiagramType type,QMenu *myItemMenu,QGraphicsSceneMouseEvent *mouseEvent);
 		DiagramItem::DiagramType myItemType;
 		QMenu *myItemMenu;
 		Mode myMode;

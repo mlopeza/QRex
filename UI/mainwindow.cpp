@@ -130,7 +130,10 @@ void MainWindow::deleteItem()
 	foreach (QGraphicsItem *item, scene->selectedItems()) {
 		if (item->type() == DiagramItem::Type) {
 			qDebug() << "(DiagramItem) MainWindow::deleteItem()";
-			qgraphicsitem_cast<DiagramItem *>(item)->removeArrows();
+			DiagramItem *a=qgraphicsitem_cast<DiagramItem *>(item);
+			qDebug()<<" has arrows?:"<<a->hasArrows()<<" Item:"<<a;
+			a->removeArrows();
+			qDebug()<<"Delete Item"<<((a==NULL)?"NULL":"NO NULL");
 		}
 		scene->removeItem(item);
 		delete item;

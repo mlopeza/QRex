@@ -82,6 +82,40 @@ void DiagramScene::editorLostFocus(DiagramTextItem *item)
 	}
 }
 
+void DiagramScene::addConditionalDiagram(DiagramItem *item,DiagramItem::DiagramType type,QMenu *myItemMenu,QGraphicsSceneMouseEvent *mouseEvent){
+				qDebug()<<"Se agrego un condicional";
+				//Se crea un nuevo tipo de diagrama
+				DiagramItem *item2 = new DiagramItem(type,myItemMenu);
+				//Se pone el color
+				item2->setBrush(myItemColor);
+				//Se agrega a escena
+				addItem(item2);
+				//Se emite la señal de que se inserto un objeto
+				emit itemInserted(item2);
+				//Se cambia la posicion
+				item2->setPos(mouseEvent->scenePos().x()+300,mouseEvent->scenePos().y());
+				//Lo pone como visible
+				item2->setVisible(true);
+		
+				//=====================Se agrega la linea
+				Arrow *arrow = new Arrow(item,item2);
+				item2->addArrowFrom(arrow);
+				qDebug()<<"Item2 has arrows?:"<<item2->hasArrows();
+				item->addArrowConditional(arrow);
+				qDebug()<<"Item1 has arrows?:"<<item->hasArrows();
+				//Color especial
+				arrow->setColor(QColor("purple"));
+				arrow->setZValue(-1000.0);
+				addItem(arrow);
+				arrow->updatePosition();
+				//=====================Se agrega la linea
+				//Hace un update del objeto y de la escena
+				item->update();
+				item2->update();
+				update();
+
+}
+
 void DiagramScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	if (mouseEvent->button() != Qt::LeftButton)
@@ -99,64 +133,8 @@ void DiagramScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 			//Y casos especiales de Condicional y While donde se agrega un elemento mas
 			if(item->isStartEnd()){
 				functions.append(item);
-				qDebug() << "Tamano:" << functions.length()<<" pos:"<<mouseEvent->scenePos().x();
-			}else if(item->isConditional()){
-				qDebug()<<"Se agrego un condicional";
-				//Se crea un nuevo tipo de diagrama
-				DiagramItem *item2 = new DiagramItem(DiagramItem::Step,myItemMenu);
-				//Se pone el color
-				item2->setBrush(myItemColor);
-				//Se agrega a escena
-				addItem(item2);
-				//Se emite la señal de que se inserto un objeto
-				emit itemInserted(item2);
-				//Se cambia la posicion
-				item2->setPos(mouseEvent->scenePos().x()+300,mouseEvent->scenePos().y());
-				//Lo pone como visible
-				item2->setVisible(true);
-		
-				//=====================Se agrega la linea
-				Arrow *arrow = new Arrow(item,item2);
-				item2->addArrowFrom(arrow);
-				item->addArrowConditional(arrow);
-				//Color especial
-				arrow->setColor(QColor("purple"));
-				arrow->setZValue(-1000.0);
-				addItem(arrow);
-				arrow->updatePosition();
-				//=====================Se agrega la linea
-
-				//Hace un update del objeto y de la escena
-				item2->update();
-				update();
-			}else if(item->isWhile()){
-				//Se crea un nuevo tipo de diagrama
-				DiagramItem *item2 = new DiagramItem(DiagramItem::Step,myItemMenu);
-				//Se pone el color
-				item2->setBrush(myItemColor);
-				//Se agrega a escena
-				addItem(item2);
-				//Se emite la señal de que se inserto un objeto
-				emit itemInserted(item2);
-				//Se cambia la posicion
-				item2->setPos(mouseEvent->scenePos().x()+300,mouseEvent->scenePos().y());
-				//Lo pone como visible
-				item2->setVisible(true);
-
-				//=====================Se agrega la linea
-				Arrow *arrow = new Arrow(item,item2);
-				item2->addArrowFrom(arrow);
-				item->addArrowConditional(arrow);
-				//Color especial
-				arrow->setColor(QColor("purple"));
-				arrow->setZValue(-1000.0);
-				addItem(arrow);
-				arrow->updatePosition();
-				//=====================Se agrega la linea
-
-				//Hace un update del objeto y de la escena
-				item2->update();
-				update();
+			}else if(item->isConditional() || item->isWhile()){
+				addConditionalDiagram(item,DiagramItem::Step,myItemMenu,mouseEvent);
 			}
 			break;
 		case InsertLine:

@@ -52,6 +52,7 @@ class DiagramItem : public QGraphicsPolygonItem
 		void setArrow(const int INDEX,Arrow *arrow);
 
 		bool hasConnection(DiagramItem *item);
+		bool hasArrows();
 		DiagramItem *getFrom();
 		DiagramItem *getTo();
 		DiagramItem *getConditional();

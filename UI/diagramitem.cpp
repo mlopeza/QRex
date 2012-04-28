@@ -53,6 +53,8 @@ DiagramItem::DiagramItem(DiagramType diagramType, QMenu *contextMenu,
 void DiagramItem::removeArrow(Arrow *arrow)
 {
 	qDebug() << "DiagramItem::removeArrow()";
+	if(arrow == NULL)
+		return;
 
 	if(arrow == arrowStruct[TO]){
 		arrowStruct[TO]=NULL;
@@ -61,41 +63,50 @@ void DiagramItem::removeArrow(Arrow *arrow)
 	}else if(arrow == arrowStruct[COND]){
 		arrowStruct[COND]=NULL;
 	}
-
-	return;
-	int index = arrows.indexOf(arrow);
-
-	if (index != -1)
-		arrows.removeAt(index);
 }
 
+bool DiagramItem::hasArrows(){
+	if(arrowStruct[TO]!=NULL || arrowStruct[FROM]!=NULL || arrowStruct[COND]!=NULL)
+		return true;
+	return false;
+}
 //Elimina todas las flechas de ub objeto
 void DiagramItem::removeArrows()
 {
 	qDebug() << "DiagramItem::removeArrows()";
+	qDebug() << "1";
 	if(arrowStruct[TO] != NULL){
 		qDebug() << ">> delete arrowStruct[TO]";
-		arrowStruct[TO]->endItem()->removeArrow(arrowStruct[TO]);
+		arrowStruct[TO]->endItem()->removeArrow(arrowStruct[FROM]);
 		scene()->removeItem(arrowStruct[TO]);
 		delete arrowStruct[TO];
 		arrowStruct[TO]=NULL;
 	}
-
+	qDebug() << "2";
 	if(arrowStruct[FROM] != NULL){
 		qDebug() << ">> delete arrowStruct[FROM]";
-		arrowStruct[FROM]->startItem()->removeArrow(arrowStruct[FROM]);
+		qDebug() << ">>	arrowStruct[FROM]->startItem()->removeArrow(arrowStruct[TO]);";
+		arrowStruct[FROM]->startItem()->removeArrow(arrowStruct[TO]);
+		qDebug() << ">>scene()->removeItem(arrowStruct[FROM]);";
 		scene()->removeItem(arrowStruct[FROM]);
+		qDebug()<<"delete arrowStruct[FROM];";
 		delete arrowStruct[FROM];
+		qDebug()<<"arrowStruct[FROM]=NULL;";
 		arrowStruct[FROM]=NULL;
 	}
-
+	qDebug() << "3";
 	if(arrowStruct[COND] != NULL){
 		qDebug() << ">> delete arrowStruct[COND]";
+		qDebug() <<"arrowStruct[COND]->endItem()->removeArrow(arrowStruct[FROM]);"; 
 		arrowStruct[COND]->endItem()->removeArrow(arrowStruct[COND]);
+		qDebug()<<"scene()->removeItem(arrowStruct[COND]);";
 		scene()->removeItem(arrowStruct[COND]);
+		qDebug()<<"delete arrowStruct[COND];";
 		delete arrowStruct[COND];
+		qDebug()<<"arrowStruct[COND]=NULL;";
 		arrowStruct[COND]=NULL;
 	}
+	qDebug() << "4";
 }
 
 void DiagramItem::addArrow(Arrow *arrow)
@@ -130,14 +141,25 @@ void DiagramItem::addArrowTo(Arrow *arrow){
 
 //Si es un condicional agrega la flecha que apunta al condicional
 void DiagramItem::addArrowConditional(Arrow *arrow){
-	if(this->myDiagramType != Conditional)
+	if(myDiagramType == Conditional){
+		qDebug()<<"Conditional!";
+	}else if(myDiagramType == While){
+		qDebug()<<"While";
+	}else if(myDiagramType == Step){
+		qDebug()<<"Step!";
+	}
+	if(!(this->myDiagramType == Conditional || this->myDiagramType == While))
 		return;
 
-	if(arrowStruct[COND] != NULL)
+	if(arrowStruct[COND] != NULL){
+		qDebug()<< "Not Null!!";
 		return;
+	}
 	if((arrow->endItem())->isStartEnd()){
+		qDebug()<<"End ITEM START END!";
 		(arrow->endItem())->removeArrowFrom(arrow);
 	}
+	qDebug()<<"ArrowStruct[COND]="<<arrow;
 	arrowStruct[COND]=arrow;
 }
 
