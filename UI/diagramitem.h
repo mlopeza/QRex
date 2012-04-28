@@ -66,6 +66,10 @@ class DiagramItem : public QGraphicsPolygonItem
 			{return myDiagramType==Conditional?true:false;}
 		bool isWhile()
 			{return myDiagramType==While?true:false;}
+		bool isStep()
+			{return myDiagramType==Step?true:false;}
+		bool isIO()
+			{return myDiagramType==Io?true:false;}
 	protected:
 		void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
 		QVariant itemChange(GraphicsItemChange change, const QVariant &value);

@@ -70,6 +70,9 @@ class MainWindow : public QMainWindow
 		//Acerca de
 		void about();
 
+		//Se llama modificar Funcion
+		void setProperties();
+
 	private:
 		//Crea el ToolBox que es donde se encuentran los objetos como eliminar, cambair font,etc.
 		void createToolBox();
@@ -99,6 +102,7 @@ class MainWindow : public QMainWindow
 		QAction *toFrontAction;
 		QAction *sendBackAction;
 		QAction *aboutAction;
+		QAction *changeProperties;
 
 		//Objetos del  Menu
 		QMenu *fileMenu;

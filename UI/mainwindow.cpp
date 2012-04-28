@@ -6,6 +6,10 @@
 #include "diagramscene.h"
 #include "diagramtextitem.h"
 #include "arrow.h"
+#include "functiondialog.h" //Para Dialogos de Funciones
+#include "conditionaldialog.h" //Para Dialogos de Condicionales
+#include "stepdialog.h" //Para Dialogos de Procesos
+#include "iodialog.h" //Para Dialogos de IO
 
 const int InsertTextButton = 10;
 
@@ -285,9 +289,10 @@ void MainWindow::handleFontChange()
 //Se selecciona un objeto de texto en la escena
 void MainWindow::itemSelected(QGraphicsItem *item)
 {
+	qDebug() << "Item Selected";
 	DiagramTextItem *textItem = qgraphicsitem_cast<DiagramTextItem *>(item);
 	QFont font = textItem->font();
-	QColor color = textItem->defaultTextColor();
+//	QColor color = textItem->defaultTextColor();
 	fontCombo->setCurrentFont(font);
 	fontSizeCombo->setEditText(QString().setNum(font.pointSize()));
 	boldAction->setChecked(font.weight() == QFont::Bold);
@@ -299,7 +304,7 @@ void MainWindow::about()
 {
 	QMessageBox::about(this, tr("Acerca de QRex"),
 			tr("<b>QRex</b> Damn! this is going to be good :)<br/>"
-				"authors:<br/> Mario Lopez <br/>y<br/> Luis Aviles."));
+				"authors:<br/><p align='center'>Mario Lopez & Luis Aviles.</p>"));
 }
 
 //Crea los Tool Box
@@ -393,6 +398,13 @@ void MainWindow::createActions()
 	connect(sendBackAction, SIGNAL(triggered()),
 			this, SLOT(sendToBack()));
 
+	changeProperties = new QAction(QIcon(":/images/background3.png"),
+			tr("&Properties"), this);
+	changeProperties->setShortcut(tr("Ctrl+M"));
+	changeProperties->setStatusTip(tr("Item Properties"));
+	connect(changeProperties, SIGNAL(triggered()),
+			this, SLOT(setProperties()));
+
 	deleteAction = new QAction(QIcon(":/images/delete.png"),
 			tr("&Delete"), this);
 	deleteAction->setShortcut(tr("Delete"));
@@ -444,6 +456,7 @@ void MainWindow::createMenus()
 	itemMenu->addSeparator();
 	itemMenu->addAction(toFrontAction);
 	itemMenu->addAction(sendBackAction);
+	itemMenu->addAction(changeProperties);
 
 	aboutMenu = menuBar()->addMenu(tr("&Help"));
 	aboutMenu->addAction(aboutAction);
@@ -457,9 +470,10 @@ void MainWindow::createToolbars()
 	editToolBar->addAction(deleteAction);
 	editToolBar->addAction(toFrontAction);
 	editToolBar->addAction(sendBackAction);
+	editToolBar->addAction(changeProperties);
 
 	fontCombo = new QFontComboBox();
-	//COnexion del tipo de fuente
+	//Conexion del tipo de fuente
 	connect(fontCombo, SIGNAL(currentFontChanged(QFont)),
 			this, SLOT(currentFontChanged(QFont)));
 
@@ -613,6 +627,61 @@ QWidget *MainWindow::createCellWidget(const QString &text,
 
 	return widget;
 }
+
+//Aqui se manejan los menus de propiedades
+//Para lo elementos del diagrama
+void MainWindow::setProperties(){
+	if (scene->selectedItems().isEmpty())
+		return;
+
+	QGraphicsItem *item = scene->selectedItems().first();
+	//Si no es del tipo diagrama no lo acepta
+	if(item->type() != DiagramItem::Type)
+		return;
+	DiagramItem *selectedItem = (DiagramItem *)item;
+	if(selectedItem->isStartEnd()){
+		FunctionDialog *fdialog = new FunctionDialog();
+		if(fdialog->exec()){
+			qDebug()<<"Yes";
+		}else{
+			qDebug()<<"No";
+		}
+
+		//Elimina el objeto
+		delete fdialog;
+	}else if(selectedItem->isConditional() || selectedItem->isWhile()){
+		ConditionalDialog *cdialog = new ConditionalDialog();
+		if(cdialog->exec()){
+			qDebug()<<"Yes";
+		}else{
+			qDebug()<<"No";
+		}
+
+		//Elimina el objeto
+		delete cdialog;
+	}else if(selectedItem->isStep()){
+		StepDialog *sdialog = new StepDialog();
+		if(sdialog->exec()){
+			qDebug()<<"Yes";
+		}else{
+			qDebug()<<"No";
+		}
+
+		//Elimina el objeto
+		delete sdialog;
+	}else if(selectedItem->isIO()){
+		IODialog *iodialog = new IODialog();
+		if(iodialog->exec()){
+			qDebug()<<"Yes";
+		}else{
+			qDebug()<<"No";
+		}
+
+		//Elimina el objeto
+		delete iodialog;
+	}
+}
+
 
 //Creas un menu con colores
 QMenu *MainWindow::createColorMenu(const char *slot, QColor defaultColor)

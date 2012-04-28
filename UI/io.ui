@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>IODialog</class>
+ <widget class="QDialog" name="IODialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>500</width>
-    <height>150</height>
+    <height>126</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>500</width>
-    <height>100</height>
+    <height>126</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>16777215</width>
-    <height>150</height>
+    <height>126</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -76,17 +76,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QPlainTextEdit" name="ioText">
+      <widget class="QLineEdit" name="IOText">
        <property name="minimumSize">
         <size>
-         <width>200</width>
+         <width>300</width>
          <height>0</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>30</height>
         </size>
        </property>
       </widget>
@@ -100,7 +94,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>Dialog</receiver>
+   <receiver>IODialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -116,7 +110,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>Dialog</receiver>
+   <receiver>IODialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

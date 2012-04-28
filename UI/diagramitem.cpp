@@ -197,6 +197,7 @@ QPixmap DiagramItem::image() const
 
 void DiagramItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
+	qDebug() << "Selected!!";
 	scene()->clearSelection();
 	setSelected(true);
 	myContextMenu->exec(event->screenPos());
