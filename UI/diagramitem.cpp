@@ -56,14 +56,18 @@ void DiagramItem::removeArrow(Arrow *arrow)
 	qDebug() << "DiagramItem::removeArrow()";
 	if(arrow == NULL)
 		return;
-
 	if(arrow == arrowStruct[TO]){
+		qDebug()<<"1";
 		arrowStruct[TO]=NULL;
 	}else if(arrow == arrowStruct[FROM]){
+		qDebug()<<"2";
 		arrowStruct[FROM]=NULL;
 	}else if(arrow == arrowStruct[COND]){
+		qDebug()<<"3";
 		arrowStruct[COND]=NULL;
 	}
+	qDebug() << "DiagramItem::removeArrow() ENDED";
+
 }
 
 bool DiagramItem::hasArrows(){
@@ -78,16 +82,20 @@ void DiagramItem::removeArrows()
 	qDebug() << "1";
 	if(arrowStruct[TO] != NULL){
 		qDebug() << ">> delete arrowStruct[TO]";
-		arrowStruct[TO]->endItem()->removeArrow(arrowStruct[FROM]);
+		qDebug() << "arrowStruct[TO]->endItem()->removeArrow(arrowStruct[FROM]);";
+		arrowStruct[TO]->endItem()->removeArrow(arrowStruct[TO]);
+		qDebug() << "scene()->removeItem(arrowStruct[TO]);";
 		scene()->removeItem(arrowStruct[TO]);
+		qDebug()<<"delete arrowStruct[TO];";
 		delete arrowStruct[TO];
+		qDebug() << "arrowStruct[TO]=NULL;";
 		arrowStruct[TO]=NULL;
 	}
 	qDebug() << "2";
 	if(arrowStruct[FROM] != NULL){
 		qDebug() << ">> delete arrowStruct[FROM]";
 		qDebug() << ">>	arrowStruct[FROM]->startItem()->removeArrow(arrowStruct[TO]);";
-		arrowStruct[FROM]->startItem()->removeArrow(arrowStruct[TO]);
+		arrowStruct[FROM]->startItem()->removeArrow(arrowStruct[FROM]);
 		qDebug() << ">>scene()->removeItem(arrowStruct[FROM]);";
 		scene()->removeItem(arrowStruct[FROM]);
 		qDebug()<<"delete arrowStruct[FROM];";
@@ -108,11 +116,6 @@ void DiagramItem::removeArrows()
 		arrowStruct[COND]=NULL;
 	}
 	qDebug() << "4";
-}
-
-void DiagramItem::addArrow(Arrow *arrow)
-{
-	arrows.append(arrow);
 }
 
 //Agrega la flecha que apunta a este objeto

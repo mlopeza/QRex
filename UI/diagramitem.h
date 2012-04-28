@@ -36,7 +36,6 @@ class DiagramItem : public QGraphicsPolygonItem
 		{ return myDiagramType; }
 		QPolygonF polygon() const
 		{ return myPolygon; }
-		void addArrow(Arrow *arrow);
 
 		//Se agregan las conexiones de las flechas
 		void addArrowFrom(Arrow *arrow);
@@ -86,7 +85,6 @@ class DiagramItem : public QGraphicsPolygonItem
 		DiagramType myDiagramType;
 		QPolygonF myPolygon;
 		QMenu *myContextMenu;
-		QList<Arrow *> arrows;
 		Arrow *arrowStruct[3];
 		QDialog *dialog;
 		

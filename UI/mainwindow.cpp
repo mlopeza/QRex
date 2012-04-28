@@ -397,12 +397,21 @@ void MainWindow::createActions()
 	connect(sendBackAction, SIGNAL(triggered()),
 			this, SLOT(sendToBack()));
 
-	changeProperties = new QAction(QIcon(":/images/background3.png"),
+	changeProperties = new QAction(QIcon(":/images/edit.png"),
 			tr("&Properties"), this);
 	changeProperties->setShortcut(tr("Ctrl+M"));
 	changeProperties->setStatusTip(tr("Item Properties"));
 	connect(changeProperties, SIGNAL(triggered()),
 			this, SLOT(setProperties()));
+
+	//Debug Objects
+	objDebug = new QAction(QIcon(":/images/debug.png"),
+			tr("&Debug"), this);
+	objDebug->setShortcut(tr("Ctrl+K"));
+	objDebug->setStatusTip(tr("Debug Object"));
+	connect(objDebug, SIGNAL(triggered()),
+			this, SLOT(debugObject()));
+
 
 	deleteAction = new QAction(QIcon(":/images/delete.png"),
 			tr("&Delete"), this);
@@ -456,6 +465,7 @@ void MainWindow::createMenus()
 	itemMenu->addAction(toFrontAction);
 	itemMenu->addAction(sendBackAction);
 	itemMenu->addAction(changeProperties);
+	itemMenu->addAction(objDebug);
 
 	aboutMenu = menuBar()->addMenu(tr("&Help"));
 	aboutMenu->addAction(aboutAction);
@@ -470,6 +480,7 @@ void MainWindow::createToolbars()
 	editToolBar->addAction(toFrontAction);
 	editToolBar->addAction(sendBackAction);
 	editToolBar->addAction(changeProperties);
+	editToolBar->addAction(objDebug);
 
 	fontCombo = new QFontComboBox();
 	//Conexion del tipo de fuente
@@ -626,7 +637,46 @@ QWidget *MainWindow::createCellWidget(const QString &text,
 
 	return widget;
 }
+void MainWindow::debugObject(){
+	qDebug()<<"Debug Object Triggered!";
+	if(scene->selectedItems().isEmpty()){
+		QList<QGraphicsItem *> l=scene->items();
+		qDebug()<<"No Items selected. NUmbero of items on scene:"<<l.size();
+		return;
+	}
 
+	QGraphicsItem *item=scene->selectedItems().first();
+	if(item->type()!=DiagramItem::Type)
+		return;
+	DiagramItem *i=(DiagramItem *)(item);
+	switch(i->diagramType()){
+		case DiagramItem::StartEnd:
+			qDebug()<<"Item type:StartEnd";
+		break;
+
+		case DiagramItem::While:
+			qDebug()<<"Item type:While";
+		break;
+
+		case DiagramItem::Conditional:
+			qDebug()<<"Item type:Conditional";
+		break;
+
+		case DiagramItem::Step:
+			qDebug()<<"Item type:Step";
+		break;
+
+		case DiagramItem::Io:
+			qDebug()<<"Item type:Io";
+		break;
+		}
+		qDebug()<<"ArrowStruct";
+		qDebug()<<"FROM: "<<i->getFrom();		
+		qDebug()<<"TO:   "<<i->getTo();
+		qDebug()<<"COND: "<<i->getConditional();
+		qDebug() << "\n\n";
+
+}
 //Aqui se manejan los menus de propiedades
 //Para lo elementos del diagrama
 void MainWindow::setProperties(){

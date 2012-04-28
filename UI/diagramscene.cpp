@@ -100,6 +100,7 @@ void DiagramScene::addConditionalDiagram(DiagramItem *item,DiagramItem::DiagramT
 				Arrow *arrow = new Arrow(item,item2);
 				item2->addArrowFrom(arrow);
 				item->addArrowConditional(arrow);
+				qDebug() << "item has arrows? "<<item->hasArrows();
 				//Color especial
 				arrow->setColor(QColor("purple"));
 				arrow->setZValue(-1000.0);
@@ -107,7 +108,6 @@ void DiagramScene::addConditionalDiagram(DiagramItem *item,DiagramItem::DiagramT
 				arrow->updatePosition();
 				//=====================Se agrega la linea
 				//Hace un update del objeto y de la escena
-				item->update();
 				item2->update();
 				update();
 
