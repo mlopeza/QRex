@@ -115,7 +115,6 @@ void MainWindow::deleteItem()
 	foreach (QGraphicsItem *item, scene->selectedItems()) {
 		//Si es del tipo flecha deben eliminarse las referencias
 		if (item->type() == Arrow::Type) {
-			qDebug() << "(Arrow) MainWindow::deleteItem()";
 			scene->removeItem(item);
 			Arrow *arrow = qgraphicsitem_cast<Arrow *>(item);
 			arrow->startItem()->removeArrow(arrow);
@@ -129,11 +128,8 @@ void MainWindow::deleteItem()
 	//Si no significa que solo es texto y se elimina
 	foreach (QGraphicsItem *item, scene->selectedItems()) {
 		if (item->type() == DiagramItem::Type) {
-			qDebug() << "(DiagramItem) MainWindow::deleteItem()";
 			DiagramItem *a=qgraphicsitem_cast<DiagramItem *>(item);
-			qDebug()<<" has arrows?:"<<a->hasArrows()<<" Item:"<<a;
 			a->removeArrows();
-			qDebug()<<"Delete Item"<<((a==NULL)?"NULL":"NO NULL");
 		}
 		scene->removeItem(item);
 		delete item;
@@ -643,45 +639,58 @@ void MainWindow::setProperties(){
 		return;
 	DiagramItem *selectedItem = (DiagramItem *)item;
 	if(selectedItem->isStartEnd()){
-		FunctionDialog *fdialog = new FunctionDialog();
+		//Verifica si ya tiene un dialogo asignado
+		//Si no lo crea
+		//Si si solo lo muestra
+		//El objeto se elimina por el padre
+		if(selectedItem->getDialog()==NULL){
+			FunctionDialog *fdialog = new FunctionDialog(this);
+			selectedItem->setDialog((QDialog *)(fdialog));
+		}
+
+		FunctionDialog *fdialog=(FunctionDialog *)(selectedItem->getDialog());
+
 		if(fdialog->exec()){
 			qDebug()<<"Yes";
 		}else{
 			qDebug()<<"No";
 		}
 
-		//Elimina el objeto
-		delete fdialog;
 	}else if(selectedItem->isConditional() || selectedItem->isWhile()){
-		ConditionalDialog *cdialog = new ConditionalDialog();
+		if(selectedItem->getDialog()==NULL){
+			ConditionalDialog *cdialog = new ConditionalDialog(this);
+			selectedItem->setDialog((QDialog *)(cdialog));
+		}
+		
+		ConditionalDialog *cdialog = (ConditionalDialog *)(selectedItem->getDialog());
 		if(cdialog->exec()){
 			qDebug()<<"Yes";
 		}else{
 			qDebug()<<"No";
 		}
-
-		//Elimina el objeto
-		delete cdialog;
 	}else if(selectedItem->isStep()){
-		StepDialog *sdialog = new StepDialog();
+		if(selectedItem->getDialog()==NULL){
+			StepDialog *sdialog = new StepDialog(this);
+			selectedItem->setDialog((QDialog *)(sdialog));
+		}
+		StepDialog *sdialog = (StepDialog *)(selectedItem->getDialog());
 		if(sdialog->exec()){
 			qDebug()<<"Yes";
 		}else{
 			qDebug()<<"No";
 		}
 
-		//Elimina el objeto
-		delete sdialog;
 	}else if(selectedItem->isIO()){
-		IODialog *iodialog = new IODialog();
+		if(selectedItem->getDialog()==NULL){
+			IODialog *iodialog = new IODialog();
+			selectedItem->setDialog((QDialog *)(iodialog));
+		}
+		IODialog *iodialog = (IODialog *)(selectedItem->getDialog());
 		if(iodialog->exec()){
 			qDebug()<<"Yes";
 		}else{
 			qDebug()<<"No";
 		}
-
-		//Elimina el objeto
-		delete iodialog;
 	}
 }
 

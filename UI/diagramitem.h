@@ -6,7 +6,7 @@
 
 #include <QGraphicsPixmapItem>
 #include <QList>
-
+#include <QDialog>
 class QPixmap;
 class QGraphicsItem;
 class QGraphicsScene;
@@ -71,6 +71,13 @@ class DiagramItem : public QGraphicsPolygonItem
 			{return myDiagramType==Step?true:false;}
 		bool isIO()
 			{return myDiagramType==Io?true:false;}
+		QDialog *getDialog(){
+			return dialog;
+		}
+
+		void setDialog(QDialog *x){
+			dialog=x;
+		}
 	protected:
 		void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
 		QVariant itemChange(GraphicsItemChange change, const QVariant &value);
@@ -81,6 +88,8 @@ class DiagramItem : public QGraphicsPolygonItem
 		QMenu *myContextMenu;
 		QList<Arrow *> arrows;
 		Arrow *arrowStruct[3];
+		QDialog *dialog;
+		
 };
 
 #endif

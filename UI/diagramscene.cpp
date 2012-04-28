@@ -83,7 +83,6 @@ void DiagramScene::editorLostFocus(DiagramTextItem *item)
 }
 
 void DiagramScene::addConditionalDiagram(DiagramItem *item,DiagramItem::DiagramType type,QMenu *myItemMenu,QGraphicsSceneMouseEvent *mouseEvent){
-				qDebug()<<"Se agrego un condicional";
 				//Se crea un nuevo tipo de diagrama
 				DiagramItem *item2 = new DiagramItem(type,myItemMenu);
 				//Se pone el color
@@ -100,9 +99,7 @@ void DiagramScene::addConditionalDiagram(DiagramItem *item,DiagramItem::DiagramT
 				//=====================Se agrega la linea
 				Arrow *arrow = new Arrow(item,item2);
 				item2->addArrowFrom(arrow);
-				qDebug()<<"Item2 has arrows?:"<<item2->hasArrows();
 				item->addArrowConditional(arrow);
-				qDebug()<<"Item1 has arrows?:"<<item->hasArrows();
 				//Color especial
 				arrow->setColor(QColor("purple"));
 				arrow->setZValue(-1000.0);

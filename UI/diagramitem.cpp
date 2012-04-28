@@ -47,6 +47,7 @@ DiagramItem::DiagramItem(DiagramType diagramType, QMenu *contextMenu,
 	arrowStruct[0]=NULL;
 	arrowStruct[1]=NULL;
 	arrowStruct[2]=NULL;
+	dialog=NULL;
 }
 
 //Elimina una flecha de un Objeto
@@ -141,25 +142,15 @@ void DiagramItem::addArrowTo(Arrow *arrow){
 
 //Si es un condicional agrega la flecha que apunta al condicional
 void DiagramItem::addArrowConditional(Arrow *arrow){
-	if(myDiagramType == Conditional){
-		qDebug()<<"Conditional!";
-	}else if(myDiagramType == While){
-		qDebug()<<"While";
-	}else if(myDiagramType == Step){
-		qDebug()<<"Step!";
-	}
 	if(!(this->myDiagramType == Conditional || this->myDiagramType == While))
 		return;
 
 	if(arrowStruct[COND] != NULL){
-		qDebug()<< "Not Null!!";
 		return;
 	}
 	if((arrow->endItem())->isStartEnd()){
-		qDebug()<<"End ITEM START END!";
 		(arrow->endItem())->removeArrowFrom(arrow);
 	}
-	qDebug()<<"ArrowStruct[COND]="<<arrow;
 	arrowStruct[COND]=arrow;
 }
 
