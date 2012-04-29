@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'functiondialog.h'
 **
-** Created: Sun Apr 29 00:00:06 2012
+** Created: Sun Apr 29 05:46:02 2012
 **      by: The Qt Meta Object Compiler version 62 (Qt 4.7.4)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -23,21 +23,30 @@ static const uint qt_meta_data_FunctionDialog[] = {
        5,       // revision
        0,       // classname
        0,    0, // classinfo
-       1,   14, // methods
+       5,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
-       0,       // signalCount
+       2,       // signalCount
+
+ // signals: signature, parameters, type, tag, flags
+      16,   15,   15,   15, 0x05,
+      48,   15,   15,   15, 0x05,
 
  // slots: signature, parameters, type, tag, flags
-      16,   15,   15,   15, 0x08,
+      65,   15,   15,   15, 0x08,
+      95,   15,   15,   15, 0x08,
+     133,   15,   15,   15, 0x08,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_FunctionDialog[] = {
-    "FunctionDialog\0\0on_functionName_textChanged()\0"
+    "FunctionDialog\0\0changed_toMain(FunctionDialog*)\0"
+    "changed_Object()\0on_functionName_textChanged()\0"
+    "on_typeComboBox_currentIndexChanged()\0"
+    "on_functionParameters_textChanged()\0"
 };
 
 const QMetaObject FunctionDialog::staticMetaObject = {
@@ -71,11 +80,28 @@ int FunctionDialog::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
         switch (_id) {
-        case 0: on_functionName_textChanged(); break;
+        case 0: changed_toMain((*reinterpret_cast< FunctionDialog*(*)>(_a[1]))); break;
+        case 1: changed_Object(); break;
+        case 2: on_functionName_textChanged(); break;
+        case 3: on_typeComboBox_currentIndexChanged(); break;
+        case 4: on_functionParameters_textChanged(); break;
         default: ;
         }
-        _id -= 1;
+        _id -= 5;
     }
     return _id;
+}
+
+// SIGNAL 0
+void FunctionDialog::changed_toMain(FunctionDialog * _t1)
+{
+    void *_a[] = { 0, const_cast<void*>(reinterpret_cast<const void*>(&_t1)) };
+    QMetaObject::activate(this, &staticMetaObject, 0, _a);
+}
+
+// SIGNAL 1
+void FunctionDialog::changed_Object()
+{
+    QMetaObject::activate(this, &staticMetaObject, 1, 0);
 }
 QT_END_MOC_NAMESPACE

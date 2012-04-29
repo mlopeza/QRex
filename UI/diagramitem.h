@@ -57,7 +57,6 @@ class DiagramItem : public QGraphicsPolygonItem
 		DiagramItem *getTo();
 		DiagramItem *getConditional();
 
-
 		QPixmap image() const;
 		int type() const
 		{ return Type;}
@@ -78,7 +77,8 @@ class DiagramItem : public QGraphicsPolygonItem
 		void setDialog(QDialog *x){
 			dialog=x;
 		}
-
+		//Final Printing method
+		void printSignature(QTextStream *out);
 		void recursivePrint(QTextStream *out);
 	protected:
 		void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);

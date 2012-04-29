@@ -244,11 +244,42 @@ bool DiagramItem::hasConnection(DiagramItem *item){
 	return false;
 }
 
+void DiagramItem::printSignature(QTextStream *out){
+	//Si es main no tiene firma
+	if(!(QString::compare(((FunctionDialog *)dialog)->typeComboBox->currentText().trimmed(), "main")))
+		return;
+	//Tipo de funcion
+	*out<<"sign "<<((FunctionDialog *)dialog)->typeComboBox->currentText()<<" ";
+	//Nombre de la funcion
+	*out<<((FunctionDialog *)dialog)->functionName->text()<<"(";
+
+	//Por medio de un proceso se obtienen los tipos de variables de las
+	//funciones
+	QString parameters(((FunctionDialog *)dialog)->functionParameters->text().simplified());
+	QString delimiterPattern(",");
+	QString space(" ");
+	QStringList plist = parameters.split(delimiterPattern);
+	int numero=1;
+	//Checa cada uno de los parametros
+	foreach(QString param, plist){
+		QStringList x = (param.simplified()).split(space);
+        	*out<<x.first();
+		if(numero!=plist.size()){
+			*out<<",";
+			numero++;
+		}
+	}
+	*out<<");\n";
+	
+}
+
+//Imprime de forma recursiva toda la informacion de la estructura
+//Recibe como parametro el stream de salida
 void DiagramItem::recursivePrint(QTextStream *out){
 	switch(myDiagramType){
 		case While:
 			*out<<" while(";
-			*out<<((ConditionalDialog *)dialog)->conditionText->text();
+			*out<<((ConditionalDialog *)dialog)->conditionText->text().simplified();
 			*out<<"){";
 			if(arrowStruct[COND] != NULL){
 				DiagramItem *cNext = arrowStruct[COND]->endItem();
@@ -259,7 +290,7 @@ void DiagramItem::recursivePrint(QTextStream *out){
 		break;
 		case Conditional:
 			*out<<" if(";
-			*out<<((ConditionalDialog *)dialog)->conditionText->text();
+			*out<<((ConditionalDialog *)dialog)->conditionText->text().simplified();
 			*out<<"){";
 			if(arrowStruct[COND] != NULL){
 				DiagramItem *cNext = arrowStruct[COND]->endItem();
@@ -271,13 +302,13 @@ void DiagramItem::recursivePrint(QTextStream *out){
 			*out<<((StepDialog *)dialog)->stepText->toPlainText();
 		break;
 		case Io:
-			if(QString::compare(((IODialog *)dialog)->ioComboBox->currentText(), "Input")){
+			if(!(QString::compare(((IODialog *)dialog)->ioComboBox->currentText(), "Input"))){
 				*out<<" read(";
-				*out<<((IODialog *)dialog)->IOText->text();
+				*out<<((IODialog *)dialog)->IOText->text().simplified();
 				*out<<");";
 			}else{
 				*out<<" print(";
-				*out<<((IODialog *)dialog)->IOText->text();
+				*out<<((IODialog *)dialog)->IOText->text().simplified();
 				*out<<");";
 			}
 		break;
@@ -295,8 +326,8 @@ void DiagramItem::recursivePrint(QTextStream *out){
 			}else{
 				qDebug()<<"Funcion Normal";
 				*out<<" "<<((FunctionDialog *)dialog)->typeComboBox->currentText()<<" ";
-				*out<<((FunctionDialog *)dialog)->functionName->text()<<" ";
-				*out<<"("<<((FunctionDialog *)dialog)->functionParameters->text()<<"){";
+				*out<<((FunctionDialog *)dialog)->functionName->text().simplified()<<" ";
+				*out<<"("<<((FunctionDialog *)dialog)->functionParameters->text().simplified()<<"){";
 				//Imprime cuerpo
 				if(arrowStruct[TO]!=NULL){
 					DiagramItem *next = arrowStruct[TO]->endItem();

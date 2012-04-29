@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'mainwindow.h'
 **
-** Created: Sun Apr 29 00:10:51 2012
+** Created: Sun Apr 29 05:46:03 2012
 **      by: The Qt Meta Object Compiler version 62 (Qt 4.7.4)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -23,7 +23,7 @@ static const uint qt_meta_data_MainWindow[] = {
        5,       // revision
        0,       // classname
        0,    0, // classinfo
-      24,   14, // methods
+      27,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -55,6 +55,9 @@ static const uint qt_meta_data_MainWindow[] = {
      513,   11,   11,   11, 0x08,
      527,   11,   11,   11, 0x08,
      537,   11,   11,   11, 0x08,
+     547,   11,   11,   11, 0x08,
+     560,   11,   11,   11, 0x08,
+     587,   11,   11,   11, 0x08,
 
        0        // eod
 };
@@ -74,7 +77,9 @@ static const char qt_meta_stringdata_MainWindow[] = {
     "fillButtonTriggered()\0lineButtonTriggered()\0"
     "handleFontChange()\0itemSelected(QGraphicsItem*)\0"
     "about()\0setProperties()\0debugObject()\0"
-    "compile()\0execute()\0"
+    "compile()\0execute()\0setGlobals()\0"
+    "checkMain(FunctionDialog*)\0"
+    "checkFunctionChange()\0"
 };
 
 const QMetaObject MainWindow::staticMetaObject = {
@@ -130,9 +135,12 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
         case 21: debugObject(); break;
         case 22: compile(); break;
         case 23: execute(); break;
+        case 24: setGlobals(); break;
+        case 25: checkMain((*reinterpret_cast< FunctionDialog*(*)>(_a[1]))); break;
+        case 26: checkFunctionChange(); break;
         default: ;
         }
-        _id -= 24;
+        _id -= 27;
     }
     return _id;
 }

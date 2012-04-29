@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'io.ui'
 **
-** Created: Sat Apr 28 23:59:45 2012
+** Created: Sun Apr 29 05:39:06 2012
 **      by: Qt User Interface Compiler version 4.7.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -50,7 +50,7 @@ public:
         buttonBox = new QDialogButtonBox(IODialog);
         buttonBox->setObjectName(QString::fromUtf8("buttonBox"));
         buttonBox->setOrientation(Qt::Horizontal);
-        buttonBox->setStandardButtons(QDialogButtonBox::Cancel|QDialogButtonBox::Ok);
+        buttonBox->setStandardButtons(QDialogButtonBox::Ok);
 
         gridLayout->addWidget(buttonBox, 7, 0, 1, 2);
 

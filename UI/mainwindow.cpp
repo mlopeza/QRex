@@ -15,6 +15,7 @@
 #include "stepdialog.h" //Para Dialogos de Procesos
 #include "iodialog.h" //Para Dialogos de IO
 #include <QMessageBox> //Mensajes Simples
+
 const int InsertTextButton = 10;
 
 MainWindow::MainWindow()
@@ -23,10 +24,11 @@ MainWindow::MainWindow()
 	createActions();
 	createToolBox();
 	createMenus();
-	
+	setWindowIcon(QIcon(":/images/qrex.png"));
 	//Se crea la escena
 	scene = new DiagramScene(itemMenu, this);
-
+	globals  = new GlobalDialog(this);
+	mainFunction=NULL;
 	//Se le asigna un tamaño maximo a la escena
 	scene->setSceneRect(QRectF(0, 0, 5000, 5000));
 
@@ -433,7 +435,14 @@ void MainWindow::createActions()
 	connect(executeObject, SIGNAL(triggered()),
 			this, SLOT(execute()));
 
-	
+	//Set Globals
+	objGlobal = new QAction(QIcon(":/images/global.png"),
+			tr("&Globals"), this);
+	objGlobal->setShortcut(tr("Ctrl+G"));
+	objGlobal->setStatusTip(tr("Set Global Variables"));
+	connect(objGlobal, SIGNAL(triggered()),
+			this, SLOT(setGlobals()));
+
 
 	deleteAction = new QAction(QIcon(":/images/delete.png"),
 			tr("&Delete"), this);
@@ -505,7 +514,7 @@ void MainWindow::createToolbars()
 	editToolBar->addAction(objDebug);
 	editToolBar->addAction(compileObject);
 	editToolBar->addAction(executeObject);
-
+	editToolBar->addAction(objGlobal);
 	fontCombo = new QFontComboBox();
 	//Conexion del tipo de fuente
 	connect(fontCombo, SIGNAL(currentFontChanged(QFont)),
@@ -662,15 +671,45 @@ QWidget *MainWindow::createCellWidget(const QString &text,
 	return widget;
 }
 
+//Asigna las globales que se usaran en el programa
+void MainWindow::setGlobals(){
+	globals->exec();
+}
+
 //Proceso de Compilacion
 void MainWindow::compile(){
 	QFile file("codigo.qc");
 	file.open(QIODevice::WriteOnly | QIODevice::Text);
 	QTextStream out(&file);
+
+	//Prints globals
+	QString a(globals->globalInt->text());
+	QString b(globals->globalFloat->text());
+	QString c(globals->globalString->text());
+	if(a != ""){
+		out<<"global int "<<a<<";\n";
+	}
+	if(b != ""){
+		out<<"global float "<<b<<";\n";
+	}
+	if(c != ""){
+		out<<"global string "<<c<<";\n";
+	}
+
 	//Iterates for all functions
 	foreach(DiagramItem* item, scene->functions){
-        	item->recursivePrint(&out);
+        	item->printSignature(&out);
 	}
+
+	//Todas las funciones excepto el main
+	foreach(DiagramItem* item, scene->functions){
+		if(item != mainFunction)
+	        	item->recursivePrint(&out);
+	}
+
+	//Imprimimos el main
+		if(mainFunction != NULL)
+		mainFunction->recursivePrint(&out);
 
 	//Cerramos el archivo
 	file.close();
@@ -723,6 +762,32 @@ void MainWindow::debugObject(){
 	qDebug()<<"Debug===================================\n";
 
 }
+
+void MainWindow::checkFunctionChange(){
+	if(mainFunction == (DiagramItem *)scene->selectedItems().first()){
+		//No hay Funcion Main asignada
+		mainFunction = NULL;
+		((DiagramItem *)scene->selectedItems().first())->setBrush(Qt::white);
+	}
+}
+
+//Se verifica si hay un Main, si lo hay se notifica del error y se cambia el tipo
+// de objeto
+void MainWindow::checkMain(FunctionDialog *f){
+	if(mainFunction == NULL){
+		mainFunction = (DiagramItem *)scene->selectedItems().first();
+		((DiagramItem *)scene->selectedItems().first())->setBrush(Qt::green);
+	}else if(mainFunction == (DiagramItem *)scene->selectedItems().first()){
+		return;
+	}else{
+		QMessageBox::information(this, "QRex Function", "More than one main function not permited.");
+		QString a("void");
+		int index = f->typeComboBox->findText(a);
+		f->typeComboBox->setCurrentIndex(index);
+	}
+
+}
+
 //Aqui se manejan los menus de propiedades
 //Para lo elementos del diagrama
 void MainWindow::setProperties(){
@@ -741,6 +806,13 @@ void MainWindow::setProperties(){
 		//El objeto se elimina por el padre
 		if(selectedItem->getDialog()==NULL){
 			FunctionDialog *fdialog = new FunctionDialog(this);
+			//Para verificar que solo haya un Main activo
+			connect(fdialog, SIGNAL(changed_toMain(FunctionDialog *)),
+				this, SLOT(checkMain(FunctionDialog *)));
+
+			connect(fdialog, SIGNAL(changed_Object()),
+				this, SLOT(checkFunctionChange()));
+
 			selectedItem->setDialog((QDialog *)(fdialog));
 		}
 

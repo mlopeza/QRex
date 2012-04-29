@@ -2,11 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-
 #include "diagramitem.h"
-
+#include "globaldialog.h"
+#include "functiondialog.h"
 class DiagramScene;
-
 class QAction;
 class QToolBox;
 class QSpinBox;
@@ -79,6 +78,11 @@ class MainWindow : public QMainWindow
 
 		void execute();
 
+		void setGlobals();
+
+		void checkMain(FunctionDialog *);
+		
+		void checkFunctionChange();
 	private:
 		//Crea el ToolBox que es donde se encuentran los objetos como eliminar, cambair font,etc.
 		void createToolBox();
@@ -112,6 +116,7 @@ class MainWindow : public QMainWindow
 		QAction *objDebug;
 		QAction *compileObject;
 		QAction *executeObject;
+		QAction *objGlobal;
 
 		//Objetos del  Menu
 		QMenu *fileMenu;
@@ -145,6 +150,8 @@ class MainWindow : public QMainWindow
 		QAction *textAction;
 		QAction *fillAction;
 		QAction *lineAction;
+		GlobalDialog *globals;
+		DiagramItem *mainFunction;
 };
 
 #endif

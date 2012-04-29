@@ -21,5 +21,7 @@
 		<file>images/edit.png</file>
 		<file>images/compile.png</file>
 		<file>images/execute.png</file>
+		<file>images/global.png</file>
+		<file>images/qrex.png</file>
 	</qresource>
 </RCC>

@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'step.ui'
 **
-** Created: Sat Apr 28 23:59:45 2012
+** Created: Sun Apr 29 05:39:07 2012
 **      by: Qt User Interface Compiler version 4.7.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -49,7 +49,7 @@ public:
         buttonBox->setObjectName(QString::fromUtf8("buttonBox"));
         buttonBox->setLocale(QLocale(QLocale::English, QLocale::UnitedStates));
         buttonBox->setOrientation(Qt::Horizontal);
-        buttonBox->setStandardButtons(QDialogButtonBox::Cancel|QDialogButtonBox::Ok);
+        buttonBox->setStandardButtons(QDialogButtonBox::Ok);
 
         gridLayout->addWidget(buttonBox, 2, 0, 1, 1);
 
