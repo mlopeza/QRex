@@ -10,7 +10,7 @@ COMPILER QRex
 
 	int //operadores
 	MAS,MENOS,POR,DIVISION,MODULO,MAYOR,MENOR,DIFERENTE,IGUAL,MAYQUE,MENQUE,AND,OR,NOT,ASIGNA,PIZQ,PDER,NEGATIVO,GOTOF,GOTOV,GOTO,
-	PRINT,IFF,READ;
+	PRINT,IFF,READ,FIN;
 
 	int //operadores saltos de funcion
 	ERA, PARAM, GOSUB, RETORNO, RETURN;
@@ -164,6 +164,7 @@ COMPILER QRex
 		GOSUB = 27;
 		RETORNO = 28; 
 		RETURN = 29; 
+		FIN = 30;
 	
 		//Hash de Cuadruplos (Manejo de Cuadruplos)
 		contCuadruplos = 0;
@@ -666,16 +667,11 @@ COMPILER QRex
 			std::wcout<< L"Function not found:"<< identificador << L"\n";
 			exit(-1);
 		}else{	//Se verifica
-			std::wcout<< L"Llamada luis2 identificador:"<<identificador <<  L"\n";
-			std::wcout<< L"Llamada luis2 it:"<<it->second->nombre <<  L"\n";
 			if(identificador == it->second->nombre){ // && it->second->definida == 1){
-			std::wcout<< L"Llamada luis3 :"<<  L"\n";
 				// guardo los datos de la funcion en el auxiliar ll
 				contParam = 1;
 				l = it->second;
-			std::wcout<< L"Llamada luis4 :"<<  L"\n";
 				p = l->parametros->getNode(contParam);
-			std::wcout<< L"Llamada luis5 :"<<  L"\n";
 
 				Cuadruplo *cuadruplo = new Cuadruplo(ERA,-1,-1,-1);
 				hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
@@ -687,15 +683,11 @@ COMPILER QRex
 	//Revisa que si se definieron las llamadas que no estaban definidas
 	void verificaLlamadaDefinida(){
 		//saco llamda (nodo) de lista
-				std::wcout<< L"denisse: " << L"\n";
 				int i = 1;
 		Node *ll = Llamadas->getNode(i);
-				std::wcout<< L"denisse: "<< ll->Nombre() << L"\n";
-				std::wcout<< L"denisse: "<< ll->Next() << L"\n";
 		std::map<std::wstring,FuncionX *>::iterator it;
 		while (ll != NULL){
 			it = tab->fhash.find(ll->Nombre());
-				std::wcout<< L"denisse: "<< it->second->nombre << L"\n";
 			if( it == tab->fhash.end()) {
 				//Ejecuta lo mismo que el primer if, solo que cuando ya existe en el hash
 				std::wcout<< L"Function not defined: "<< ll->Nombre() << L"\n";
@@ -723,9 +715,8 @@ COMPILER QRex
 	void generaParametro(){
 		//Verifico que el parametro y el argumento sean del mismo tipo
 		int argumento = PilaO->Pop();
-		std::wcout<< L"llamada asdf "<< L"\n";
 		if (p->Data() != dameTipo(argumento)){
-			std::wcout<< L"parameter type mismatach: "<< identificador << L"\n";
+			std::wcout<< L"Parameter type mismatach: "<< identificador << L"\n";
 			std::wcout<< L"Parameter type: "<< p->Data() << L"\n";
 			std::wcout<< L"Type given: "<< dameTipo(argumento) << L"\n";
 			exit(-1);
@@ -888,9 +879,6 @@ COMPILER QRex
 			int tipo = verificaCubo(operador,dameTipo(operando),dameTipo(resultado));
 			if(tipo == -666){
 
-				std::wcout<< L"Operando1 "<< operando << L"\n";
-				std::wcout<< L"resultado "<< resultado << L"\n";
-
 				Err(L"Assignation of different types");
 				exit(-1);
 			}
@@ -935,6 +923,11 @@ COMPILER QRex
 			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
 			contCuadruplos++;
 	
+		}else if(operador == FIN){
+			Cuadruplo *cuadruplo = new Cuadruplo(operador,-1,-1,-1);
+			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+			//PilaS->Push(contCuadruplos++);
+			contCuadruplos++;
 		}else if(operador == GOSUB){
 			int dir = l->dirInicial;
 			Cuadruplo *cuadruplo = new Cuadruplo(operador,-1,-1,dir);
@@ -1115,8 +1108,7 @@ Cuerpo2
 				(.definefunc = 0;omiteCuerpo=0;.)
 }
 
-				(.verificaLlamadaDefinida();
-				tipo = funcion;.)
+				(.tipo = funcion;.)
 main '(' ')'
 				(.registraMain(); gCuadruploGOTOMain();.) 
 				(.tipo = undef;.)
@@ -1126,7 +1118,13 @@ Cuerpo
 					tab->fhash.insert(std::make_pair(f->nombre,f));
 				.)
 
-(.imprimeRegistros();.).
+				(.	verificaLlamadaDefinida();
+					operadorActual=FIN;
+					metePoper();
+					gCuadruplo();
+					imprimeRegistros();
+				.)
+.
 //Fin QRex-------------------------------------------------------------------------
 
 //Inicia Declaracion---------------------------------------------------------------
@@ -1190,15 +1188,17 @@ Var_Cte=
 						}
 					.)
 	|ID
-		[				(.	llamada = 1;	
+							(.metePilaOV();.)
+							
+		[				(.	//llamada = 1;	
+							PilaO->Pop();
 						verificaLlamada();
 						.)
-						(.std::wcout<< L"llamada??  "<< llamada<< L"\n";.)
-	Llamada]  
-					(.	if (llamada != 1){
-							metePilaOV();
-						}
-						else if(llamada == 1){
+	Llamada  
+					(.	//if (llamada != 1){
+							//metePilaOV();
+						//}
+						//else if(llamada == 1){
 							if (p != NULL){
 								std::wcout<< L"p not null:"<<  L"\n";
 								exit(-1);
@@ -1206,34 +1206,30 @@ Var_Cte=
 							Poper->Push(GOSUB);
 							gCuadruplo();
 							
-						}
+						//}
 						llamada = 0;
 						l = NULL;
 						p = NULL;
 					.)
 
-.
+].
 
 Param = (.	operadorActual=PIZQ;
+		llamada = 1;
 				metePoper();
-		std::wcout<< L"Llamada inicio asdf "<< L"\n";
 			.)
 (
 					(.
 						if(tipo == escritura){
 							Poper->Push(PRINT);
 						}
-		std::wcout<< L"Parametro de exprecion asdf "<< L"\n";
 					.)
 Expresion
 					(.
-		std::wcout<< L"Parametro despues de expresion asdf "<< L"\n";
 						if(tipo == escritura){
-		std::wcout<< L"Parametro despues exprecion tipo esc asdf "<< L"\n";
 							gCuadruplo();
 						}
 						if(llamada == 1){
-		std::wcout<< L"Parametro de exprecion asdf "<< L"\n";
 							generaParametro();
 							}
 					.)
@@ -1252,7 +1248,6 @@ cte_string				(.
 							gCuadruplo();
 						}
 						if(llamada == 1){
-		std::wcout<< L"Parametro de cadena asdf "<< L"\n";
 							std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
 							PilaO->Push((it->second)->direccion);
 							generaParametro();
@@ -1260,7 +1255,7 @@ cte_string				(.
 					.)
 
 ) 		(.	operadorActual=PDER;
-		std::wcout<< L"Llamada Fin asdf "<< L"\n";
+	llamada = 0;
 				sacaPoper();
 				meteLlamada();
 			.)
@@ -1433,7 +1428,6 @@ Exp3
 ].
 
 Exp3 = Exp4
-				(.  std::wcout << "Se genero en EXP4\n";.)
 				(.	int peek = Poper->Peek();
 					if(peek == MAS || peek == MENOS){
 					//std::wcout << "Se genero en EXP3\n";
@@ -1485,7 +1479,6 @@ Exp6				(.	int peek = Poper->Peek();
 )
 ]
 Var_Cte 
-						(.std::wcout<< L"Exp 6 expresion cte desp var_cte "<< L"\n";.)
 				(.	int peek = Poper->Peek();
 					if(peek == NEGATIVO){
 					//std::wcout << "Se genero en EXP6\n";
