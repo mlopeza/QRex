@@ -33,7 +33,7 @@ COMPILER QRex
 	global;
 
 	int //Declaracion de parametros en una funcion
-	parametros, contParam;
+	parametros, contParam, cpentero, cpflotante, cpcadena;
 
 	int //Operador actual en la expresion
 	operadorActual;
@@ -50,6 +50,7 @@ COMPILER QRex
 	Variable *v;
 	FuncionX *ftemp;
 	Temporales *temporales;
+	List *Llamadas;
 
 	//Tabla de Variables globales y Constantes
 	Contexto *tabconstantes;
@@ -172,6 +173,7 @@ COMPILER QRex
 		Poper = new Pila();
 		PilaO = new Pila();
 		PilaS = new Pila();
+		Llamadas = new List();
 
 
 		//Inicializa la tabla de Variables
@@ -209,6 +211,9 @@ COMPILER QRex
 		firma = 0;
 		definefunc = 0;
 		omiteCuerpo = 0;
+		cpentero = 0;
+		cpflotante = 0; 
+		cpcadena = 0;
 
 		//Tipo de objetos
 		variable = 0;
@@ -332,35 +337,6 @@ COMPILER QRex
 		FuncionX *func;
 		Variable *var;
 
-		std::wcout<<L"\n\nTabla de Funciones y Variables\n";
-		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.begin();
-		while (it != tab->fhash.end()){
-			func = it->second;
-			std::wcout<<L" "<< func->tipo<< L" " << func->nombre << L'\n';
-			//Direccion de inicio
-			std::wcout<<L"Direccion de Inicio "<< func->dirInicial<< L'\n';
-			
-			//Imprime Parametros si los tiene.
-			func->parametros->Print();
-			
-			std::wcout << L"intNum:"<< func->intNum << L" floatNum:";
-			std::wcout << func->floatNum << L" stringNum:" << func->stringNum << L'\n';
-	
-			//Variables Dentro
-			std::map<std::wstring,Variable *>::iterator it2 = func->vhash.begin();
-			while(it2 != it->second->vhash.end()){
-				var = it2->second;
-				std::wcout << L"		nombre:" << var->nombre;
-				std::wcout << L" tipo:" << var->tipo;
-				std::wcout << L" direccion:" << var->direccion << L'\n';
-	
-				it2++;
-			}
-			
-			it++;
-			std::wcout << L"\n\n";
-		}
-
 		std::wcout<<L"Tabla de Variables Globales\n";
 		std::map<std::wstring,Variable *>::iterator it2 = tabglobales->vhash.begin();
 		while (it2 != tabglobales->vhash.end()){
@@ -477,6 +453,7 @@ COMPILER QRex
 			ftemp = NULL;
 
 			//Asigna la variable que se usara para los returns
+			/*qwer
 			it = tabglobales->vhash.find(f->nombre);
 			if(it != tabglobales->vhash.end()){
 				std::wcout << L"Global("<<identificador<<")";
@@ -502,6 +479,7 @@ COMPILER QRex
 			}			
 			//Insertar en tabla de variables Globales
 			tabglobales->vhash.insert(std::make_pair(v->nombre,v));
+			*/
 		}
 
 	}
@@ -625,6 +603,8 @@ COMPILER QRex
 			if(f->nombre == std::wstring(L"")){
 				f->nombre=identificador;
 				f->tipo=tipofuncion;
+				//aqui
+				creaVariableRetorno();
 				tab->fhash.insert(std::make_pair(f->nombre,f));
 			}else{
 				//Inserta la funcion  al hash y crea la nueva
@@ -632,6 +612,8 @@ COMPILER QRex
 				f = new FuncionX();
 				f->nombre=identificador;
 				f->tipo=tipofuncion;
+				//aqui
+				creaVariableRetorno();
 				tab->fhash.insert(std::make_pair(f->nombre,f));
 			}
 		}else{
@@ -642,6 +624,35 @@ COMPILER QRex
 		}
 	}
 
+	void creaVariableRetorno(){
+		//zxcv
+		std::map<std::wstring,Variable *>::iterator it = tabglobales->vhash.find(f->nombre);
+		if(it != tabglobales->vhash.end()){
+			std::wcout << L"Global("<<identificador<<")";
+			Err(L"Variable already declared.");
+		}else{
+			v = new Variable();
+			v->nombre = f->nombre;
+			v->tipo = f->tipo-10;
+			switch(f->tipo){
+				case 21://entero
+					v->direccion=tabglobales->intNum;
+					tabglobales->intNum++;
+					break;
+				case 22://flotante
+					v->direccion=tabglobales->floatNum;
+					tabglobales->floatNum++;
+					break;
+				case 23://string
+					v->direccion=tabglobales->stringNum;
+					tabglobales->stringNum++;
+					break;
+			}	
+		}			
+		//Insertar en tabla de variables Globales
+		tabglobales->vhash.insert(std::make_pair(v->nombre,v));
+	}
+
 	//verifica si la funcion llamada existe
 	void verificaLlamada(){
 		wchar_t* name = coco_string_create(t->val);
@@ -650,36 +661,91 @@ COMPILER QRex
 
 		//Busca en la tabla si es que existe la firma
 		std::map<std::wstring,FuncionX *>::iterator it = tab->fhash.find(identificador);
-
-		//Se verifica
-		if(identificador == it->second->nombre && it->second->definida == 1){
-			// guardo los datos de la funcion en el auxiliar ll
-			contParam = 1;
-			l = it->second;
-			p = l->parametros->getNode(contParam);
-
-			Cuadruplo *cuadruplo = new Cuadruplo(ERA,-1,-1,-1);
-			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
-			contCuadruplos++;
-		}else if( it == tab->fhash.end()) {
+		if( it == tab->fhash.end()) {
 			//Ejecuta lo mismo que el primer if, solo que cuando ya existe en el hash
 			std::wcout<< L"Function not found:"<< identificador << L"\n";
 			exit(-1);
+		}else{	//Se verifica
+			std::wcout<< L"Llamada luis2 identificador:"<<identificador <<  L"\n";
+			std::wcout<< L"Llamada luis2 it:"<<it->second->nombre <<  L"\n";
+			if(identificador == it->second->nombre){ // && it->second->definida == 1){
+			std::wcout<< L"Llamada luis3 :"<<  L"\n";
+				// guardo los datos de la funcion en el auxiliar ll
+				contParam = 1;
+				l = it->second;
+			std::wcout<< L"Llamada luis4 :"<<  L"\n";
+				p = l->parametros->getNode(contParam);
+			std::wcout<< L"Llamada luis5 :"<<  L"\n";
+
+				Cuadruplo *cuadruplo = new Cuadruplo(ERA,-1,-1,-1);
+				hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+				contCuadruplos++;
+			}
 		}
 	}
+
+	//Revisa que si se definieron las llamadas que no estaban definidas
+	void verificaLlamadaDefinida(){
+		//saco llamda (nodo) de lista
+				std::wcout<< L"denisse: " << L"\n";
+				int i = 1;
+		Node *ll = Llamadas->getNode(i);
+				std::wcout<< L"denisse: "<< ll->Nombre() << L"\n";
+				std::wcout<< L"denisse: "<< ll->Next() << L"\n";
+		std::map<std::wstring,FuncionX *>::iterator it;
+		while (ll != NULL){
+			it = tab->fhash.find(ll->Nombre());
+				std::wcout<< L"denisse: "<< it->second->nombre << L"\n";
+			if( it == tab->fhash.end()) {
+				//Ejecuta lo mismo que el primer if, solo que cuando ya existe en el hash
+				std::wcout<< L"Function not defined: "<< ll->Nombre() << L"\n";
+				exit(-1);
+			}else{	//Se verifica
+				//busco llamada en la tabla de variables
+				//Busca en la tabla si es que existe la firma
+				if( it->second->definida == 1){
+					// guardo los datos de la funcion en el auxiliar ll
+					//Rellena el gotof anterior
+				std::wcout<< L"Function defined: "<< ll->Nombre() << L"\n";
+					std::map<int,Cuadruplo *>::iterator itc;
+					itc = hashCuadruplos.find(ll->Data());
+					Cuadruplo *c = (itc->second);
+					c->resultado=it->second->dirInicial;
+
+				}
+			}
+			i++;
+			ll = Llamadas->getNode(i);
+		}
+	}
+	
 
 	void generaParametro(){
 		//Verifico que el parametro y el argumento sean del mismo tipo
 		int argumento = PilaO->Pop();
+		std::wcout<< L"llamada asdf "<< L"\n";
 		if (p->Data() != dameTipo(argumento)){
-			std::wcout<< L"Parameter type mismatach: "<< identificador << L"\n";
+			std::wcout<< L"parameter type mismatach: "<< identificador << L"\n";
 			std::wcout<< L"Parameter type: "<< p->Data() << L"\n";
 			std::wcout<< L"Type given: "<< dameTipo(argumento) << L"\n";
-			std::wcout<< L"dir given: "<< argumento << L"\n";
 			exit(-1);
 		}
-		std::map<std::wstring,Variable *>::iterator it = l->vhash.find(p->Nombre());
-		int parametro = it->second->direccion;
+		int parametro = 0;
+
+		switch(p->Data()){
+			case 11://entero
+				parametro = PROCINT + cpentero;
+				cpentero++;
+				break;
+			case 12://flotante
+				parametro = PROCFLOAT + cpflotante;
+				cpflotante++;
+				break;
+			case 13://string
+				parametro = PROCSTRING + cpcadena;
+				cpcadena++;
+				break;
+		}
 
 		Cuadruplo *cuadruplo = new Cuadruplo(PARAM,argumento,-1,parametro);
 		hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
@@ -865,7 +931,7 @@ COMPILER QRex
 			int resultado = PilaO->Pop();
 			int dir = itglobal->second->direccion;
 
-			Cuadruplo *cuadruplo = new Cuadruplo(operador,resultado,666,dir);
+			Cuadruplo *cuadruplo = new Cuadruplo(operador,resultado,-1,dir);
 			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
 			contCuadruplos++;
 	
@@ -873,7 +939,16 @@ COMPILER QRex
 			int dir = l->dirInicial;
 			Cuadruplo *cuadruplo = new Cuadruplo(operador,-1,-1,dir);
 			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
-			PilaS->Push(contCuadruplos);
+			//Verificar si la funcion existe/gosub
+			// Buscar como meter linea, contCuadruplo, nombre a la pila
+			if (l->definida == 0 ){
+				//Buscar como calcular la linea en caso de error
+				int linea = 0;
+				Llamadas->Append3(contCuadruplos,linea,l->nombre);
+			}
+
+
+			//PilaS->Push(contCuadruplos);
 			contCuadruplos++;
 			
 		}else{
@@ -899,6 +974,9 @@ COMPILER QRex
 void meteLlamada(){
 	std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(l->nombre);
 	PilaO->Push(itglobal->second->direccion);
+	cpentero = 0;
+	cpflotante = 0;
+	cpcadena = 0;
 }
 
 void gCuadruploGOTOWhile(){
@@ -1037,7 +1115,8 @@ Cuerpo2
 				(.definefunc = 0;omiteCuerpo=0;.)
 }
 
-				(.tipo = funcion;.)
+				(.verificaLlamadaDefinida();
+				tipo = funcion;.)
 main '(' ')'
 				(.registraMain(); gCuadruploGOTOMain();.) 
 				(.tipo = undef;.)
@@ -1078,16 +1157,7 @@ Tipov ID					(.registraVariable(f);.)
 						(. tipo = undef;.)
 .
 //Finaliza Declaracion-----------------------------------------------------------------
-Llamada = '('		(.	operadorActual=PIZQ;
-				metePoper();
-			.)
-	[Param]
-	')'		(.	operadorActual=PDER;
-				sacaPoper();
-				meteLlamada();
-
-				
-			.)
+Llamada = '(' [Param] ')'		
 	
 	.
 
@@ -1119,16 +1189,18 @@ Var_Cte=
 							metePilaO();
 						}
 					.)
-	| ID [				(.	llamada = 1;	
+	|ID
+		[				(.	llamada = 1;	
 						verificaLlamada();
 						.)
+						(.std::wcout<< L"llamada??  "<< llamada<< L"\n";.)
 	Llamada]  
 					(.	if (llamada != 1){
 							metePilaOV();
 						}
 						else if(llamada == 1){
 							if (p != NULL){
-								std::wcout<< L"p not null:"<< p << L"\n";
+								std::wcout<< L"p not null:"<<  L"\n";
 								exit(-1);
 							}
 							Poper->Push(GOSUB);
@@ -1142,19 +1214,26 @@ Var_Cte=
 
 .
 
-Param = 
+Param = (.	operadorActual=PIZQ;
+				metePoper();
+		std::wcout<< L"Llamada inicio asdf "<< L"\n";
+			.)
 (
 					(.
 						if(tipo == escritura){
 							Poper->Push(PRINT);
 						}
+		std::wcout<< L"Parametro de exprecion asdf "<< L"\n";
 					.)
 Expresion
 					(.
+		std::wcout<< L"Parametro despues de expresion asdf "<< L"\n";
 						if(tipo == escritura){
+		std::wcout<< L"Parametro despues exprecion tipo esc asdf "<< L"\n";
 							gCuadruplo();
 						}
 						if(llamada == 1){
+		std::wcout<< L"Parametro de exprecion asdf "<< L"\n";
 							generaParametro();
 							}
 					.)
@@ -1172,14 +1251,21 @@ cte_string				(.
 							PilaO->Push((it->second)->direccion);
 							gCuadruplo();
 						}
-					/*	if(llamada == 1){
+						if(llamada == 1){
+		std::wcout<< L"Parametro de cadena asdf "<< L"\n";
 							std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
 							PilaO->Push((it->second)->direccion);
 							generaParametro();
-						}*/
+						}
 					.)
 
-) [',' Param].
+) 		(.	operadorActual=PDER;
+		std::wcout<< L"Llamada Fin asdf "<< L"\n";
+				sacaPoper();
+				meteLlamada();
+			.)
+
+[',' Param].
 
 //Inicia Funcion () ----------------------------------------------------------------
 Funcion = Tipof 
@@ -1330,7 +1416,7 @@ Exp1 = Exp2
 ["&&"				(. operadorActual = AND;metePoper();.)
 Exp1].
 
-Exp2 = Exp3 [
+Exp2 = Exp3  [
  ('>' 				(.operadorActual=MAYOR;.)
   |'<' 				(.operadorActual=MENOR;.)
   |">=" 			(.operadorActual=MAYQUE;.)
@@ -1347,6 +1433,7 @@ Exp3
 ].
 
 Exp3 = Exp4
+				(.  std::wcout << "Se genero en EXP4\n";.)
 				(.	int peek = Poper->Peek();
 					if(peek == MAS || peek == MENOS){
 					//std::wcout << "Se genero en EXP3\n";
@@ -1388,7 +1475,7 @@ Exp6				(.	int peek = Poper->Peek();
 .
  /*Esto sirve para poner los fondos a la pila*/
  Exp6 = 
-'(' 				(.operadorActual=PIZQ;metePoper();.) 
+'(' 				(.operadorActual=PIZQ;metePoper();.)
  Expresion 
 ')' 				(.operadorActual=PDER;sacaPoper();.)
 |
@@ -1396,7 +1483,9 @@ Exp6				(.	int peek = Poper->Peek();
 ('+'			
 |'-'				(.operadorActual=NEGATIVO;metePoper();.)
 )
-] Var_Cte 
+]
+Var_Cte 
+						(.std::wcout<< L"Exp 6 expresion cte desp var_cte "<< L"\n";.)
 				(.	int peek = Poper->Peek();
 					if(peek == NEGATIVO){
 					//std::wcout << "Se genero en EXP6\n";
@@ -1409,6 +1498,7 @@ Exp6				(.	int peek = Poper->Peek();
 Cuerpo2 = '{' {Declaracion} {Estatuto} [ return 
 					
 (Expresion		(.
+			
 			 		//Se compara el tipo de la funcion con el tipo del valor retornado
 					if (f->tipo != dameTipo(PilaO->Peek())+10 ){
 						std::wcout<< L"Returned value not expected"<< f->tipo << L"\n";
