@@ -72,8 +72,12 @@ class MainWindow : public QMainWindow
 
 		//Se llama modificar Funcion
 		void setProperties();
-	
+		//Debug Object	
 		void debugObject();
+
+		void compile();
+
+		void execute();
 
 	private:
 		//Crea el ToolBox que es donde se encuentran los objetos como eliminar, cambair font,etc.
@@ -106,6 +110,8 @@ class MainWindow : public QMainWindow
 		QAction *aboutAction;
 		QAction *changeProperties;
 		QAction *objDebug;
+		QAction *compileObject;
+		QAction *executeObject;
 
 		//Objetos del  Menu
 		QMenu *fileMenu;

@@ -4,7 +4,9 @@
 IODialog::IODialog(QWidget *parent):QDialog(parent){
 	setupUi(this);
 	//QRegExp regExp("[:blank:]*[a-zA-Z][a-zA-Z0-9]*[:blank:]*");
-	QRegExp regExp("(.*-[,])(,(.*-[,]))*");
+	//QRegExp regExp("(.*-[,])(,(.*-[,]))*");
+	QRegExp regExp(".*");
+
 	IOText->setValidator(new QRegExpValidator(regExp,this));
 
 	//Pone el boton como deshabilitado

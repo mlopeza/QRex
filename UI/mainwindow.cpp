@@ -1,6 +1,10 @@
 #include <QtGui>
 #include <QLabel>
 
+#include <QFile>
+#include <QCoreApplication>
+#include <QTextStream>
+
 #include "mainwindow.h"
 #include "diagramitem.h"
 #include "diagramscene.h"
@@ -10,7 +14,7 @@
 #include "conditionaldialog.h" //Para Dialogos de Condicionales
 #include "stepdialog.h" //Para Dialogos de Procesos
 #include "iodialog.h" //Para Dialogos de IO
-
+#include <QMessageBox> //Mensajes Simples
 const int InsertTextButton = 10;
 
 MainWindow::MainWindow()
@@ -407,11 +411,29 @@ void MainWindow::createActions()
 	//Debug Objects
 	objDebug = new QAction(QIcon(":/images/debug.png"),
 			tr("&Debug"), this);
-	objDebug->setShortcut(tr("Ctrl+K"));
+	objDebug->setShortcut(tr("Ctrl+D"));
 	objDebug->setStatusTip(tr("Debug Object"));
 	connect(objDebug, SIGNAL(triggered()),
 			this, SLOT(debugObject()));
 
+	//Compile Object
+	compileObject = new QAction(QIcon(":/images/compile.png"),
+			tr("&Compile"), this);
+	compileObject->setShortcut(tr("Ctrl+K"));
+	compileObject->setStatusTip(tr("Compile"));
+	connect(compileObject, SIGNAL(triggered()),
+			this, SLOT(compile()));
+
+	
+	//Execute Object
+	executeObject = new QAction(QIcon(":/images/execute.png"),
+			tr("&Execute"), this);
+	executeObject->setShortcut(tr("Ctrl+X"));
+	executeObject->setStatusTip(tr("Execute"));
+	connect(executeObject, SIGNAL(triggered()),
+			this, SLOT(execute()));
+
+	
 
 	deleteAction = new QAction(QIcon(":/images/delete.png"),
 			tr("&Delete"), this);
@@ -481,6 +503,8 @@ void MainWindow::createToolbars()
 	editToolBar->addAction(sendBackAction);
 	editToolBar->addAction(changeProperties);
 	editToolBar->addAction(objDebug);
+	editToolBar->addAction(compileObject);
+	editToolBar->addAction(executeObject);
 
 	fontCombo = new QFontComboBox();
 	//Conexion del tipo de fuente
@@ -637,11 +661,33 @@ QWidget *MainWindow::createCellWidget(const QString &text,
 
 	return widget;
 }
+
+//Proceso de Compilacion
+void MainWindow::compile(){
+	QFile file("codigo.qc");
+	file.open(QIODevice::WriteOnly | QIODevice::Text);
+	QTextStream out(&file);
+	//Iterates for all functions
+	foreach(DiagramItem* item, scene->functions){
+        	item->recursivePrint(&out);
+	}
+
+	//Cerramos el archivo
+	file.close();
+
+	//Mostramos Mensaje de Finalizado
+	QMessageBox::information(this, "QRex Compiler", "Finished Compiling.");
+}
+
+void MainWindow::execute(){
+
+}
+//Debug simple para los desarrolladores de este sistema
 void MainWindow::debugObject(){
-	qDebug()<<"Debug Object Triggered!";
+	qDebug()<<"Debug===================================";
 	if(scene->selectedItems().isEmpty()){
 		QList<QGraphicsItem *> l=scene->items();
-		qDebug()<<"No Items selected. NUmbero of items on scene:"<<l.size();
+		qDebug()<<"No Items selected. Number of items on scene:"<<l.size();
 		return;
 	}
 
@@ -674,7 +720,7 @@ void MainWindow::debugObject(){
 		qDebug()<<"FROM: "<<i->getFrom();		
 		qDebug()<<"TO:   "<<i->getTo();
 		qDebug()<<"COND: "<<i->getConditional();
-		qDebug() << "\n\n";
+	qDebug()<<"Debug===================================\n";
 
 }
 //Aqui se manejan los menus de propiedades
@@ -732,7 +778,7 @@ void MainWindow::setProperties(){
 
 	}else if(selectedItem->isIO()){
 		if(selectedItem->getDialog()==NULL){
-			IODialog *iodialog = new IODialog();
+			IODialog *iodialog = new IODialog(this);
 			selectedItem->setDialog((QDialog *)(iodialog));
 		}
 		IODialog *iodialog = (IODialog *)(selectedItem->getDialog());

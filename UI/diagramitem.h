@@ -7,6 +7,7 @@
 #include <QGraphicsPixmapItem>
 #include <QList>
 #include <QDialog>
+#include <QTextStream>
 class QPixmap;
 class QGraphicsItem;
 class QGraphicsScene;
@@ -77,6 +78,8 @@ class DiagramItem : public QGraphicsPolygonItem
 		void setDialog(QDialog *x){
 			dialog=x;
 		}
+
+		void recursivePrint(QTextStream *out);
 	protected:
 		void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
 		QVariant itemChange(GraphicsItemChange change, const QVariant &value);

@@ -3,7 +3,9 @@
 
 ConditionalDialog::ConditionalDialog(QWidget *parent):QDialog(parent){
 	setupUi(this);
-	QRegExp regExp(".*[a-zA-Z][a-zA-Z0-9]*.*[>|<|!=|==|<=|>=].*[a-zA-Z][a-zA-Z0-9]*.*");
+	//QRegExp regExp(".*[a-zA-Z][a-zA-Z0-9]*.*[>|<|!=|==|<=|>=].*[a-zA-Z][a-zA-Z0-9]*.*");
+	QRegExp regExp(".*");
+
 	conditionText->setValidator(new QRegExpValidator(regExp,this));
 
 	//Pone el boton como deshabilitado

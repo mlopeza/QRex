@@ -1,7 +1,11 @@
 #include <QtGui>
 #include "diagramitem.h"
 #include "arrow.h"
-
+#include "functiondialog.h" //Para Dialogos de Funciones
+#include "conditionaldialog.h" //Para Dialogos de Condicionales
+#include "stepdialog.h" //Para Dialogos de Procesos
+#include "iodialog.h" //Para Dialogos de IO
+#include <QString>
 DiagramItem::DiagramItem(DiagramType diagramType, QMenu *contextMenu,
 		QGraphicsItem *parent, QGraphicsScene *scene)
 : QGraphicsPolygonItem(parent, scene)
@@ -240,7 +244,75 @@ bool DiagramItem::hasConnection(DiagramItem *item){
 	return false;
 }
 
+void DiagramItem::recursivePrint(QTextStream *out){
+	switch(myDiagramType){
+		case While:
+			*out<<" while(";
+			*out<<((ConditionalDialog *)dialog)->conditionText->text();
+			*out<<"){";
+			if(arrowStruct[COND] != NULL){
+				DiagramItem *cNext = arrowStruct[COND]->endItem();
+				cNext->recursivePrint(out);
+			}
 
+			*out<<"}";
+		break;
+		case Conditional:
+			*out<<" if(";
+			*out<<((ConditionalDialog *)dialog)->conditionText->text();
+			*out<<"){";
+			if(arrowStruct[COND] != NULL){
+				DiagramItem *cNext = arrowStruct[COND]->endItem();
+				cNext->recursivePrint(out);
+			}
+			*out<<"}";
+		break;
+		case Step:
+			*out<<((StepDialog *)dialog)->stepText->toPlainText();
+		break;
+		case Io:
+			if(QString::compare(((IODialog *)dialog)->ioComboBox->currentText(), "Input")){
+				*out<<" read(";
+				*out<<((IODialog *)dialog)->IOText->text();
+				*out<<");";
+			}else{
+				*out<<" print(";
+				*out<<((IODialog *)dialog)->IOText->text();
+				*out<<");";
+			}
+		break;
+		case StartEnd:
+			qDebug()<<((FunctionDialog *)dialog)->typeComboBox->currentText().trimmed();
+			if(!(QString::compare(((FunctionDialog *)dialog)->typeComboBox->currentText().trimmed(), "main"))){
+				qDebug()<<"Funcion Main";
+				*out<<" main(){";
+				//Imprime cuerpo
+				if(arrowStruct[TO]!=NULL){
+					DiagramItem *next = arrowStruct[TO]->endItem();
+					next->recursivePrint(out);
+				}			
+				*out<<"}";
+			}else{
+				qDebug()<<"Funcion Normal";
+				*out<<" "<<((FunctionDialog *)dialog)->typeComboBox->currentText()<<" ";
+				*out<<((FunctionDialog *)dialog)->functionName->text()<<" ";
+				*out<<"("<<((FunctionDialog *)dialog)->functionParameters->text()<<"){";
+				//Imprime cuerpo
+				if(arrowStruct[TO]!=NULL){
+					DiagramItem *next = arrowStruct[TO]->endItem();
+					next->recursivePrint(out);
+				}			
+				*out<<"}";
+			}
+		break;
+	}
+	//Va al siguiente elemento en la lista
+	if(arrowStruct[TO]==NULL || myDiagramType == StartEnd)
+		return;
+	DiagramItem *next = arrowStruct[TO]->endItem();
+	next->recursivePrint(out);
+	
+}
 //Retorna los objetos con los que se hace referencia
 DiagramItem *DiagramItem::getFrom()
 {return arrowStruct[FROM]!=NULL?arrowStruct[FROM]->startItem():NULL;}

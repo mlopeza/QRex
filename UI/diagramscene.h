@@ -20,6 +20,8 @@ class DiagramScene : public QGraphicsScene
 	public:
 		//Tipos Enum para identificar acciones
 		enum Mode { InsertItem, InsertLine, InsertText, MoveItem, InsertConditional };
+		//Lista de Funciones
+		QList<DiagramItem *> functions;
 
 		DiagramScene(QMenu *itemMenu, QObject *parent = 0);
 		QFont font() const
@@ -40,7 +42,7 @@ class DiagramScene : public QGraphicsScene
 		void setItemType(DiagramItem::DiagramType type);
 		void editorLostFocus(DiagramTextItem *item);
 
-signals:
+	signals:
 		void itemInserted(DiagramItem *item);
 		void textInserted(QGraphicsTextItem *item);
 		void itemSelected(QGraphicsItem *item);
@@ -64,7 +66,6 @@ signals:
 		QColor myTextColor;
 		QColor myItemColor;
 		QColor myLineColor;
-		QList<DiagramItem *> functions;
- };
+};
 
 #endif

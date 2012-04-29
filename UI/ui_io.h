@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'io.ui'
 **
-** Created: Sat Apr 28 17:19:35 2012
+** Created: Sat Apr 28 23:59:45 2012
 **      by: Qt User Interface Compiler version 4.7.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -68,7 +68,7 @@ public:
         horizontalLayout->setObjectName(QString::fromUtf8("horizontalLayout"));
         ioComboBox = new QComboBox(IODialog);
         ioComboBox->setObjectName(QString::fromUtf8("ioComboBox"));
-        ioComboBox->setMaximumSize(QSize(70, 16777215));
+        ioComboBox->setMaximumSize(QSize(80, 16777215));
 
         horizontalLayout->addWidget(ioComboBox);
 
