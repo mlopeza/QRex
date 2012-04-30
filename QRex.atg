@@ -1,9 +1,9 @@
 #include <iostream>
+#include <fstream>
+#include <iomanip>
 #include <string>
 #include "TDV.h"
 #include "wchar.h"
-
-
 
 /*-------------------------------------------------------------*/
 COMPILER QRex
@@ -335,36 +335,56 @@ COMPILER QRex
 		asdf
 	*/
 	void creaObj(){
-		FuncionX *func;
 		Variable *var;
+		std::ofstream fs; 
+		fs.open("test.txt",std::ofstream::out|std::ofstream::trunc); 
+		fs << "%%" << std::endl ;
+		//wchar_t* fin;
 
 		std::wcout<<L"Tabla de Variables Globales\n";
 		std::map<std::wstring,Variable *>::iterator it2 = tabglobales->vhash.begin();
 		while (it2 != tabglobales->vhash.end()){
 			var = it2->second;
+			/*
 			std::wcout << L"	nombre:" << var->nombre;
 			std::wcout << L" tipo:" << var->tipo;
-			std::wcout << L" direccion:" << var->direccion << L'\n';
+			std::wcout << L" direccion:" << var->direccion << L'\n'; */
+			std::wcout <<  var->direccion << L'\n'; 
+			fs << var->direccion << std::endl ;
 			it2++;
 		}
 
+		fs << "%%" << std::endl ;
+		fs << "--" << std::endl ;
 		std::wcout<<L"Tabla de Variables Constantes\n";
 		it2 = tabconstantes->vhash.begin();
 		while (it2 != tabconstantes->vhash.end()){
 			var = it2->second;
-			std::wcout << L"	nombre:" << var->nombre;
+			/*std::wcout << L"	valor:" << var->nombre;
 			std::wcout << L" tipo:" << var->tipo;
-			std::wcout << L" direccion:" << var->direccion << L'\n';
+			std::wcout << L" direccion:" << var->direccion << L'\n'; */
+			std::wcout << var->direccion << L","<< var->nombre<< L'\n';
+		//fs << var->direccion<< std::endl;
+
+			std::string s( var->nombre.begin(), var->nombre.end() );
+			fs << var->direccion<<','<< s << std::endl ;
+
 			it2++;
 		}
+
+	fs << "--" << std::endl ;
+	fs << "++" << std::endl ;
 		std::wcout<<L"\n\nCuadruplos de Expresiones\n";
 		std::map<int,Cuadruplo *>::iterator iterator = hashCuadruplos.begin();
 		Cuadruplo *c;
 		while(iterator != hashCuadruplos.end()){
 			c = iterator->second;
 			std::wcout<< c->op << L"," << c->operador1 << L"," << c->operador2 << L","<< c->resultado << L"\n";
+			fs<< c->op << ',' << c->operador1 <<  ',' << c->operador2 << ','<< c->resultado << std::endl;
 			iterator++;
 		}
+	fs << "++" << std::endl ;
+		fs.close();
 
 	}
 
@@ -1123,6 +1143,7 @@ Cuerpo
 					metePoper();
 					gCuadruplo();
 					imprimeRegistros();
+					creaObj();
 				.)
 .
 //Fin QRex-------------------------------------------------------------------------
