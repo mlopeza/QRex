@@ -136,6 +136,10 @@ void MainWindow::deleteItem()
 		if (item->type() == DiagramItem::Type) {
 			DiagramItem *a=qgraphicsitem_cast<DiagramItem *>(item);
 			a->removeArrows();
+			//Al removerlo de la escena hay que checar si era la funcion
+			//Main para permitir la insercion de una nueva.
+			if(a == mainFunction)	
+				mainFunction=NULL;
 		}
 		scene->removeItem(item);
 		delete item;
@@ -678,6 +682,11 @@ void MainWindow::setGlobals(){
 
 //Proceso de Compilacion
 void MainWindow::compile(){
+	if(mainFunction == NULL){
+		QMessageBox::information(this, "QRex Compiler", "No main function Present.");
+		return;
+	}
+
 	QFile file("codigo.qc");
 	file.open(QIODevice::WriteOnly | QIODevice::Text);
 	QTextStream out(&file);
