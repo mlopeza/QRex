@@ -337,7 +337,7 @@ COMPILER QRex
 	void creaObj(){
 		Variable *var;
 		std::ofstream fs; 
-		fs.open("test.txt",std::ofstream::out|std::ofstream::trunc); 
+		fs.open("out.qo",std::ofstream::out|std::ofstream::trunc); 
 		fs << "%%" << std::endl ;
 		//wchar_t* fin;
 
