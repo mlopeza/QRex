@@ -10,8 +10,6 @@
 *.old
 *.swp
 QRex
-Parser.cpp
-Scanner.cpp
 Parser.h
 Scanner.h
 
