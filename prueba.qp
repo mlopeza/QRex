@@ -3,7 +3,7 @@ global float y;
 global string z;
 sign int Func(int,float,int,float,float);
 sign int Pato(int,int,int);
-sign int Func(int,int);
+sign void Func(int,int);
 sign int Func(float,int);
 
 int Pato(int pito, int alkjsakl,int aklsjklajs) {
@@ -13,7 +13,6 @@ int Pato(int pito, int alkjsakl,int aklsjklajs) {
     }
 void Func(int a, float e) {
     int y;
-    return "asdf";
     }
 
 int Func(int as,float ass,int asa,float ssa,float sas) {
@@ -25,7 +24,8 @@ int Func(int as,float ass,int asa,float ssa,float sas) {
 main ()
 {
 	int a,b,c,d,e,f,g,h;
-	a = 1*2 + b -c / h + 5 * 2;
+	a = 1*2 + b -c / h + 5 * Pato(8,5,3);
+	
 
 	while (a<b) {
 		a=1;
@@ -36,5 +36,6 @@ main ()
 	}
 	else{
 		a=1;
+	
 	}
 }

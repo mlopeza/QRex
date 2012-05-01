@@ -47,14 +47,21 @@ namespace QRex{
 	/*Linked List de Parametros*/
 	class Node {
 		int data;
+		int linea;
+		std::wstring nombre;
+
 		Node* next;
 
 		public:
-		Node() {data = -1; next = NULL;};
+		Node() {data = -1; linea = -1; next = NULL;};
 		~Node(){}
 		void SetData(int aData) { data = aData; };
+		void SetLinea(int aLinea) { linea = aLinea; };
+		void SetNombre(std::wstring aNombre) { nombre = aNombre; };
 		void SetNext(Node* aNext) { next = aNext; };
 		int Data() { return data; };
+		int Linea() { return linea; };
+		std::wstring Nombre() { return nombre; };
 		Node* Next() { return next; };
 
 	};
@@ -90,11 +97,64 @@ namespace QRex{
 				size++;
 			};
 
+			void Append2(int data,std::wstring nombre){
+				// Crea nuevo nodo
+				Node* newNode = new Node();
+				newNode->SetData(data);
+				newNode->SetNombre(nombre);
+				newNode->SetNext(NULL);
+
+				// Crea pointer temporal
+				Node *tmp = head;
+
+				if ( tmp != NULL ) {
+					// Hay nodos en la Lista
+					// Busca hasta llegar al final de la lista
+					while ( tmp->Next() != NULL ) {
+						tmp = tmp->Next();
+					}
+
+					// Asigna al ultimo nodo el nuevo nodo
+					tmp->SetNext(newNode);
+				}else {
+					// Asigna el primer Nodo
+					head = newNode;
+				}
+				size++;
+			}
+
+			void Append3(int cuadruplo,int linea,std::wstring nombre){
+				// Crea nuevo nodo
+				Node* newNode = new Node();
+				newNode->SetData(cuadruplo);
+				newNode->SetNombre(nombre);
+				newNode->SetLinea(linea);
+				newNode->SetNext(NULL);
+
+				// Crea pointer temporal
+				Node *tmp = head;
+
+				if ( tmp != NULL ) {
+					// Hay nodos en la Lista
+					// Busca hasta llegar al final de la lista
+					while ( tmp->Next() != NULL ) {
+						tmp = tmp->Next();
+					}
+
+					// Asigna al ultimo nodo el nuevo nodo
+					tmp->SetNext(newNode);
+				}else {
+					// Asigna el primer Nodo
+					head = newNode;
+				}
+				size++;
+			}
+
 			void Print(){
 				Node *tmp = head;
 				std::wcout<< L"Parametros:";
 				while(tmp != NULL){
-					std::wcout<< L"("<< tmp->Data() << L")" <<L"   ";
+					std::wcout<< L"("<< tmp->Data() << L","<<tmp->Nombre()<< L")" <<L"   ";
 					tmp=tmp->Next();
 				}
 
@@ -131,6 +191,20 @@ namespace QRex{
 				//Los parametros son iguales
 				return true;
 			};
+
+			Node *getNode(int place){
+				
+				int index = 1;
+
+				Node *tmp = head;
+				while(tmp != NULL && index < place){
+					tmp = tmp->Next();
+					index++;
+				}
+
+				return tmp;
+			};
+
 	};
 
 	/*Funciones*/
@@ -161,8 +235,11 @@ namespace QRex{
 			}
 
 			~FuncionX(){
-				parametros->Delete();
-				delete(parametros);
+				if(parametros != NULL){
+
+					parametros->Delete();
+					delete(parametros);
+				}
 				vhash.clear();
 			}
 
@@ -331,14 +408,3 @@ namespace QRex{
 
 };
 #endif
-
-
-
-
-
-
-
-
-
-
-
