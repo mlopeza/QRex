@@ -12,7 +12,6 @@
 QRex
 Parser.h
 Scanner.h
-UI
 UI.pro
 Makefile
 moc_*
