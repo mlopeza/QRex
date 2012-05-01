@@ -338,7 +338,6 @@ COMPILER QRex
 		Variable *var;
 		std::ofstream fs; 
 		fs.open("out.qo",std::ofstream::out|std::ofstream::trunc); 
-		fs << "%%" << std::endl ;
 		//wchar_t* fin;
 
 		std::wcout<<L"Tabla de Variables Globales\n";
@@ -354,8 +353,7 @@ COMPILER QRex
 			it2++;
 		}
 
-		fs << "%%" << std::endl ;
-		fs << "--" << std::endl ;
+		fs << ";;" << std::endl ;
 		std::wcout<<L"Tabla de Variables Constantes\n";
 		it2 = tabconstantes->vhash.begin();
 		while (it2 != tabconstantes->vhash.end()){
@@ -372,8 +370,7 @@ COMPILER QRex
 			it2++;
 		}
 
-	fs << "--" << std::endl ;
-	fs << "++" << std::endl ;
+	fs << ".." << std::endl ;
 		std::wcout<<L"\n\nCuadruplos de Expresiones\n";
 		std::map<int,Cuadruplo *>::iterator iterator = hashCuadruplos.begin();
 		Cuadruplo *c;
@@ -383,7 +380,7 @@ COMPILER QRex
 			fs<< c->op << ',' << c->operador1 <<  ',' << c->operador2 << ','<< c->resultado << std::endl;
 			iterator++;
 		}
-	fs << "++" << std::endl ;
+	fs << "--" << std::endl ;
 		fs.close();
 
 	}

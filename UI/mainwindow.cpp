@@ -769,6 +769,8 @@ void MainWindow::compile(){
 void MainWindow::execute(){
 	VMDialog *vm = new VMDialog(this);
 	vm->show();
+	VMachine *m = new VMachine("out.qo",vm);
+	m->ExecuteCode();
 }
 //Debug simple para los desarrolladores de este sistema
 void MainWindow::debugObject(){
