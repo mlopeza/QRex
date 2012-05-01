@@ -865,8 +865,9 @@ COMPILER QRex
 	}
 
 	void sacaPoper(){
+std::wcout << L" poper" << Poper->Peek() << L'\n';
 	int operador = Poper->Pop();
-		//	std::wcout << L"Saca Poper("<<operador<<L")\n";	
+		std::wcout << L"Saca Poper("<<operador<<L")\n";	
 		if(operador != PIZQ){
 			std::wcout << L"Se esperaba )\n";
 			exit(-1);
@@ -984,6 +985,7 @@ COMPILER QRex
 
 }
 
+//Mete la direccion de la variable global de la llamada a la pila de operadores
 void meteLlamada(){
 	std::map<std::wstring,Variable *>::iterator itglobal = tabglobales->vhash.find(l->nombre);
 	PilaO->Push(itglobal->second->direccion);
@@ -1177,6 +1179,8 @@ Tipov ID					(.registraVariable(f);.)
 .
 //Finaliza Declaracion-----------------------------------------------------------------
 Llamada = '(' [Param] ')'		
+	(.std::wcout << L"Fin de parametros\n";
+					meteLlamada();std::wcout << L"Fin de parametros1\n";.)
 	
 	.
 
@@ -1219,6 +1223,7 @@ Var_Cte=
 					(.	//if (llamada != 1){
 							//metePilaOV();
 						//}
+								std::wcout<< L"Fin de llamada qwer:"<<  L"\n";
 						//else if(llamada == 1){
 							if (p != NULL){
 								std::wcout<< L"p not null:"<<  L"\n";
@@ -1249,8 +1254,7 @@ Expresion
 					(.
 						if(tipo == escritura){
 							gCuadruplo();
-						}
-						if(llamada == 1){
+						} else if(llamada == 1){
 							generaParametro();
 							}
 					.)
@@ -1267,18 +1271,20 @@ cte_string				(.
 							Poper->Push(PRINT);
 							PilaO->Push((it->second)->direccion);
 							gCuadruplo();
-						}
-						if(llamada == 1){
+					std::wcout << L" cuadruplo correcto string \n";
+						} else	if(llamada == 1){
 							std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
 							PilaO->Push((it->second)->direccion);
 							generaParametro();
 						}
+					std::wcout << L" param fin  string 4\n";
 					.)
 
-) 		(.	operadorActual=PDER;
-	llamada = 0;
+) 		(.		operadorActual=PDER;
+				llamada = 0;
 				sacaPoper();
-				meteLlamada();
+				//	std::wcout << L" poper 3 " << Poper->Peek() << L'\n';
+				//	std::wcout << L" despeus de meter llamada poper 4 " << Poper->Peek() << L'\n';
 			.)
 
 [',' Param].
@@ -1366,8 +1372,12 @@ Asignacion = ID 			(.	metePilaOV();		.)
 
 
 //Inicia Escritura--------------------------------------------------
-Escritura = print 			(.tipo = escritura;.)
-'(' Param ')' ';'
+Escritura = print 			(.tipo = escritura;
+					std::wcout<< L"Print " << L'\n';.)
+'('
+Param 					
+					(.std::wcout<< L"despues de param " << L'\n';.)
+')' ';'
 					(.tipo = undef;.)
 .
 //Finaliza Escritura--------------------------------------------------
