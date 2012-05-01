@@ -25,7 +25,7 @@ main ()
 {
 	int a,b,c,d,e,f,g,h;
 	a = 1*2 + b -c / h + 5 * Pato(8,5,3);
-	
+	print(a);	
 
 	while (a<b) {
 		a=1;

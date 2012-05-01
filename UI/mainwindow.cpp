@@ -14,7 +14,18 @@
 #include "conditionaldialog.h" //Para Dialogos de Condicionales
 #include "stepdialog.h" //Para Dialogos de Procesos
 #include "iodialog.h" //Para Dialogos de IO
+#include "virtualmachine.h" //Para la salida de la maquina virtual
 #include <QMessageBox> //Mensajes Simples
+
+#include "vmachine.h" //Maquina Virtual
+//Cabeceras del compilador
+#include "stdio.h"
+#include "../Parser.h"
+#include "../Scanner.h"
+#include <sys/timeb.h>
+#include <wchar.h>
+
+
 
 const int InsertTextButton = 10;
 
@@ -723,12 +734,41 @@ void MainWindow::compile(){
 	//Cerramos el archivo
 	file.close();
 
+	qDebug()<<"Ya casi";
+	//Inicia el procesod e compilacion
+        wchar_t *fileName = QRex::coco_string_create("codigo.qc");
+	
+	qDebug() << "Paso :)";
+        QRex::Scanner *scanner = new QRex::Scanner(fileName);
+	qDebug()<<"1";
+        QRex::Parser *parser = new QRex::Parser(scanner);
+	qDebug()<<"2";
+        parser->Parse();
+	qDebug()<<"3";
+        if (parser->errors->count == 0) {
+            printf("Succesful Analysis\n");
+        }
+        else {
+            printf("Error\n");
+        }
+	qDebug()<<"4";
+        QRex::coco_string_delete(fileName);
+	qDebug()<<"5";
+        delete parser;
+	qDebug()<<"6";
+        delete scanner;
+
+	//Finaliza proceso de compilacion
+
 	//Mostramos Mensaje de Finalizado
+	qDebug()<<"7";
 	QMessageBox::information(this, "QRex Compiler", "Finished Compiling.");
+	qDebug()<<"8";
 }
 
 void MainWindow::execute(){
-
+	VMDialog *vm = new VMDialog(this);
+	vm->show();
 }
 //Debug simple para los desarrolladores de este sistema
 void MainWindow::debugObject(){
