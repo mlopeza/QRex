@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="Images">
+    <file>pointer.png</file>
+    <file>linepointer.png</file>
+    <file>delete.png</file>
+  </qresource>
+</RCC>
