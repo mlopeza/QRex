@@ -15,6 +15,8 @@ Scanner.h
 UI
 UI.pro
 Makefile
+moc_*
+qrc_*
 # Packages #
 ############
 # it's better to unpack these files and commit the raw source
