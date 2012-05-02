@@ -5,6 +5,7 @@ sign int Func(int,float,int,float,float);
 sign int Pato(int,int,int);
 sign void Func(int,int);
 sign int Func(float,int);
+sign int Fibo(int);
 
 int Pato(int pito, int alkjsakl,int aklsjklajs) {
 	int x;
@@ -21,9 +22,24 @@ int Func(int as,float ass,int asa,float ssa,float sas) {
     return w;
 }
 
+int Fibo(int n){
+	int f;
+	if (n == 1 || n == 2){
+		f = 1;
+	} else {
+		1         if (n <= 0 ){
+			f = 0;
+		} else {
+			f = Fibo(1) + Fibo(2);
+		}
+	}
+	return f;
+}
+
+
 main ()
 {
-	int a,b,c,d,e,f,g,h;
+	int a,b,c,d,e,f,g,h,i,sum;
 	a = 1*2 + b -c / h + 5 * Pato(8,5,3);
 	print(a);	
 
@@ -38,4 +54,16 @@ main ()
 		a=1;
 	
 	}
+
+	a = 0;
+	b = 1;
+	i = 0;
+	while (i <= 6){
+		sum = a+b;
+		a = b;
+		b = sum;
+	}
+
+	a = Fibo(3);
+	print(a);
 }
