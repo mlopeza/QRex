@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'variableinput.ui'
 **
-** Created: Tue May 1 05:01:57 2012
+** Created: Tue May 1 21:31:35 2012
 **      by: Qt User Interface Compiler version 4.7.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -27,7 +27,7 @@ class Ui_VariableInput
 {
 public:
     QGridLayout *gridLayout;
-    QLineEdit *lineEdit;
+    QLineEdit *inputLine;
     QDialogButtonBox *buttonBox;
 
     void setupUi(QDialog *VariableInput)
@@ -40,10 +40,10 @@ public:
         VariableInput->setLocale(QLocale(QLocale::English, QLocale::UnitedStates));
         gridLayout = new QGridLayout(VariableInput);
         gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
-        lineEdit = new QLineEdit(VariableInput);
-        lineEdit->setObjectName(QString::fromUtf8("lineEdit"));
+        inputLine = new QLineEdit(VariableInput);
+        inputLine->setObjectName(QString::fromUtf8("inputLine"));
 
-        gridLayout->addWidget(lineEdit, 0, 0, 1, 1);
+        gridLayout->addWidget(inputLine, 0, 0, 1, 1);
 
         buttonBox = new QDialogButtonBox(VariableInput);
         buttonBox->setObjectName(QString::fromUtf8("buttonBox"));

@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'io.ui'
 **
-** Created: Tue May 1 05:01:57 2012
+** Created: Tue May 1 19:54:40 2012
 **      by: Qt User Interface Compiler version 4.7.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -32,10 +32,10 @@ public:
     QGridLayout *gridLayout;
     QDialogButtonBox *buttonBox;
     QLabel *label;
-    QLabel *label_2;
     QHBoxLayout *horizontalLayout;
     QComboBox *ioComboBox;
     QLineEdit *IOText;
+    QLabel *label_2;
 
     void setupUi(QDialog *IODialog)
     {
@@ -59,11 +59,6 @@ public:
 
         gridLayout->addWidget(label, 0, 0, 1, 1);
 
-        label_2 = new QLabel(IODialog);
-        label_2->setObjectName(QString::fromUtf8("label_2"));
-
-        gridLayout->addWidget(label_2, 1, 0, 1, 2);
-
         horizontalLayout = new QHBoxLayout();
         horizontalLayout->setObjectName(QString::fromUtf8("horizontalLayout"));
         ioComboBox = new QComboBox(IODialog);
@@ -81,6 +76,11 @@ public:
 
         gridLayout->addLayout(horizontalLayout, 3, 0, 1, 1);
 
+        label_2 = new QLabel(IODialog);
+        label_2->setObjectName(QString::fromUtf8("label_2"));
+
+        gridLayout->addWidget(label_2, 1, 0, 1, 2);
+
 
         retranslateUi(IODialog);
         QObject::connect(buttonBox, SIGNAL(accepted()), IODialog, SLOT(accept()));
@@ -93,12 +93,12 @@ public:
     {
         IODialog->setWindowTitle(QApplication::translate("IODialog", "Input/Output", 0, QApplication::UnicodeUTF8));
         label->setText(QApplication::translate("IODialog", "INPUT:  Write the ID of the Variable", 0, QApplication::UnicodeUTF8));
-        label_2->setText(QApplication::translate("IODialog", "OUTPUT: Write values separated by commas (ID,STRING,CONSTANT)", 0, QApplication::UnicodeUTF8));
         ioComboBox->clear();
         ioComboBox->insertItems(0, QStringList()
          << QApplication::translate("IODialog", "Input", 0, QApplication::UnicodeUTF8)
          << QApplication::translate("IODialog", "Output", 0, QApplication::UnicodeUTF8)
         );
+        label_2->setText(QApplication::translate("IODialog", "OUTPUT: Write values separated by commas (ID,STRING,CONSTANT)", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
 
 };

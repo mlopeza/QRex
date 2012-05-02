@@ -46,13 +46,6 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0" colspan="2">
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>OUTPUT: Write values separated by commas (ID,STRING,CONSTANT)</string>
-     </property>
-    </widget>
-   </item>
    <item row="3" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
@@ -86,6 +79,13 @@
       </widget>
      </item>
     </layout>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>OUTPUT: Write values separated by commas (ID,STRING,CONSTANT)</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

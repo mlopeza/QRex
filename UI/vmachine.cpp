@@ -148,6 +148,8 @@ void VMachine::start(){
 	int cont=0;
 	int a;
 	int p=0;
+	int wow = 0;
+	QStringList elements;
 	qDebug() << "Start Execution!";
 	std::map<int,Quadruple *>::iterator it = Quadruples.find(cont);
 	while(it->second->getQ(0)!= _FIN){
@@ -241,6 +243,18 @@ void VMachine::start(){
 			case _PRINT:
 				qDebug()<<"PRINT";
 				//Print Function
+				//Limpieza del string y ejecucion de los saltos de linea
+				linea = dameVariable(it->second->getQ(1)).remove(QChar('"'), Qt::CaseInsensitive);;
+				wow=linea.count(QRegExp("\\\\n"));
+				if(wow!=0){
+					elements = linea.split("\\n");
+					foreach(QString nl,elements){	
+						dialog->mainOutput->insertPlainText(nl);
+						dialog->mainOutput->insertPlainText("\n");
+					}
+				}else{
+					dialog->mainOutput->insertPlainText(linea);
+				}
 				qDebug() <<"IMPRESION>>>>>>>>"<<it->second->getQ(1)<<">>>>"<< dameVariable(it->second->getQ(1));
 				cont++;
 				break;
@@ -250,27 +264,51 @@ void VMachine::start(){
 				break;
 			case _READ:
 				qDebug()<<"READ";
-				asignaVariable(it->second->getQ(1),"100");
+				vi = new VariableInput(dialog,tipoVariable(it->second->getQ(1)));
+				if(vi->exec()){
+					asignaVariable(it->second->getQ(1),vi->inputLine->text());
+				}else{
+					asignaVariable(it->second->getQ(1),"0");
+				}
+				delete vi;
 				cont++;
 				break;
 			case _ERA:
 				qDebug()<<"ERA";
+				tempMemory = new Memory();
 				cont++;
 				break;
 			case _PARAM:
 				qDebug()<<"PARAM";
+				tempMemory->setVar(it->second->getQ(3),dameVariable(it->second->getQ(1)));
 				cont++;
 				break;
 			case _GOSUB:
 				qDebug()<<"GOSUB";
-				cont++;
+				//Pone el retorno de linea
+				tempMemory->setLine(cont+1);
+				//Mete la memoria actual a la pila
+				memStack->Push(actualMemory);
+				//La memoria temporal se convierte en la actual
+				actualMemory = tempMemory;
+				tempMemory = NULL;
+				//Salta a la linea
+				cont=it->second->getQ(3);
 				break;
 			case _RETORNO:
 				qDebug()<<"RETORNO";
-				cont++;
+				//Regreso a la ejecucion anterior
+				//Saca la linea a la cual se va a regresar
+				cont=actualMemory->getLine();
+				//ELimina de la memoria el proceso terminado
+				delete actualMemory;
+				//Saca el proceso pendiente de la pila
+				actualMemory = memStack->Pop();
 				break;
 			case _RETURN:
 				qDebug()<<"RETURN";
+				//La variable que va a regresar
+				GlobalMemory->setVar(it->second->getQ(3),dameVariable(it->second->getQ(1)));
 				cont++;
 				break;
 		}

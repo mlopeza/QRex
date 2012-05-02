@@ -51,6 +51,7 @@
 #include <QString>
 #include "vmdatastruct.h"
 #include "virtualmachine.h"
+#include "variableinput.h"
 class VMachine{
 
 	public:
@@ -99,10 +100,13 @@ class VMachine{
 
 		//Salida a pantalla de ejecucion
 		VMDialog *dialog;
+		VariableInput *vi;
 		
 
 		Memory *actualMemory;
+		Memory *tempMemory;
 		Pila *memStack;
+		QString linea;
 
 };
 
