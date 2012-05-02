@@ -4,30 +4,42 @@
 #include <utility>
 #include <string>
 
+//Direcciones para cada uno de los tipos
+//de variables
+
+//Variables locales a la funcion
 #define PROCINT 4000
 #define PROCFLOAT 6000
 #define PROCSTRING 8000
 
+//Variables globales
 #define GLOBAL_INT 	10000
 #define GLOBAL_FLOAT	12000
 #define GLOBAL_STRING	14000
 
+//Variables constantes
 #define CONSTANT_INT	16000
 #define CONSTANT_FLOAT	18000
 #define CONSTANT_STRING 20000
 
+//Variables temporales
 #define TEMP_INT 22000
 #define TEMP_FLOAT 23000
 #define TEMP_STRING 24000
 
 namespace std
 {
+	//Estructuras basicas del objeto wstring
 	typedef basic_string<char> string;
 	typedef basic_string<wchar_t> wstring;
 };
 
 namespace QRex{
 	/*Variables*/
+	/*
+	En este objeto se guardan las
+	variables con su tipo,nombre y direccion
+	*/
 	class Variable{
 		public:
 			std::wstring nombre;
@@ -44,7 +56,12 @@ namespace QRex{
 
 	};
 
-	/*Linked List de Parametros*/
+	/*Linked List de Parametros
+		Este nodo sirve para almacenar una
+		lista de parametros a la funcion
+		cada nodo representa un parametro y este tiene
+		asignado nombre y tipo
+	*/
 	class Node {
 		int data;
 		int linea;
@@ -66,6 +83,11 @@ namespace QRex{
 
 	};
 
+	/*
+		Esta es uan estructura de lista
+		que sirve para ir guardanado los nodos
+		que se encuentran en las funciones
+	*/
 	class List {
 		public:
 			Node *head;
@@ -149,7 +171,8 @@ namespace QRex{
 				}
 				size++;
 			}
-
+			
+			//Imprime el contenido de los nodos
 			void Print(){
 				Node *tmp = head;
 				std::wcout<< L"Parametros:";
@@ -161,6 +184,7 @@ namespace QRex{
 				std::wcout<< L"\n";
 			};
 
+			//Elimina un nodo
 			void Delete(){
 				Node *tmp = head;
 				Node *tmp2;
@@ -171,6 +195,8 @@ namespace QRex{
 				}
 			};
 
+			//Compara dos listas y regresa
+			//verdadero si son iguales en contenido
 			bool Equals(List *lista){
 				Node *tmp = head;
 				Node *x = lista->head;
@@ -192,6 +218,7 @@ namespace QRex{
 				return true;
 			};
 
+			//Se regresa el nodo segun el entero dado
 			Node *getNode(int place){
 				
 				int index = 1;
@@ -207,7 +234,11 @@ namespace QRex{
 
 	};
 
-	/*Funciones*/
+	/*Esta estructura sirve para Guardar una funcion
+	se pueden encontrar tanto losparametros como la tabla
+	de variables un tipo, el nombre y la direccion Inicial
+	de ejecucion
+	*/
 	class FuncionX{
 		public:
 			std::wstring nombre;
@@ -220,6 +251,7 @@ namespace QRex{
 			int stringNum;
 			int dirInicial;
 
+			//Metodo constructor
 			FuncionX(){
 				tipo = 0;
 				definida = 0;
@@ -230,10 +262,11 @@ namespace QRex{
 				dirInicial = -1;
 			}
 
+			//Se agrega un parametro
 			void Insert(int n){
 				parametros->Append(n);
 			}
-
+			//Metodo destructor
 			~FuncionX(){
 				if(parametros != NULL){
 
@@ -275,6 +308,7 @@ namespace QRex{
 			~TablaDeVariables(){fhash.clear();}
 	};
 
+	//Es un objeto para almacenar los cuatro campos de un cuadruplo
 	class Cuadruplo{
 		public:
 			int op;
@@ -292,6 +326,9 @@ namespace QRex{
 			~Cuadruplo(){}
 	};
 
+	//Estructura de pila utilizada
+	//Para almacenar tanto los operadores
+	//Como las direcciones de variables
 	class Pila{
 		Node *head;
 		int nodos;
@@ -360,6 +397,9 @@ namespace QRex{
 
 	};
 
+	//Esta es una clase que maneja los temporales
+	//de manera automatizada ya que le asigna una direccion
+	//y tambien se limpia al termianr cada funcion
 	class Temporales{
 		public:
 			std::map<int, Variable *> vhash;

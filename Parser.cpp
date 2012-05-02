@@ -126,7 +126,6 @@ void Parser::QRex2() {
 		operadorActual=FIN;
 		metePoper();
 		gCuadruplo();
-		imprimeRegistros();
 		creaObj();
 		
 }
@@ -175,12 +174,6 @@ void Parser::Cuerpo2() {
 				Get();
 				std::wcout<< L"Returned value not allowed"<< L"\n";
 				exit(-1);
-				
-				/*tipovariable = cadenav;
-				wchar_t* name = coco_string_create(t->val);
-				identificador = std::wstring(name);
-				coco_string_delete(name);
-				registraConstante(); */
 				
 			} else SynErr(40);
 			Expect(18);
@@ -255,8 +248,7 @@ void Parser::Llamada() {
 			ParamLlamada();
 		}
 		Expect(20);
-		std::wcout << L"Fin de parametros\n";meteLlamada();
-		std::wcout << L"Fin de parametros1\n";
+		meteLlamada();
 		
 }
 
@@ -280,14 +272,11 @@ void Parser::ParamLlamada() {
 			std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
 			PilaO->Push((it->second)->direccion);
 			generaParametro();
-			std::wcout << L" param fin  string 4\n";
 			
 		} else SynErr(43);
 		operadorActual=PDER;
 		llamada = 0;
 		sacaPoper();
-		//	std::wcout << L" poper 3 " << Poper->Peek() << L'\n';
-		//	std::wcout << L" despeus de meter llamada poper 4 " << Poper->Peek() << L'\n';
 		
 		if (la->kind == 21) {
 			Get();
@@ -336,16 +325,13 @@ void Parser::Var_Cte() {
 				verificaLlamada();
 				
 				Llamada();
-				std::wcout<< L"Fin de llamada qwer:"<<  L"\n";
-				//else if(llamada == 1){
 				if (p != NULL){
-				std::wcout<< L"p not null:"<<  L"\n";
+				std::wcout<< L"Parameter error"<<  L"\n";
 				exit(-1);
 				}
 				Poper->Push(GOSUB);
 				gCuadruplo();
 				
-				//}
 				llamada = 0;
 				l = NULL;
 				p = NULL;
@@ -375,13 +361,10 @@ void Parser::Param() {
 			Poper->Push(PRINT);
 			PilaO->Push((it->second)->direccion);
 			gCuadruplo();
-			std::wcout << L" cuadruplo correcto string \n";
 			
 		} else SynErr(45);
 		operadorActual=PDER;
 		sacaPoper();
-		//	std::wcout << L" poper 3 " << Poper->Peek() << L'\n';
-		//	std::wcout << L" despeus de meter llamada poper 4 " << Poper->Peek() << L'\n';
 		
 		if (la->kind == 21) {
 			Get();
@@ -394,7 +377,6 @@ void Parser::Expresion() {
 		Exp1();
 		int peek = Poper->Peek();
 		if(peek == OR){
-		//std::wcout << "Se genero en EXP1\n";
 		gCuadruplo();
 		}
 		
@@ -491,10 +473,8 @@ void Parser::Asignacion() {
 void Parser::Escritura() {
 		Expect(10);
 		tipo = escritura;
-		std::wcout<< L"Print " << L'\n';
 		Expect(19);
 		Param();
-		std::wcout<< L"despues de param " << L'\n';
 		Expect(20);
 		Expect(18);
 		tipo = undef;
@@ -517,7 +497,6 @@ void Parser::Exp1() {
 		Exp2();
 		int peek = Poper->Peek();
 		if(peek == AND){
-		//std::wcout << "Se genero en EXP1\n";
 		gCuadruplo();
 		}
 		
@@ -566,7 +545,6 @@ void Parser::Exp2() {
 			metePoper();
 			Exp3();
 			gCuadruplo();	
-			//std::wcout << "Se genero en EXP2\n";
 			
 			
 		}
@@ -650,7 +628,6 @@ void Parser::Exp6() {
 			Var_Cte();
 			int peek = Poper->Peek();
 			if(peek == NEGATIVO){
-			//std::wcout << "Se genero en EXP6\n";
 			gCuadruplo();
 			}
 			
