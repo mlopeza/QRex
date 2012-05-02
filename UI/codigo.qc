@@ -1,12 +1,16 @@
-sign int Pato(int);
- int Pato (int i){int a;
-i = i+1;
-read(a);
-print("Pato:",i,"\n");
-return i+a;} main(){int a;
-a=1;
-print("Main1:",a,"\n");
-a=a+1;
-a=Pato(1);
-print("Main2:",a,"\n");
+sign int fibo(int);
+ int fibo (int n){int ret,a,b;
+if(n==1||n==2){
+	ret=1;
+}else{
+	/*a=fibo(n-1);*/
+	/*b=fibo(n-2)*/
+	/*ret=a+b;*/
+	ret=fibo(n-1)+fibo(n-2);
+	print("A:",n-1," B:",n-2," RET:",ret,"\n");
 }
+
+return ret;} main(){int a,b;
+read(b);
+a=fibo(b);
+print(a);}

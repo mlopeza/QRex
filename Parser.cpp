@@ -833,6 +833,7 @@ void Errors::SynErr(int line, int col, int n) {
 void Errors::Error(int line, int col, const wchar_t *s) {
 	wprintf(L"-- line %d col %d: %ls\n", line, col, s);
 	count++;
+	exit(1);
 }
 
 void Errors::Warning(int line, int col, const wchar_t *s) {
