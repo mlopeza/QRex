@@ -1,0 +1,19 @@
+main ()
+{
+    int x,r,a;
+    float asdf,f;
+    float v;
+    string asff;
+    print("Hola mundo", 5,"Yo soy muy bueno :)");
+    x = "hola";
+    x = (4 - 3) || ( 4 * -4 + 6) ;
+    if(a > 3){
+        read(b);
+    }
+    else {
+    }
+
+    while((a >=4 ) && (a==5)){
+    }
+    a = asdf(5);    
+}

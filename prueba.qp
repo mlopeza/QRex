@@ -1,0 +1,41 @@
+global int w,alsk,d;
+global float y;
+global string z;
+sign int Func(int,float,int,float,float);
+sign int Pato(int,int,int);
+sign void Func(int,int);
+sign int Func(float,int);
+
+int Pato(int pito, int alkjsakl,int aklsjklajs) {
+	int x;
+	pito = 3;
+	return 3;
+    }
+void Func(int a, float e) {
+    int y;
+    }
+
+int Func(int as,float ass,int asa,float ssa,float sas) {
+    int flash;
+
+    return w;
+}
+
+main ()
+{
+	int a,b,c,d,e,f,g,h;
+	a = 1*2 + b -c / h + 5 * Pato(8,5,3);
+	print(a);	
+
+	while (a<b) {
+		a=1;
+	}
+
+	if (a<b){
+		a=1;
+	}
+	else{
+		a=1;
+	
+	}
+}
