@@ -12,7 +12,7 @@ DiagramItem::DiagramItem(DiagramType diagramType, QMenu *contextMenu,
 {
 	myDiagramType = diagramType;
 	myContextMenu = contextMenu;
-
+	dialog = NULL;
 	//Se dibujan los poligonos a utilizar
 	QPainterPath path;
 	switch (myDiagramType) {
@@ -276,6 +276,7 @@ void DiagramItem::printSignature(QTextStream *out){
 //Imprime de forma recursiva toda la informacion de la estructura
 //Recibe como parametro el stream de salida
 void DiagramItem::recursivePrint(QTextStream *out){
+	if(dialog != NULL)
 	switch(myDiagramType){
 		case While:
 			*out<<" while(";
