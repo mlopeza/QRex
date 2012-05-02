@@ -1,7 +1,0 @@
-#!/bin/bash
-
-cococpp QRex.atg -namespace QRex
-make
-rm -rf *.old
-rm -rf *.swp
-rm -rf *~
