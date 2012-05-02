@@ -372,7 +372,12 @@ void VMachine::Operacion(Quadruple *q,int operacion){
 	int aa = tipoVariable(a);
 	int bb = tipoVariable(b);
 	int cc = tipoVariable(c);
-	if(aa == _ENTERO && bb == _ENTERO){
+	qDebug()<<"a:"<<aa<<"-"<<dameVariable(a);
+	qDebug()<<"b:"<<bb<<"-"<<dameVariable(b);
+	if(aa == _CADENA && cc == _CADENA && operacion == _ASIGNA){
+		qDebug()<<"Es Cadena";
+		asignaVariable(c,dameVariable(a));
+	}else if(aa == _ENTERO && bb == _ENTERO){
 		x=dameVariable(a).toInt(&bo,10);
 		xx=dameVariable(b).toInt(&bi,10);
 		if(!bo){qDebug()<<"Problemas con x";exit(-1);}
@@ -575,6 +580,8 @@ void VMachine::Operacion(Quadruple *q,int operacion){
 	}else if(aa == _FLOTANTE && bb == _FLOTANTE){
 		y=dameVariable(a).toFloat(&bo);
 		yy=dameVariable(b).toFloat(&bi);
+		qDebug()<<y;
+		qDebug()<<yy;
 		if(!bo){qDebug()<<"Problemas con y3";exit(-1);}
 		if(!bi){qDebug()<<"Problemas con yy3";exit(-1);}
 		switch(operacion){
@@ -588,7 +595,7 @@ void VMachine::Operacion(Quadruple *q,int operacion){
 				y=y*yy;
 				break;
 			case _DIVISION:
-				if(yy==0){
+				if(yy!=0){
 					y=y/yy;
 				}else{
 					qDebug()<<"Divided by Zero";

@@ -252,29 +252,23 @@ void Parser::Estatuto() {
 void Parser::Llamada() {
 		Expect(19);
 		if (StartOf(3)) {
-			Param();
+			ParamLlamada();
 		}
 		Expect(20);
-		std::wcout << L"Fin de parametros\n";
-			meteLlamada();std::wcout << L"Fin de parametros1\n";
+		std::wcout << L"Fin de parametros\n";meteLlamada();
+		std::wcout << L"Fin de parametros1\n";
+		
 }
 
-void Parser::Param() {
+void Parser::ParamLlamada() {
 		operadorActual=PIZQ;
 		llamada = 1;
 		metePoper();
 		
 		if (StartOf(2)) {
-			if(tipo == escritura){
-			Poper->Push(PRINT);
-			}
 			
 			Expresion();
-			if(tipo == escritura){
-			gCuadruplo();
-			} else if(llamada == 1){
 			generaParametro();
-			}
 			
 		} else if (la->kind == 2) {
 			Get();
@@ -283,17 +277,9 @@ void Parser::Param() {
 			identificador = std::wstring(name);
 			coco_string_delete(name);
 			registraConstante();
-			if(tipo == escritura){
-			std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
-			Poper->Push(PRINT);
-			PilaO->Push((it->second)->direccion);
-			gCuadruplo();
-			std::wcout << L" cuadruplo correcto string \n";
-			} else	if(llamada == 1){
 			std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
 			PilaO->Push((it->second)->direccion);
 			generaParametro();
-			}
 			std::wcout << L" param fin  string 4\n";
 			
 		} else SynErr(43);
@@ -305,7 +291,7 @@ void Parser::Param() {
 		
 		if (la->kind == 21) {
 			Get();
-			Param();
+			ParamLlamada();
 		}
 }
 
@@ -345,6 +331,7 @@ void Parser::Var_Cte() {
 			ID();
 			metePilaOV();
 			if (la->kind == 19) {
+				llamada = 1;	
 				PilaO->Pop();
 				verificaLlamada();
 				
@@ -365,6 +352,41 @@ void Parser::Var_Cte() {
 				
 			}
 		} else SynErr(44);
+}
+
+void Parser::Param() {
+		operadorActual=PIZQ;
+		metePoper();
+		
+		if (StartOf(2)) {
+			Poper->Push(PRINT);
+			
+			Expresion();
+			gCuadruplo();
+			
+		} else if (la->kind == 2) {
+			Get();
+			tipovariable = cadenav;
+			wchar_t* name = coco_string_create(t->val);
+			identificador = std::wstring(name);
+			coco_string_delete(name);
+			registraConstante();
+			std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
+			Poper->Push(PRINT);
+			PilaO->Push((it->second)->direccion);
+			gCuadruplo();
+			std::wcout << L" cuadruplo correcto string \n";
+			
+		} else SynErr(45);
+		operadorActual=PDER;
+		sacaPoper();
+		//	std::wcout << L" poper 3 " << Poper->Peek() << L'\n';
+		//	std::wcout << L" despeus de meter llamada poper 4 " << Poper->Peek() << L'\n';
+		
+		if (la->kind == 21) {
+			Get();
+			Param();
+		}
 }
 
 void Parser::Expresion() {
@@ -394,7 +416,7 @@ void Parser::Tipof() {
 		} else if (la->kind == 14) {
 			Get();
 			tipofuncion = voidf; 
-		} else SynErr(45);
+		} else SynErr(46);
 }
 
 void Parser::Dec_Param() {
@@ -450,9 +472,19 @@ void Parser::Asignacion() {
 			wchar_t* name = coco_string_create(t->val);
 			identificador = std::wstring(name);
 			coco_string_delete(name);
-			registraConstante();
+			int resultado=registraConstante();
 			
-		} else SynErr(46);
+			int tipo = verificaCubo(ASIGNA,dameTipo(PilaO->Peek()),dameTipo(resultado));
+			if(tipo == -666){
+			std::wcout<<L"Trying to assign an invalid type";
+			}else{
+			Cuadruplo *cuadruplo=new Cuadruplo(ASIGNA,resultado,-1,PilaO->Pop());
+			hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+			contCuadruplos++;
+			}	
+			
+			
+		} else SynErr(47);
 		Expect(18);
 }
 
@@ -622,7 +654,7 @@ void Parser::Exp6() {
 			gCuadruplo();
 			}
 			
-		} else SynErr(47);
+		} else SynErr(48);
 }
 
 
@@ -811,11 +843,12 @@ void Errors::SynErr(int line, int col, int n) {
 			case 40: s = coco_string_create(L"invalid Cuerpo2"); break;
 			case 41: s = coco_string_create(L"invalid Tipov"); break;
 			case 42: s = coco_string_create(L"invalid Estatuto"); break;
-			case 43: s = coco_string_create(L"invalid Param"); break;
+			case 43: s = coco_string_create(L"invalid ParamLlamada"); break;
 			case 44: s = coco_string_create(L"invalid Var_Cte"); break;
-			case 45: s = coco_string_create(L"invalid Tipof"); break;
-			case 46: s = coco_string_create(L"invalid Asignacion"); break;
-			case 47: s = coco_string_create(L"invalid Exp6"); break;
+			case 45: s = coco_string_create(L"invalid Param"); break;
+			case 46: s = coco_string_create(L"invalid Tipof"); break;
+			case 47: s = coco_string_create(L"invalid Asignacion"); break;
+			case 48: s = coco_string_create(L"invalid Exp6"); break;
 
 		default:
 		{
@@ -833,7 +866,6 @@ void Errors::SynErr(int line, int col, int n) {
 void Errors::Error(int line, int col, const wchar_t *s) {
 	wprintf(L"-- line %d col %d: %ls\n", line, col, s);
 	count++;
-	exit(1);
 }
 
 void Errors::Warning(int line, int col, const wchar_t *s) {

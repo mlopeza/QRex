@@ -5,6 +5,9 @@
 #include <QCoreApplication>
 #include <QTextStream>
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "mainwindow.h"
 #include "diagramitem.h"
 #include "diagramscene.h"
@@ -736,8 +739,22 @@ void MainWindow::compile(){
 
 	qDebug()<<"Ya casi";
 	//Inicia el procesod e compilacion
-        wchar_t *fileName = QRex::coco_string_create("codigo.qc");
-	
+       // wchar_t *fileName = QRex::coco_string_create("codigo.qc");
+
+	int exit=system("../QRex codigo.qc > compiler.log");
+	QString message;
+	QFile archivo("compiler.log");
+	if (!archivo.open (QIODevice::ReadOnly | QIODevice::Text)){
+			qDebug()<<"Couldn't Open compiler.log file!";
+	}else{
+		QTextStream stream (&archivo);
+		while( !stream.atEnd() ) {
+			message+=stream.readLine();
+			message+="\n";
+		}
+		file.close(); // when your done.
+	}
+	/*	
 	qDebug() << "Paso :)";
         QRex::Scanner *scanner = new QRex::Scanner(fileName);
 	qDebug()<<"1";
@@ -757,12 +774,12 @@ void MainWindow::compile(){
         delete parser;
 	qDebug()<<"6";
         delete scanner;
-
+	*/
 	//Finaliza proceso de compilacion
 
 	//Mostramos Mensaje de Finalizado
-	qDebug()<<"7";
-	QMessageBox::information(this, "QRex Compiler", "Finished Compiling.");
+	qDebug()<<"7"<<"Salida:"<<exit;
+	QMessageBox::information(this, "QRex Compiler",message);
 	qDebug()<<"8";
 }
 

@@ -385,8 +385,9 @@ COMPILER QRex
 
 	}
 
+
 	//Registra las constantes encontradas en el programa
-	void registraConstante(){
+	int registraConstante(){
 		std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
 			if(it == tabconstantes->vhash.end()){
 				v = new Variable();
@@ -409,6 +410,8 @@ COMPILER QRex
 				//Se registra la constante
 				tabconstantes->vhash.insert(std::make_pair(v->nombre,v));			
 			}
+		it = tabconstantes->vhash.find(identificador);
+		return it->second->direccion;
 	}
 
 	//Agrega el parametro a la lista de la funcion
@@ -1175,11 +1178,12 @@ Tipov ID					(.registraVariable(f);.)
 						(. tipo = undef;.)
 .
 //Finaliza Declaracion-----------------------------------------------------------------
-Llamada = '(' [Param] ')'		
-	(.std::wcout << L"Fin de parametros\n";
-					meteLlamada();std::wcout << L"Fin de parametros1\n";.)
-	
-	.
+Llamada = '(' [ParamLlamada] ')'		
+	(.
+		std::wcout << L"Fin de parametros\n";meteLlamada();
+		std::wcout << L"Fin de parametros1\n";
+	.)	
+.
 
 Lectura= read '(' 
 					//Verifica que exista el ID antes de leer
@@ -1212,9 +1216,9 @@ Var_Cte=
 	|ID
 							(.metePilaOV();.)
 							
-		[				(.	//llamada = 1;	
+		[				(.	llamada = 1;	
 							PilaO->Pop();
-						verificaLlamada();
+							verificaLlamada();
 						.)
 	Llamada  
 					(.	//if (llamada != 1){
@@ -1238,22 +1242,15 @@ Var_Cte=
 ].
 
 Param = (.	operadorActual=PIZQ;
-		llamada = 1;
 				metePoper();
 			.)
 (
 					(.
-						if(tipo == escritura){
 							Poper->Push(PRINT);
-						}
 					.)
 Expresion
 					(.
-						if(tipo == escritura){
 							gCuadruplo();
-						} else if(llamada == 1){
-							generaParametro();
-							}
 					.)
 |
 
@@ -1263,18 +1260,45 @@ cte_string				(.
 						identificador = std::wstring(name);
 						coco_string_delete(name);
 						registraConstante();
-						if(tipo == escritura){
-							std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
-							Poper->Push(PRINT);
-							PilaO->Push((it->second)->direccion);
-							gCuadruplo();
-					std::wcout << L" cuadruplo correcto string \n";
-						} else	if(llamada == 1){
-							std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
-							PilaO->Push((it->second)->direccion);
+						std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
+						Poper->Push(PRINT);
+						PilaO->Push((it->second)->direccion);
+						gCuadruplo();
+						std::wcout << L" cuadruplo correcto string \n";
+					.)
+
+) 			(.	
+				operadorActual=PDER;
+				sacaPoper();
+				//	std::wcout << L" poper 3 " << Poper->Peek() << L'\n';
+				//	std::wcout << L" despeus de meter llamada poper 4 " << Poper->Peek() << L'\n';
+			.)
+
+[',' Param].
+//Inicia Param Llamada
+ParamLlamada = (.	operadorActual=PIZQ;
+			llamada = 1;
+			metePoper();
+			.)
+(
+					(.
+					.)
+Expresion
+					(.
 							generaParametro();
-						}
-					std::wcout << L" param fin  string 4\n";
+					.)
+|
+
+cte_string				(. 
+						tipovariable = cadenav;
+						wchar_t* name = coco_string_create(t->val);
+						identificador = std::wstring(name);
+						coco_string_delete(name);
+						registraConstante();
+						std::map<std::wstring,Variable *>::iterator it = tabconstantes->vhash.find(identificador);
+						PilaO->Push((it->second)->direccion);
+						generaParametro();
+						std::wcout << L" param fin  string 4\n";
 					.)
 
 ) 		(.		operadorActual=PDER;
@@ -1284,7 +1308,7 @@ cte_string				(.
 				//	std::wcout << L" despeus de meter llamada poper 4 " << Poper->Peek() << L'\n';
 			.)
 
-[',' Param].
+[',' ParamLlamada].
 
 //Inicia Funcion () ----------------------------------------------------------------
 Funcion = Tipof 
@@ -1361,7 +1385,17 @@ Asignacion = ID 			(.	metePilaOV();		.)
 						wchar_t* name = coco_string_create(t->val);
 						identificador = std::wstring(name);
 						coco_string_delete(name);
-						registraConstante();
+						int resultado=registraConstante();
+						
+						int tipo = verificaCubo(ASIGNA,dameTipo(PilaO->Peek()),dameTipo(resultado));
+						if(tipo == -666){
+							std::wcout<<L"Trying to assign an invalid type";
+						}else{
+							Cuadruplo *cuadruplo=new Cuadruplo(ASIGNA,resultado,-1,PilaO->Pop());
+							hashCuadruplos.insert(std::make_pair(contCuadruplos,cuadruplo));
+							contCuadruplos++;
+						}	
+
 					.)
 
 ) ';'.
